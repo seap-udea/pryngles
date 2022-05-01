@@ -202,6 +202,11 @@ def errorMsg(error,msg):
 def stop():
     raise AssertionError("Stop")
 
+#################################################################################
+#Modules to auto import
+#################################################################################
+from pryngles.base import *
+
 get_ipython().run_cell_magic('javascript', '', 'IPython.notebook.kernel.execute(\'FILE=\\"\' + IPython.notebook.notebook_name + \'\\"\')')
 
 #################################################################################

@@ -39,8 +39,8 @@ file](https://github.com/seap-udea/pryngles/archive/master.zip)
 
 ## Tutorial
 
-A complete `Jupyter` tutorial is provided here:
-[https://github.com/seap-udea/ExoRyng/blob/master/examples/exoryng-tutorial.ipynb]
+A complete `Jupyter` tutorial is provided
+[here](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial.ipynb)
 
 In this tutorial you will learn how to configure, install, use and even modify `pryngles`.
 
