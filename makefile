@@ -16,8 +16,8 @@
 ##################################################################
 #VARIABLES
 ##################################################################
-#PACKDIR=.pack/
-#include $(PACKDIR)/packrc
+PACKDIR=.pack/
+include $(PACKDIR)/packrc
 DEVFILES=$(shell ls exoryng/dev/$(PACKNAME)-*.ipynb)
 BRANCH=$(shell bash .getbranch.sh)
 
