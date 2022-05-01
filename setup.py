@@ -72,5 +72,5 @@ setuptools.setup(
     #OPTIONS
     #######################################################################
     include_package_data=True,
-    package_data={"": ["data/*.*"]},
+    package_data={"":["data/*.*","tests/*.*"]},
  )

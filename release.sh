@@ -15,7 +15,6 @@
 ##################################################################
 #!/bin/bash
 . .pack/packrc
-cd pryngles
 
 version=$1
 setversion=$(grep "version=" setup.py |awk -F"'" '{print $2}')
@@ -45,16 +44,6 @@ echo "Releasing version $version of the package..."
 sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py 
 
 ##################################################################
-# Update files
-##################################################################
-echo "Updating package files..."
-cp -rf ../README.md .
-rm -rf src/pryngles/*
-cp -rf *.py src/pryngles/
-cp -rf data src/pryngles/
-rm -rf src/pryngles/setup.py
-
-##################################################################
 # Remove previous versions
 ##################################################################
 echo "Removing previous version..."
@@ -76,4 +65,3 @@ python -m twine upload --repository testpypi dist/* --verbose
 # Report version
 ##################################################################
 echo $version >> .versions
-cd -

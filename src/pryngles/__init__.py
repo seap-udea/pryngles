@@ -88,7 +88,7 @@ except:
     ROOTDIR=os.path.abspath('')
 
 def get_data(path):
-    return os.path.join(ROOTDIR,'data',path)
+    return os.path.join(ROOTDIR,'data',path);
 
 #Stores the time of start of the script when gravray is imported
 TIMESTART=time()
