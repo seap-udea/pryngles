@@ -1,7 +1,7 @@
 # Pryngles
 
 ## PlanetaRY spaNGLES: the bright-side of the light-curve of (ringed) exoplanets
-![Animation](https://github.com/seap-udea/ExoRyng/blob/master/examples/ecliptic-i_3.0e+01-lambobs_9.0e+01-betaobs_9.0e+01.gif?raw=true)
+![Animation](https://github.com/seap-udea/ExoRyng/blob/master/examples/figures/observer-i_3.0e+01-lambobs_9.0e+01-betaobs_9.0e+01.gif?raw=true)
 
 `Pryngles` is a `Python` package intended to produce useful
 visualizations of the geometric configuration of a ringed exoplanet
@@ -15,11 +15,15 @@ non-transiting exoplanets.
 
 For the science behind the model please refer to the following papers:
 
-> Zuluaga, Sucerquia & Alvarado, *The bright-side of the light-curve:
+> Zuluaga, Sucerquia & Alvarado, *The bright side of the light curve: a general photometric model for
+non-transiting exorings*, in preparation (2022).
 
 > Sucerquia, Alvarado, Zuluaga, Montesinos, Bayo, *Scattered light may
-  reveal the existence of ringed exoplanets*, submitted to MNRAS
-  letters, 2020.
+  reveal the existence of ringed exoplanets*, Sucerquia, M.,
+  Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos, M., & Bayo,
+  A. (2020). Scattered light may reveal the existence of ringed
+  exoplanets. Monthly Notices of the Royal Astronomical Society:
+  Letters, 496(1), L85-L90.
 
 ## Download
 
