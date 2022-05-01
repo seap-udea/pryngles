@@ -1,7 +1,9 @@
 # Pryngles
 
 ## PlanetaRY spaNGLES
-![Animation](https://raw.githubusercontent.com/seap-udea/pryngles/master/examples/figures/observer-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif?token=GHSAT0AAAAAABTXDDMU3E6YC7B7JQXIVKYGYTOVJFA)
+![Animation](https://github.com/seap-udea/pryngles-public/blob/master/gallery/ecliptic-i_3.0e+01-lambobs_9.0e+01-betaobs_9.0e+01.gif?raw=true)
+
+![Image](https://github.com/seap-udea/pryngles-public/blob/master/gallery/reference_frames.png?raw=true)
 
 `Pryngles` is a `Python` package intended to produce useful
 visualizations of the geometric configuration of a ringed exoplanet
