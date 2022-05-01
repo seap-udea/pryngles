@@ -40,7 +40,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         ],
-    version='0.1',
+    version='0.1.2',
 
     #######################################################################
     #FILES
@@ -65,7 +65,7 @@ setuptools.setup(
     #######################################################################
     
     install_requires=[
-        'scipy','ipython','matplotlib','tqdm','dill'
+        'scipy>=1.7.3','ipython>=8.0.1','matplotlib>=3.5.1','tqdm>=4.62.3','dill>=0.3.4'
         ],
 
     #######################################################################

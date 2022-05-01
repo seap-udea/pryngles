@@ -4,3 +4,13 @@ To Do List
 - Create the PyPI package.
   See: https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
+  For the developers:
+
+  - To build a distribution:
+
+    python3 -m build
+  
+  - To upload the distribution:
+  
+    python -m twine upload --repository testpypi dist/* --verbose
+     
