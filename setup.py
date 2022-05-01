@@ -1,14 +1,17 @@
 ##################################################################
 #                                                                #
-# ███████╗██╗  ██╗ ██████╗ ██████╗ ██╗   ██╗███╗   ██╗ ██████╗   #
-# ██╔════╝╚██╗██╔╝██╔═══██╗██╔══██╗╚██╗ ██╔╝████╗  ██║██╔════╝   #
-# █████╗   ╚███╔╝ ██║   ██║██████╔╝ ╚████╔╝ ██╔██╗ ██║██║  ███╗  #
-# ██╔══╝   ██╔██╗ ██║   ██║██╔══██╗  ╚██╔╝  ██║╚██╗██║██║   ██║  #
-# ███████╗██╔╝ ██╗╚██████╔╝██║  ██║   ██║   ██║ ╚████║╚██████╔╝  #
-# ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝ ╚═════╝   #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga (C) 2020                                      #
+# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
 ##################################################################
 import setuptools
 
@@ -19,14 +22,14 @@ setuptools.setup(
     #######################################################################
     #BASIC DESCRIPTION
     #######################################################################
-    name='exoryng', 
-    author="Jorge I. Zuluaga",
+    name='pryngles', 
+    author="Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado",
     author_email="jorge.zuluaga@udea.edu.co",
-    description="Exoring light curve synthesizer",
+    description="PlanetaRY spanGLES: the bright-side of the light-curve of (ringed) exoplanets",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/seap-udea/ExoRyng",
-    keywords='astronomy exoplanets',
+    url="https://github.com/seap-udea/pryngles",
+    keywords='astronomy exoplanets planetary-rings',
     license='MIT',
     
     #######################################################################
@@ -48,7 +51,7 @@ setuptools.setup(
     #ENTRY POINTS
     #######################################################################
     entry_points={
-        'console_scripts':['install=exoryng.install:main'],
+        'console_scripts':['install=pryngles.install:main'],
         },
 
     #######################################################################

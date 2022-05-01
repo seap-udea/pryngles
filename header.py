@@ -8,6 +8,7 @@
 #................................................................#
 #                                                                #
 # PlanetaRY spanGLES                                             #
+# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
 # Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
