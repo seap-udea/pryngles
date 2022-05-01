@@ -44,6 +44,12 @@ A complete `Jupyter` tutorial is provided
 
 In this tutorial you will learn how to configure, install, use and even modify `pryngles`.
 
+## Updates
+
+- **Changes in 0.2.0 version**:
+
+  - First official version of the package.
+
 ------------
 
 This package has been designed and written originally by Jorge
