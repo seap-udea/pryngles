@@ -2037,6 +2037,9 @@ class RingedPlanet(object):
         #Clean files after animation
         print("Cleaning temporal animation images...")
         os.system(f"rm -rf {animdir}/{preffix}*.{ext}")
+        
+        #Notification
+        print(f"Animations generated: {figdir}/{filemovie}.gif, {figdir}/{filemovie}.mp4")
 
     def printState(self):
         print(f"Total planet sampling points: {self.Np} ({self.Np/self.Np*100:g}%)")
