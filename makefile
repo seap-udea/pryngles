@@ -19,7 +19,7 @@
 ##################################################################
 PACKDIR=.pack/
 include $(PACKDIR)/packrc
-DEVFILES=$(shell ls pryngles/dev/$(PACKNAME)-*.ipynb)
+DEVFILES=$(shell ls dev/$(PACKNAME)-*.ipynb)
 BRANCH=$(shell bash .getbranch.sh)
 
 show:

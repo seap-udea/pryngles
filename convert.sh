@@ -102,7 +102,7 @@ do
 
     # Parse script name
     IFS="-"
-    targetdir="."
+    targetdir="src/"
     for dir in $devfile
     do
 	if [ -d $targetdir/$dir ];then
