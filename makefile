@@ -93,7 +93,7 @@ unpack:
 	@bash $(PACKDIR)/pack.sh unpack
 
 convert:
-	@echo "Converting iPython Notebooks..."
+	@echo "Converting iPython Notebooks $(DEVFILES)..."
 	@bash convert.sh $(DEVFILES)
 
 release:
