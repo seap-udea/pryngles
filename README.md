@@ -1,6 +1,6 @@
 # Pryngles
 
-## PlanetaRY spaNGLES: the bright-side of the light-curve of (ringed) exoplanets
+## PlanetaRY spaNGLES
 ![Animation](https://github.com/seap-udea/ExoRyng/blob/master/examples/figures/observer-i_3.0e+01-lambobs_9.0e+01-betaobs_9.0e+01.gif?raw=true)
 
 `Pryngles` is a `Python` package intended to produce useful
@@ -15,8 +15,9 @@ non-transiting exoplanets.
 
 For the science behind the model please refer to the following papers:
 
-> Zuluaga, Sucerquia & Alvarado, *The bright side of the light curve: a general photometric model for
-non-transiting exorings*, in preparation (2022).
+> Zuluaga, Sucerquia & Alvarado, *The bright side of the light curve:
+a general photometric model for non-transiting exorings*, in
+preparation (2022).
 
 > Sucerquia, Alvarado, Zuluaga, Montesinos, Bayo, *Scattered light may
   reveal the existence of ringed exoplanets*, Sucerquia, M.,
@@ -33,7 +34,8 @@ To download `pryngles` as a user:
    git clone https://github.com/seap-udea/pryngles.git
 ```
 
-Or download the [`zip` file](https://github.com/seap-udea/pryngles/archive/master.zip)
+Or download the [`zip`
+file](https://github.com/seap-udea/pryngles/archive/master.zip)
 
 ## Tutorial
 
@@ -44,4 +46,5 @@ In this tutorial you will learn how to configure, install, use and even modify `
 
 ------------
 
-This package has been designed and written originally by Jorge I. Zuluaga (C) 2022
+This package has been designed and written originally by Jorge
+I. Zuluaga, Mario Sucerquia & Jaime A. Alvarado-Montes (C) 2022
