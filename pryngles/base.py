@@ -2033,14 +2033,12 @@ class RingedPlanet(object):
             if verbose:print(f"Creating video '{filemovie}'...")
             os.system(f"convert -delay 20 -loop 0 {animdir}/{preffix}{imgtype}*.png {figdir}/{filemovie}.gif > {figdir}/animate.log 2>&1")
             os.system(f"ffmpeg -y -i {figdir}/{filemovie}.gif -movflags faststart -pix_fmt yuv420p -vf 'scale=trunc(iw/2)*2:trunc(ih/2)*2' {figdir}/{filemovie}.mp4 >> {figdir}/animate.log 2>&1")
-        
+            print(f"Animations generated:\n\t{figdir}/{filemovie}.gif\n\t{figdir}/{filemovie}.mp4")
+
         #Clean files after animation
         print("Cleaning temporal animation images...")
         os.system(f"rm -rf {animdir}/{preffix}*.{ext}")
         
-        #Notification
-        print(f"Animations generated: {figdir}/{filemovie}.gif, {figdir}/{filemovie}.mp4")
-
     def printState(self):
         print(f"Total planet sampling points: {self.Np} ({self.Np/self.Np*100:g}%)")
         print(f"\tVisible (v): {self.vp.sum()} ({self.vp.sum()/self.Np*100:g}%)")
