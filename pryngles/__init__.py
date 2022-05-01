@@ -8,6 +8,7 @@
 #................................................................#
 #                                                                #
 # PlanetaRY spanGLES                                             #
+# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
 # Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
@@ -85,6 +86,9 @@ try:
 except:
     import IPython
     ROOTDIR=os.path.abspath('')
+
+def get_data(path):
+    return os.path.join(ROOTDIR,'data',path)
 
 #Stores the time of start of the script when gravray is imported
 TIMESTART=time()

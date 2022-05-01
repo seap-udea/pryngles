@@ -5,3 +5,5 @@ __pycache__
 .anim*
 env/
 dist/
+src/
+build/

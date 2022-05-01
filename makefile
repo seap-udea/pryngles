@@ -19,7 +19,7 @@
 ##################################################################
 PACKDIR=.pack/
 include $(PACKDIR)/packrc
-DEVFILES=$(shell ls exoryng/dev/$(PACKNAME)-*.ipynb)
+DEVFILES=$(shell ls pryngles/dev/$(PACKNAME)-*.ipynb)
 BRANCH=$(shell bash .getbranch.sh)
 
 show:
@@ -67,7 +67,9 @@ cleanout:
 ##################################################################
 #GIT
 ##################################################################
-addall:
+addall:cleanall
+	@echo "Adding..."
+	@-git add -A .
 
 commit:
 	@echo "Commiting..."
@@ -93,6 +95,10 @@ unpack:
 convert:
 	@echo "Converting iPython Notebooks..."
 	@bash convert.sh $(DEVFILES)
+
+release:
+	@echo "Releasing a new version..."
+	@bash release.sh
 
 install:
 	@echo "Installing system dependencies..."

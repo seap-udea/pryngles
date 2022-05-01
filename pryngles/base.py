@@ -2075,7 +2075,7 @@ class RingedPlanet(object):
         Notes:
             Tab. (2.3) in Sobolev (1975).
         """
-        data_ss=np.loadtxt(f"{ROOTDIR}/data/diffuse_reflection_function.data")
+        data_ss=np.loadtxt(get_data("diffuse_reflection_function.data"))
         eta=data_ss[1:,0]
         gamma=data_ss[0,1:]
         f=data_ss[1:,1:]
