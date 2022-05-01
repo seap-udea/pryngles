@@ -2379,16 +2379,3 @@ class RingedPlanet(object):
             self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
 RingedPlanet.__doc__=RingedPlanet_doc
 
-P=RingedPlanet(Nr=1000,Np=1000,Nb=0,i=30*DEG,a=0.2,e=0,physics=dict(AL=1,AS=1,taug=1))
-
-P.changeObserver([90*DEG,90*DEG])
-P.changeStellarPosition(+30.0*DEG)
-fig1,fig2,fig3=P.plotRingedPlanet(view='side',showfig=0,showstar=1)
-fig1
-
-P.behavior["shadows"]=True
-P.changeObserver([90*DEG,90*DEG])
-P.changeStellarPosition(+30.0*DEG)
-fig1,fig2,fig3=P.plotRingedPlanet(view='side',showfig=0,showstar=1)
-fig3
-
