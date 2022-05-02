@@ -21,6 +21,7 @@ PACKDIR=.pack/
 include $(PACKDIR)/packrc
 DEVFILES=$(shell ls dev/$(PACKNAME)-*.ipynb)
 BRANCH=$(shell bash .getbranch.sh)
+VERSION=$(shell tail -n 1 .versions)
 
 show:
 	@echo "Development files:" $(DEVFILES)
@@ -96,9 +97,10 @@ convert:
 	@echo "Converting iPython Notebooks $(DEVFILES)..."
 	@bash convert.sh $(DEVFILES)
 
+#Example: make release RELMODE=release VERSION=0.2.0.2 
 release:
 	@echo "Releasing a new version..."
-	@bash release.sh
+	@bash release.sh $(RELMODE) $(VERSION)
 
 install:
 	@echo "Installing system dependencies..."

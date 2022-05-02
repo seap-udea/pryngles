@@ -31,3 +31,6 @@ SYSTEM=macosx
 #Other
 DEVDIR=dev/
 PACKNAME=pryngles
+
+#Default mode of release
+RELMODE=test

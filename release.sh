@@ -16,6 +16,22 @@
 #!/bin/bash
 . .pack/packrc
 
+type=$1;shift
+if [ "x$type" = "x" ]
+then
+    echo "You need to choose a type of release: 'test', 'release'."
+    exit 1
+elif [ "$type" = "test" ]
+then
+    qtype=0
+elif [ "$type" = "release" ]
+then
+    qtype=1
+else
+    echo "Type '$type' not recognized (it should be 'test' or 'release'"
+    exit 1
+fi
+
 version=$1
 setversion=$(grep "version=" setup.py |awk -F"'" '{print $2}')
 
@@ -36,7 +52,7 @@ then
     exit 1
 fi
 
-echo "Releasing version $version of the package..."
+echo "Releasing new version $version (current version $setversion) of the package in mode '$type'..."
 
 ##################################################################
 # Update setup.py file
@@ -58,8 +74,15 @@ python -m build
 ##################################################################
 # Uploading the package
 ##################################################################
-echo "Uploading to PyPI (use __token__ as username and pypi-<token> as password..."
-python -m twine upload --repository testpypi dist/* --verbose
+echo
+if [ $qtype -eq 0 ]
+then
+    echo "Uploading to Test PyPI (use __token__ as username and pypi-<token> as password)..."
+    python -m twine upload --repository testpypi dist/* --verbose
+else
+    echo "Uploading to PyPI (use your username and password)..."
+    python -m twine upload dist/*
+fi
 
 ##################################################################
 # Report version
