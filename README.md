@@ -24,17 +24,6 @@ For the science behind the model please refer to the following papers:
   ringed exoplanets**. Monthly Notices of the Royal Astronomical
   Society: Letters, 496(1), L85-L90.
 
-## Download
-
-To download `pryngles` as a user:
-
-```
-   git clone https://github.com/seap-udea/pryngles.git
-```
-
-Or download the [`zip`
-file](https://github.com/seap-udea/pryngles/archive/master.zip)
-
 ## Tutorial
 
 A complete `Jupyter` tutorial is provided
