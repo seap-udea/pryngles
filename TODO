@@ -1,6 +1,8 @@
 To Do List
 ==========
 
+- Include the possibility of non-ringed planets (Nr=0).
+
 - [DONE] Create the PyPI package.  See:
   https://packaging.python.org/en/latest/tutorials/packaging-projects/
 

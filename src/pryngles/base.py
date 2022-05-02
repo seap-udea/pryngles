@@ -276,6 +276,8 @@ class Util(object):
             I=1-cs[0]*(1-mu)-cs[1]*(1-mu)**2
         elif order==3:
             I=1-cs[0]*(1-mu)-cs[1]*(1-mu**1.5)-cs[2]*(1-mu**2)
+        elif order==4:
+            I=1-cs[0]*(1-mu**0.5)-cs[1]*(1-mu)-cs[2]*(1-mu**1.5)-cs[3]*(1-mu**2)
         else:
             raise ValueError(f"Limb darkening not implemented for order {order}")
         return I/N
