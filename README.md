@@ -24,6 +24,15 @@ For the science behind the model please refer to the following papers:
   ringed exoplanets**. Monthly Notices of the Royal Astronomical
   Society: Letters, 496(1), L85-L90.
 
+## Download and install
+
+`pryngles` is available in `PyPI`, https://pypi.org/project/pryngles/.
+To install it, just execute:
+
+```
+   pip install pryngles
+```
+
 ## Tutorial
 
 A complete `Jupyter` tutorial is provided
