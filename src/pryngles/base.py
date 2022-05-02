@@ -1983,6 +1983,7 @@ class RingedPlanet(object):
         #========================================
         if not showfig:
             plt.ion()
+            plt.close("all")
         return fig1,fig2,fig3
 
     def animateRingedPlanet(self,nframes=1,
@@ -2378,4 +2379,9 @@ class RingedPlanet(object):
             msr,rijs,etaijs,zetaijs=self._getFacetsOnSky(self.rrs_equ[i],observing_body="ring")
             self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
 RingedPlanet.__doc__=RingedPlanet_doc
+
+"""
+P=RingedPlanet()
+P.plotRingedPlanet(showfig=0)
+#""";
 

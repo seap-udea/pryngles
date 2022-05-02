@@ -55,6 +55,7 @@ In this tutorial you will learn how to configure, install, use and even modify `
 
   - Tutorial is now working in Google Colab.
   - References were corrected.
+  - The home url was set as the PyPI web page.
 
 ------------
 

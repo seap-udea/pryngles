@@ -1,8 +1,8 @@
 To Do List
 ==========
 
-- Create the PyPI package.
-  See: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+- [DONE] Create the PyPI package.  See:
+  https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
   For the developers:
 
@@ -14,4 +14,21 @@ To Do List
   
     python -m twine upload --repository testpypi dist/* --verbose
 
-- Disable showing figure when plotting with showfig=0
+- [DONE] Disable showing figure when plotting with showfig=0 in Google Colab.
+
+
+Version management
+==================
+
+- Version 0: first release and design.  Example: 0.2.1.2
+
+- Version 1: this will be the release when modularity of the package
+  be improved.
+
+- Version advance according to major changes.  Version 0.2.1.x are a
+  family of the main version 0.2.
+
+- All test versions have a trailing zero.  Thus for instance: if we
+  are in version 0.2.1.2, the corresponding test version will ve
+  0.2.0.3.
+      

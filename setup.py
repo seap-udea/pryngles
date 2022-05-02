@@ -28,7 +28,7 @@ setuptools.setup(
     description="PlanetaRY spanGLES: the bright-side of the light-curve of (ringed) exoplanets",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/seap-udea/pryngles",
+    url="https://pypi.org/project/pryngles",
     keywords='astronomy exoplanets planetary-rings',
     license='MIT',
     
@@ -40,7 +40,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         ],
-    version='0.2.1.1',
+    version='0.2.1.2',
 
     #######################################################################
     #FILES
