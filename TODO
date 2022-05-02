@@ -20,6 +20,8 @@ To Do List
 Version management
 ==================
 
+- Versions are in .versions file.
+
 - Version 0: first release and design.  Example: 0.2.1.2
 
 - Version 1: this will be the release when modularity of the package
@@ -31,4 +33,3 @@ Version management
 - All test versions have a trailing zero.  Thus for instance: if we
   are in version 0.2.1.2, the corresponding test version will ve
   0.2.0.3.
-      
