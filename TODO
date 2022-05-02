@@ -13,4 +13,5 @@ To Do List
   - To upload the distribution:
   
     python -m twine upload --repository testpypi dist/* --verbose
-     
+
+- Disable showing figure when plotting with showfig=0
