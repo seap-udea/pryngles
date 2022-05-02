@@ -33,10 +33,15 @@ To install it, just execute:
    pip install pryngles
 ```
 
+If you prefer, you may download and install from the
+[sources](https://pypi.org/project/pryngles/#files).
+
 ## Tutorial
 
 A complete `Jupyter` tutorial is provided
-[here](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-exploration.ipynb).  If you prefer Google Colab check [this](https://bit.ly/pryngles-tutorial-exploration).
+[here](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-exploration.ipynb).
+If you prefer Google Colab check
+[this](https://bit.ly/pryngles-tutorial-exploration).
 
 In this tutorial you will learn how to configure, install, use and even modify `pryngles`.
 
