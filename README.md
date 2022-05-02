@@ -40,7 +40,7 @@ file](https://github.com/seap-udea/pryngles/archive/master.zip)
 ## Tutorial
 
 A complete `Jupyter` tutorial is provided
-[here](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-exploration.ipynb).  If you prefer Google Colab check [this](https://bit.ly/pryngles-tutorial-exploration)
+[here](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-exploration.ipynb).  If you prefer Google Colab check [this](https://bit.ly/pryngles-tutorial-exploration).
 
 In this tutorial you will learn how to configure, install, use and even modify `pryngles`.
 
