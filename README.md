@@ -1,7 +1,8 @@
 # Pryngles
 
 ## PlanetaRY spaNGLES
-![Animation](https://github.com/seap-udea/pryngles-public/blob/master/gallery/ecliptic-i_3.0e+01-lambobs_9.0e+01-betaobs_9.0e+01.gif?raw=true)
+
+![Logo](https://github.com/seap-udea/pryngles-public/blob/master/gallery/pryngles-logo.png?raw=true)
 
 `Pryngles` is a `Python` package intended to produce useful
 visualizations of the geometric configuration of a ringed exoplanet
@@ -12,6 +13,10 @@ to predict the signatures that exorings may produce not only in the
 light-curve of transiting exoplanets (a problem that has been
 extensively studied) but also in the light of stars having
 non-transiting exoplanets.
+
+This is an example of what can be done with `Pryngles`:
+
+![Animation](https://github.com/seap-udea/pryngles-public/blob/master/gallery/ecliptic-i_3.0e+01-lambobs_9.0e+01-betaobs_9.0e+01.gif?raw=true)
 
 For the science behind the model please refer to the following papers:
 

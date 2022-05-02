@@ -1,6 +1,7 @@
 To Do List
 ==========
 
+- Remove: Javascript Error: IPython is not defined.
 
 - Include the possibility of non-ringed planets (Nr=0).
 
@@ -18,6 +19,11 @@ To Do List
     python -m twine upload --repository testpypi dist/* --verbose
 
 - [DONE] Disable showing figure when plotting with showfig=0 in Google Colab.
+
+Future version [1.0]
+====================
+
+- 
 
 
 Version management
