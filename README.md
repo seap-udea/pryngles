@@ -15,16 +15,14 @@ non-transiting exoplanets.
 
 For the science behind the model please refer to the following papers:
 
-> Zuluaga, Sucerquia & Alvarado, *The bright side of the light curve:
-a general photometric model for non-transiting exorings*, in
-preparation (2022).
+> Zuluaga, J.I., Sucerquia, M. & Alvarado-Montes, J.A. (2022), **The
+  bright side of the light curve: a general photometric model for
+  non-transiting exorings**, in preparation (2022).
 
-> Sucerquia, Alvarado, Zuluaga, Montesinos, Bayo, *Scattered light may
-  reveal the existence of ringed exoplanets*, Sucerquia, M.,
-  Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos, M., & Bayo,
-  A. (2020). Scattered light may reveal the existence of ringed
-  exoplanets. Monthly Notices of the Royal Astronomical Society:
-  Letters, 496(1), L85-L90.
+> Sucerquia, M., Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos,
+  M., & Bayo, A. (2020), **Scattered light may reveal the existence of
+  ringed exoplanets**. Monthly Notices of the Royal Astronomical
+  Society: Letters, 496(1), L85-L90.
 
 ## Download
 
@@ -44,11 +42,16 @@ A complete `Jupyter` tutorial is provided
 
 In this tutorial you will learn how to configure, install, use and even modify `pryngles`.
 
-## Updates
+## What's new
 
-- **Changes in 0.2.0 version**:
+- **0.2.0.x versions**:
 
   - First official version of the package.
+
+- **0.2.1.x versions**:
+
+  - Tutorial is now working in Google Colab.
+  - References were corrected.
 
 ------------
 
