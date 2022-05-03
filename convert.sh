@@ -48,6 +48,7 @@ function convert()
     notebook=$1;shift
     target=$1;shift
     test=$1;shift
+    filename=$1;shift
     
     echo -e "\tConverting from ipynb $notebook to python $target..."
     jupyter nbconvert --to python $notebook --stdout 2> /dev/null | grep -v "# In" | cat -s > /tmp/convert.py 
@@ -77,14 +78,22 @@ function convert()
 	tlines=$ntlines
     fi
     
-    echo -e "\tAdding header..."
-    (cat header.py;head -n $tlines /tmp/convert.py) > $target
+    #echo -e "\tAdding header..."
+    if [ ! -e src/$filename.temp ]
+    then
+	filename=""
+    fi
+    echo -e "\tUsing as template src/$filename.temp"
+    
+    (cat header.py;cat src/$filename.temp;head -n $tlines /tmp/convert.py) > $target
+    #(head -n $tlines /tmp/convert.py) > $target
 
     if [ $ntlines -gt 0 ];then
 	alines=$(cat /tmp/convert.py|wc -l)
 	elines=$((alines-ntlines))
 	rlines=$((nlines-ntlines))
 	(cat header.py;tail -n $elines /tmp/convert.py | head -n $rlines) > $test
+	#(tail -n $elines /tmp/convert.py | head -n $rlines) > $test
 	echo -e "\tCreating test file $test..."
     fi
 	
@@ -137,7 +146,7 @@ do
     echo -e "\tFilename: $filename"
     echo -e "\tTarget object: $target"
 
-    convert $notebook $target $test
+    convert $notebook $target $test $filename
 
     if [[ $notebook == *"$PACKNAME-"* ]]
     then

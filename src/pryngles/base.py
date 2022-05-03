@@ -19,6 +19,7 @@
 # # Pryngles
 # ## PlanetaRY spanGLES: the bright-side of the light-curve
 
+##HEADER
 from pryngles import *
 
 # ### Jupyter magics
@@ -2473,4 +2474,9 @@ class Extra(object):
         ##CAMERA ORIENTATION 
         ax.view_init(elev=-30, azim=25)
         fig.tight_layout()
+        
+    def prynglesMark(ax):
+        from pryngles import __version__
+        ax.text(1,1,f"Pryngles {__version__}",rotation=270,ha='left',va='top',
+                transform=ax.transAxes,color='pink',fontsize=8,zorder=100);
 

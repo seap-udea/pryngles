@@ -13,12 +13,17 @@
 ##################################################################
 # Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
 ##################################################################
+##################################################
+# PRELIMINARY INIT COMMANDS
+##################################################
+#--END OF TEMPLATE--#
+
 #!/usr/bin/env python
 # coding: utf-8
 
 # # Pryngles Master File
 
-# -*- coding:utf-8 -*-
+##HEADER
 #################################################################################
 #External basic modules
 #################################################################################
@@ -26,6 +31,8 @@ import numpy as np
 from time import time,strftime
 import warnings
 warnings.filterwarnings('ignore')
+import pkg_resources
+__version__=pkg_resources.require('pryngles')[0].version
 
 #################################################################################
 #This code is used only for development purposes in Jupyter
@@ -72,8 +79,6 @@ except AttributeError:
             import re
             if "timeit" in command:
                 replaceTimeIt(command)
-
-get_ipython().run_cell_magic('javascript', '', 'IPython.notebook.kernel.execute(\'FILE=\\"\' + IPython.notebook.notebook_name + \'\\"\')')
 
 #################################################################################
 #Global variables
@@ -206,8 +211,6 @@ def stop():
 #Modules to auto import
 #################################################################################
 from pryngles.base import *
-
-get_ipython().run_cell_magic('javascript', '', 'IPython.notebook.kernel.execute(\'FILE=\\"\' + IPython.notebook.notebook_name + \'\\"\')')
 
 #################################################################################
 #Program test
