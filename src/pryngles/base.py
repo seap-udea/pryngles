@@ -2388,6 +2388,7 @@ RingedPlanet.__doc__=RingedPlanet_doc
 
 # #### Debugging
 
+# DEBUG DIFFUSE REFLECTED LIGHT
 """
 P=RingedPlanet(Nr=1000,Np=1000,Nb=0,physics=dict(AL=1,AS=1))
 P.changeObserver([90*DEG,90*DEG])
@@ -2408,6 +2409,50 @@ Fcr=P.Rir.sum()
 print(f"Ring simulated flux: {Fcr}")
 Fer=(P.Ar*np.sin(P.estar_equ[1])*(1-P.sr.sum()/P.Nr))/(4*np.pi*P.rstar**2)
 print(f"Ring lambertian flux: {Fer}")
+#""";
+
+# DEBUG TRANSIT DEPTH
+"""
+#NORMAL CASE
+print(f"\nNormal case:\n")
+
+P=RingedPlanet(Nr=1000,Np=1000,Nb=0,i=90*DEG,physics=dict(AL=1,AS=1,taug=1,limb_cs=[]))
+P.changeObserver([90*DEG,0*DEG])
+P.changeStellarPosition(+270.0*DEG+0.0*DEG)
+P.updateOpticalFactors()
+
+print(f"Optical depth: geometric = {P.taug}, effective = {P.taueff}")
+beta=1-Util.attenuationFactor([np.cos(P.io)],P.taueff)[0]
+print(f"Attenuation factor: beta = {beta}")
+Io=Util.limbDarkening(0,cs=P.limb_cs,N=P.normlimb)
+print(f"Intensity of disk in center: {Io}")
+
+P.updateTransit()
+Tep=P.Tip.sum()
+print(f"Numerical planet transit depth: {Tep}")
+Tcp=P.Ap*Io
+print(f"Theoretical planet transit depth: {Tcp}")
+
+Ter=P.Tir.sum()
+print(f"Numerical ring transit depth: {Ter}")
+Tcr=P.Ar*Io*beta
+print(f"Theoretical ring transit depth: {Tcr}")
+
+print(f"\nTilted case:\n")
+P=RingedPlanet(Nr=1000,Np=1000,Nb=0,i=40*DEG,physics=dict(AL=1,AS=1,taug=1,limb_cs=[]))
+P.changeObserver([90*DEG,0*DEG])
+P.changeStellarPosition(+270.0*DEG+0.0*DEG)
+P.updateOpticalFactors()
+
+beta=1-Util.attenuationFactor([np.cos(P.io)],P.taug)[0]
+print(f"Attenuation factor: beta = {beta}")
+
+P.updateTransit()
+Ter=P.Tip.sum()+P.Tir.sum()
+print(f"Numerical ring transit depth: {Ter}")
+Arp=Util.calcRingedPlanetArea(P.Rp,P.fi,P.fe,P.io,beta)
+Tcr=Arp*Io
+print(f"Theoretical ring transit depth: {Tcr}")
 #""";
 
 # ### Class Extra
