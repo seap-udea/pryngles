@@ -62,13 +62,12 @@ In this tutorial you will learn how to configure, install, use and even modify `
 
 ## Disclaimer
 
-This is the *disco* version of Pryngles.  We are improving the
-resolution and performance of the software for future releases.
-
 <p align="center">
 <img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/disco-planet.jpeg?raw=true" alt="Logo" width="150"/>
 </p>
 
+This is the *disco* version of Pryngles.  We are improving the
+resolution and performance of the software for future releases.
 
 ## What's new
 
