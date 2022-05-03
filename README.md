@@ -66,6 +66,8 @@ In this tutorial you will learn how to configure, install, use and even modify `
   - References were corrected.
   - The home url was set as the PyPI web page.
   - Non-linear (4th order) limb darkening included.
+  - Added the class `Extra`.
+  - Function to draw logo: `drawPryngles`.
 
 ------------
 

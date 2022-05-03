@@ -111,3 +111,6 @@ install:
 test:
 	@echo "Testing package..."
 	@$(NOSETESTS) $(PACKNAME)
+
+version:
+	@pip show $(PACKNAME)

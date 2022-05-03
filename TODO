@@ -1,7 +1,7 @@
 To Do List
 ==========
 
-- Función de Logo.
+- Add __version__ variable to package
 
 - Plot returns information to render a photorealistic image of the
   planet.
@@ -11,6 +11,11 @@ To Do List
 - Remove: Javascript Error: IPython is not defined.
 
 - Include the possibility of non-ringed planets (Nr=0).
+
+Done
+====
+
+- [DONE] Draw logo.
 
 - [DONE] Create the PyPI package.  See:
   https://packaging.python.org/en/latest/tutorials/packaging-projects/
@@ -30,8 +35,7 @@ To Do List
 Future version [1.0]
 ====================
 
-- 
-
+- REBOUND integration.
 
 Version management
 ==================

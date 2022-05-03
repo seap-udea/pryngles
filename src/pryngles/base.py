@@ -45,7 +45,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import interp1d,interp2d
 from scipy.integrate import quad,dblquad
 import dill
-
+import cmasher as cmr
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'nbagg')
 
@@ -437,6 +437,7 @@ class Util(object):
         ARp=np.pi*Rp**2+np.pi*(re2-ri2)*Rp**2
 
         return ARp
+    
 
 # ### Configuration
 
@@ -2382,8 +2383,94 @@ class RingedPlanet(object):
             self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
 RingedPlanet.__doc__=RingedPlanet_doc
 
-"""
-P=RingedPlanet()
-P.plotRingedPlanet(showfig=0)
-#""";
+# ### Class Extra
+
+class Extra(object):
+    def drawPryngles(iobs=1,dark=False):
+        ############################################################
+        # Simulation
+        ############################################################
+        no=10000
+        P=RingedPlanet(Nr=500,Np=500,Nb=0,
+                       Rint=1.2,Rext=2.0, i=45*DEG,
+                       a=0.1,e=0.1,lambq=70*DEG,
+                       physics=dict(AL=1,AS=1,taug=1),
+                       behavior=dict(shadows=0))
+        P.changeObserver([90*DEG,iobs*DEG]) #LOGO
+        lamb_initial = 0.0*DEG
+        lamb_final   = 360*DEG
+        lambs        = np.linspace(lamb_initial,lamb_final,no)
+        Rps=[]
+        Rrs=[]
+        ts=[]
+        Ts =[]
+
+        for lamb in lambs:
+            P.changeStellarPosition(lamb)
+            ts+=[P.t*P.CU.UT]
+            P.updateOpticalFactors()
+            P.updateDiffuseReflection()
+            P.updateTransit()
+
+            Rps+=[P.Rip.sum()]
+            Rrs+=[P.Rir.sum()]
+            Tp=P.Tip.sum()
+
+            T=Tp+P.Tir.sum()
+            Ts+=[T]
+
+        Ts=np.array(Ts)
+        ts=np.array(ts)
+        Rps=np.array(Rps)
+        Rrs=np.array(Rrs)
+        ts=ts/Const.days
+
+        ############################################################
+        # Plot
+        ############################################################
+        ppm=1e6
+        alpha=1
+
+        fig = plt.figure(figsize=(8,8))
+        ax = fig.add_subplot(projection='3d')
+        title=f"$a={P.a:g}$ au, $i={P.i*RAD:g}^\circ$ ($i_0={P.io*RAD:.1f}^\circ$), $\lambda_\mathrm{{q}}={P.lambq*RAD:g}^\circ$, Obs ($\lambda$,$\\beta$) : ({P.eobs_ecl[0]*RAD:g}$^\circ$,{P.eobs_ecl[1]*RAD:g}$^\circ$)"
+        theta= np.linspace(0, 2*np.pi, no)
+        x    = np.cos(theta)
+        y    = np.sin(theta)
+        z1    = (ppm*(Rrs+Rps-1e-3*Ts))
+        z2    = (ppm*(Rps+Rps-1e-3*Ts))
+
+        if dark:
+            cmap=cmr.bubblegum
+            back='k'
+            fcolor='pink'
+        else:
+            cmap=cmr.bubblegum_r
+            back='w'
+            fcolor='blue'
+
+        p=ax.scatter(x,y,(z2), marker=".", c=z1+z2 ,s=7, cmap=cmap,alpha=alpha,edgecolors=None)
+        cb=plt.colorbar(p, orientation="horizontal", fraction=0.03, pad=-0.2)
+        cb.set_label(r"Pryngles", color=fcolor, fontsize=40,fontname="Special Elite")
+
+        cb.ax.tick_params(labelcolor=back)
+        cbytick_obj = plt.getp(cb.ax, 'yticklabels' ) #Set y tick label color
+        plt.setp(cbytick_obj, color=back)
+        cb.ax.tick_params(which = 'minor', length = 2, color = back )
+        cb.ax.tick_params(which = 'major', length = 5, color = back )
+        cb.update_ticks()
+
+        # THE (SPHERICAL) SUN 
+        ax.scatter(0,0,0, marker=".", s=1000, color="orange")
+        for i in np.linspace(0,1,20):
+            ax.scatter(0,0,0, marker=".", s=1000*5*i, color="gold", alpha=1-0.9*i )
+
+        # AXIS SETUP
+        fig.set_facecolor(back)
+        ax.set_axis_off()
+        ax.set_facecolor(back) 
+
+        ##CAMERA ORIENTATION 
+        ax.view_init(elev=-30, azim=25)
+        fig.tight_layout()
 
