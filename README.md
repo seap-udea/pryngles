@@ -2,8 +2,8 @@
 
 ## PlanetaRY spaNGLES
 
-<p align="center">
-<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/pryngles-logo.png?raw=true" alt="Logo" width="200"/>
+<p align="left">
+<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/pryngles-logo-wb.png?raw=true" alt="Logo" width="200"/>
 </p>
 
 `Pryngles` is a `Python` package intended to produce useful
