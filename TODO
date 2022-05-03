@@ -1,6 +1,13 @@
 To Do List
 ==========
 
+- Función de Logo.
+
+- Plot returns information to render a photorealistic image of the
+  planet.
+
+- Generate a water mark for the plots.
+
 - Remove: Javascript Error: IPython is not defined.
 
 - Include the possibility of non-ringed planets (Nr=0).
