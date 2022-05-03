@@ -1,21 +1,28 @@
 To Do List
 ==========
 
-- Add __version__ variable to package
-
 - Plot returns information to render a photorealistic image of the
-  planet.
-
-- Generate a water mark for the plots.
-
-- Remove: Javascript Error: IPython is not defined.
+  planet.  Returns the value of each point in a plot.
 
 - Include the possibility of non-ringed planets (Nr=0).
+
+Future version [1.0]
+====================
+
+- REBOUND integration.
 
 Done
 ====
 
+- [DONE] Remove: Javascript Error: IPython is not defined.
+
+- [DONE] Add __version__ variable to package.
+
+- [DONE] Generate a water mark for the plots.
+  Sol. Extra.prynglesMark()
+
 - [DONE] Draw logo.
+  Sol. Extra.drawPryngles()
 
 - [DONE] Create the PyPI package.  See:
   https://packaging.python.org/en/latest/tutorials/packaging-projects/
@@ -31,11 +38,6 @@ Done
     python -m twine upload --repository testpypi dist/* --verbose
 
 - [DONE] Disable showing figure when plotting with showfig=0 in Google Colab.
-
-Future version [1.0]
-====================
-
-- REBOUND integration.
 
 Version management
 ==================
