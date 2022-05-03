@@ -4,9 +4,9 @@
 
 ![Logo](https://github.com/seap-udea/pryngles-public/blob/master/gallery/pryngles-logo.png?raw=true)
 
-<center>
+<p align="center">
 <img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/pryngles-logo.png?raw=true" alt="Logo" width="200"/>
-</center>
+</p>
 
 `Pryngles` is a `Python` package intended to produce useful
 visualizations of the geometric configuration of a ringed exoplanet
