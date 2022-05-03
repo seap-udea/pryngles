@@ -2,9 +2,11 @@
 
 ## PlanetaRY spaNGLES
 
+<!--
 <p align="left">
 <img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/pryngles-logo-wb.png?raw=true" alt="Logo" width="200"/>
 </p>
+-->
 
 `Pryngles` is a `Python` package intended to produce useful
 visualizations of the geometric configuration of a ringed exoplanet
@@ -68,6 +70,8 @@ In this tutorial you will learn how to configure, install, use and even modify `
   - Non-linear (4th order) limb darkening included.
   - Added the class `Extra`.
   - Function to draw logo: `drawPryngles`.
+  - Added function `prynglesMark`.
+  - Now `__version__` variable is available.
 
 ------------
 
