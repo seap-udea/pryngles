@@ -22,6 +22,7 @@ include $(PACKDIR)/packrc
 DEVFILES=$(shell ls dev/$(PACKNAME)-*.ipynb)
 BRANCH=$(shell bash .getbranch.sh)
 VERSION=$(shell tail -n 1 .versions)
+PUBLIC=../$(PACKNAME)-public/
 
 show:
 	@echo "Development files:" $(DEVFILES)
@@ -114,3 +115,9 @@ test:
 
 version:
 	@pip show $(PACKNAME)
+
+public:
+	@echo "Updating public github repo..."
+	@cp examples/pryngles-tutorial-exploration.ipynb $(PUBLIC)/
+	@cp README.md $(PUBLIC)/
+	@make -C $(PUBLIC) commit

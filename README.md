@@ -77,7 +77,7 @@ In this tutorial you will learn how to configure, install, use and even modify `
   - Added function `prynglesMark`.
   - Now `__version__` variable is available.
 
-- **0.3.0.x versions**:
+- **0.3.x versions**:
 
   - Major corrections in diffuse formulae.
 
