@@ -2310,11 +2310,11 @@ class RingedPlanet(object):
         #Planet
         self.Rip=np.zeros(self.Np)
         cond=(self.ap)*(self.ip)
-        self.Rip[cond]=self.fluxips[cond]*self.ALps[cond]*self.zetaps[cond]
+        self.Rip[cond]=self.fluxips[cond]*self.ALps[cond] #*self.zetaps[cond]
         #Ring
         self.Rir=np.zeros(self.Nrt)
         cond=(self.ar)*(self.ir)
-        self.Rir[cond]=self.fluxirs[cond]*self.ALrs[cond]*self.zetars[cond]
+        self.Rir[cond]=self.fluxirs[cond]*self.ALrs[cond] #self.zetars[cond]
 
     def updateTransit(self):
         """
@@ -2374,15 +2374,41 @@ class RingedPlanet(object):
         activep=np.arange(self.Np)[cond]
         for i in activep:
             msp,rijs,etaijs,zetaijs=self._getFacetsOnSky(self.rps_equ[i],observing_body="planet")
-            self.Sip[i]=((self.fluxirs[msp]*zetaijs)*(self.normp*self.afp/(4*mh.pi*rijs**2))*etaijs*self.zetaps[i]).sum()
+            #self.Sip[i]=((self.fluxirs[msp]*zetaijs)*(self.normp*self.afp/(4*mh.pi*rijs**2))*etaijs*self.zetaps[i]).sum()
+            self.Sip[i]=((self.fluxirs[msp])*(self.normp*self.afp/(4*mh.pi*rijs**2))*etaijs).sum()
         #Ring
         self.Sir=np.zeros(self.Nr)
         cond=(self.ar[self.irn])*(self.nr[self.irn])*(~self.tp[self.irn])*(~self.cp[self.irn])
         activer=np.arange(self.Nr)[cond]
         for i in activer:
             msr,rijs,etaijs,zetaijs=self._getFacetsOnSky(self.rrs_equ[i],observing_body="ring")
-            self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
+            #self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
+            self.Sir[i]=((self.fluxips[msr])*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs).sum()
 RingedPlanet.__doc__=RingedPlanet_doc
+
+# #### Debugging
+
+"""
+P=RingedPlanet(Nr=1000,Np=1000,Nb=0,physics=dict(AL=1,AS=1))
+P.changeObserver([90*DEG,90*DEG])
+P.changeStellarPosition(160.0*DEG)
+P.updateOpticalFactors()
+fig1,fig2,fig3=P.plotRingedPlanet(view='top',showfig=0)
+
+#Planet
+P.updateDiffuseReflection()
+Fcp=P.Rip.sum()
+print(f"Planetary simulated flux: {Fcp}")
+Fep=(P.Ap/2*(1-P.sp.sum()/P.Np))/(4*np.pi*P.rstar**2)
+print(f"Planetary lambertian flux: {Fep}")
+
+#Ring 
+P.updateDiffuseReflection()
+Fcr=P.Rir.sum()
+print(f"Ring simulated flux: {Fcr}")
+Fer=(P.Ar*np.sin(P.estar_equ[1])*(1-P.sr.sum()/P.Nr))/(4*np.pi*P.rstar**2)
+print(f"Ring lambertian flux: {Fer}")
+#""";
 
 # ### Class Extra
 
@@ -2474,9 +2500,11 @@ class Extra(object):
         ##CAMERA ORIENTATION 
         ax.view_init(elev=-30, azim=25)
         fig.tight_layout()
+        return fig
         
     def prynglesMark(ax):
         from pryngles import __version__
-        ax.text(1,1,f"Pryngles {__version__}",rotation=270,ha='left',va='top',
+        text=ax.text(1,1,f"Pryngles {__version__}",rotation=270,ha='left',va='top',
                 transform=ax.transAxes,color='pink',fontsize=8,zorder=100);
+        return text
 
