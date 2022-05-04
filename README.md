@@ -7,7 +7,9 @@
 <!--Other badges: https://shields.io/category/activity -->
 
 [![version](https://img.shields.io/pypi/v/pryngles?color=blue)](https://pypi.org/project/pryngles/)
-[![version](https://img.shields.io/pypi/dw/pryngles)](https://pypi.org/project/pryngles/)
+[![downloads](https://img.shields.io/pypi/dw/pryngles)](https://pypi.org/project/pryngles/)
+[![license](https://img.shields.io/pypi/l/pryngles)](https://pypi.org/project/pryngles/)
+[![implementation](https://img.shields.io/pypi/implementation/pryngles)](https://pypi.org/project/pryngles/)
 [![arXiv](http://img.shields.io/badge/arXiv-2004.14121-orange.svg?style=flat)](http://arxiv.org/abs/2004.14121)
 
 <!--
