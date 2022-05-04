@@ -4,6 +4,9 @@
 
 <!--[![PyPi version](https://pypip.in/v/pryngles/badge.png)](https://crate.io/packages/pryngles/)-->
 <!--[![PyPi downloads](https://pypip.in/d/pryngles/badge.png)](https://crate.io/packages/pryngles/)-->
+<!--Other badges: https://shields.io/category/activity -->
+
+[![version](https://img.shields.io/pypi/v/pryngles)](https://pypi.org/project/pryngles/)
 [![arXiv](http://img.shields.io/badge/arXiv-2004.14121-orange.svg?style=flat)](http://arxiv.org/abs/2004.14121)
 
 <!--
@@ -73,6 +76,8 @@ resolution and performance of the software for future releases.
 
 - **0.3.x versions**:
 
+  - Package has been compared against similar packages (good
+    agreement) but disclaimer has been done.
   - New version number scheme: 0.x.y (x-major, y-minor release),
     0.x.y.z (z test version).
   - Major corrections in diffuse formulae.
