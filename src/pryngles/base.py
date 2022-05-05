@@ -1651,7 +1651,9 @@ class RingedPlanet(object):
     def plotRingedPlanet(self,view='side',
                          visibility=True,axis=True,
                          showring=True,showborder=False,showactive=False,
-                         showfig=True,showstar=False):
+                         showfig=True,showstar=False,
+                         showtitle=True,bgdark=True
+                        ):
         """
         Plot three different views of a ringed planet: from the ecliptic, from the observer and 
         from the star.
@@ -1676,6 +1678,10 @@ class RingedPlanet(object):
 
             showfig=True: Show figures when method is called.  If False figures only will be displayed
                           if uset invoque them.
+                          
+            showtitle=True: Show title of the plot.
+            
+            bgdark=True: Dark background.
 
         Return:
 
@@ -1714,10 +1720,20 @@ class RingedPlanet(object):
         onlyrings=np.arange(self.Nrt)<(self.Nrt if showborder else self.Nr)
 
         #========================================
+        #Color of background
+        #========================================
+        if bgdark:
+            bgcolor='k'
+            fccolor='w'
+        else:
+            bgcolor='pink'
+            fccolor='k'
+            
+        #========================================
         #Plot from ecliptic
         #========================================
         fig1,axs=plt.subplots(1,figsize=(self._plot["fs"],self._plot["fs"]))
-        fig1.patch.set_facecolor('black')
+        fig1.patch.set_facecolor(bgcolor)
         ax=axs
         if view=='side':
             icond=1
@@ -1802,7 +1818,8 @@ class RingedPlanet(object):
                            alpha=self._plot["va"])
 
         #Title
-        ax.set_title(f"Ecliptic\n"+label,color='w',fontsize=self._plot["fn"],position=(0.5,-0.1),ha='center')
+        if showtitle:
+            ax.set_title(f"Ecliptic\n"+label,color=fccolor,fontsize=self._plot["fn"],position=(0.5,-0.1),ha='center')
 
         #Equatl axis
         values=[self.rps_ecl/self.Rp]
@@ -1814,10 +1831,10 @@ class RingedPlanet(object):
         if axis:
             xmin,xmax=ax.get_xlim()
             ymin,ymax=ax.get_ylim()
-            ax.axhline(0.0,xmin=0.5,xmax=1,color='w',lw=1,zorder=-100,alpha=0.3)
-            ax.axvline(0.0,ymin=0.5,ymax=1,color='w',lw=1,zorder=-100,alpha=0.3)
-            ax.text(1.0,0.5,xaxis,fontsize=10,alpha=0.5,transform=ax.transAxes,ha='right',color='w')
-            ax.text(0.5,1.0,yaxis,fontsize=10,alpha=0.5,transform=ax.transAxes,va='top',color='w')
+            ax.axhline(0.0,xmin=0.5,xmax=1,color=fccolor,lw=1,zorder=-100,alpha=0.3)
+            ax.axvline(0.0,ymin=0.5,ymax=1,color=fccolor,lw=1,zorder=-100,alpha=0.3)
+            ax.text(1.0,0.5,xaxis,fontsize=10,alpha=0.5,transform=ax.transAxes,ha='right',color=fccolor)
+            ax.text(0.5,1.0,yaxis,fontsize=10,alpha=0.5,transform=ax.transAxes,va='top',color=fccolor)
 
         ax.axis("off")
         #fig1.tight_layout()
@@ -1826,7 +1843,7 @@ class RingedPlanet(object):
         #Plot from observer
         #========================================
         fig2,axs=plt.subplots(1,figsize=(self._plot["fs"],self._plot["fs"]))
-        fig2.patch.set_facecolor('black')
+        fig2.patch.set_facecolor(bgcolor)
         ax=axs
 
         #Outside screen
@@ -1908,7 +1925,8 @@ class RingedPlanet(object):
             )
 
         #Title
-        ax.set_title(f"Observer\n"+label,color='w',fontsize=self._plot["fn"],position=(0.5,-0.1),ha='center')
+        if showtitle:
+            ax.set_title(f"Observer\n"+label,color=fccolor,fontsize=self._plot["fn"],position=(0.5,-0.1),ha='center')
 
         #Equatl axis
         values=[self.rps_obs/self.Rp]
@@ -1920,10 +1938,10 @@ class RingedPlanet(object):
         if axis:
             xmin,xmax=ax.get_xlim()
             ymin,ymax=ax.get_ylim()
-            ax.axhline(0.0,xmin=0.5,xmax=1,color='w',lw=1,zorder=-100,alpha=0.3)
-            ax.axvline(0.0,ymin=0.5,ymax=1,color='w',lw=1,zorder=-100,alpha=0.3)
-            ax.text(1.0,0.5,"$x_\mathrm{obs}$",fontsize=10,alpha=0.5,transform=ax.transAxes,ha='right',color='w')
-            ax.text(0.5,1.0,"$y_\mathrm{obs}$",fontsize=10,alpha=0.5,transform=ax.transAxes,va='top',color='w')
+            ax.axhline(0.0,xmin=0.5,xmax=1,color=fccolor,lw=1,zorder=-100,alpha=0.3)
+            ax.axvline(0.0,ymin=0.5,ymax=1,color=fccolor,lw=1,zorder=-100,alpha=0.3)
+            ax.text(1.0,0.5,"$x_\mathrm{obs}$",fontsize=10,alpha=0.5,transform=ax.transAxes,ha='right',color=fccolor)
+            ax.text(0.5,1.0,"$y_\mathrm{obs}$",fontsize=10,alpha=0.5,transform=ax.transAxes,va='top',color=fccolor)
 
         ax.axis("off")
 
@@ -1931,7 +1949,7 @@ class RingedPlanet(object):
         #Plot from star
         #========================================
         fig3,axs=plt.subplots(1,figsize=(self._plot["fs"],self._plot["fs"]))
-        fig3.patch.set_facecolor('black')
+        fig3.patch.set_facecolor(bgcolor)
         ax=axs
 
         #Rotate to stellar reference system
@@ -1964,7 +1982,8 @@ class RingedPlanet(object):
                        color=self._plot["ir"],s=self._plot["sr"],alpha=self._plot["da"])
 
         #Title
-        ax.set_title(f"Star\n"+label,color='w',fontsize=self._plot["fn"],position=(0.5,-0.1),ha='center')    
+        if showtitle:
+            ax.set_title(f"Star\n"+label,color=fccolor,fontsize=self._plot["fn"],position=(0.5,-0.1),ha='center')    
 
         #Equatl axis
         values=[rps_str/self.Rp]
@@ -1976,10 +1995,10 @@ class RingedPlanet(object):
         if axis:
             xmin,xmax=ax.get_xlim()
             ymin,ymax=ax.get_ylim()
-            ax.axhline(0.0,xmin=0.5,xmax=1,color='w',lw=1,zorder=-100,alpha=0.3)
-            ax.axvline(0.0,ymin=0.5,ymax=1,color='w',lw=1,zorder=-100,alpha=0.3)
-            ax.text(1.0,0.5,"$y_\mathrm{str}$",fontsize=10,alpha=0.5,transform=ax.transAxes,ha='right',color='w')
-            ax.text(0.5,1.0,"$z_\mathrm{str}$",fontsize=10,alpha=0.5,transform=ax.transAxes,va='top',color='w')    
+            ax.axhline(0.0,xmin=0.5,xmax=1,color=fccolor,lw=1,zorder=-100,alpha=0.3)
+            ax.axvline(0.0,ymin=0.5,ymax=1,color=fccolor,lw=1,zorder=-100,alpha=0.3)
+            ax.text(1.0,0.5,"$y_\mathrm{str}$",fontsize=10,alpha=0.5,transform=ax.transAxes,ha='right',color=fccolor)
+            ax.text(0.5,1.0,"$z_\mathrm{str}$",fontsize=10,alpha=0.5,transform=ax.transAxes,va='top',color=fccolor)    
         ax.axis("off")
 
         #========================================
@@ -2310,11 +2329,11 @@ class RingedPlanet(object):
         #Planet
         self.Rip=np.zeros(self.Np)
         cond=(self.ap)*(self.ip)
-        self.Rip[cond]=self.fluxips[cond]*self.ALps[cond] #*self.zetaps[cond]
+        self.Rip[cond]=self.fluxips[cond]*self.ALps[cond]*self.zetaps[cond]
         #Ring
         self.Rir=np.zeros(self.Nrt)
         cond=(self.ar)*(self.ir)
-        self.Rir[cond]=self.fluxirs[cond]*self.ALrs[cond] #self.zetars[cond]
+        self.Rir[cond]=self.fluxirs[cond]*self.ALrs[cond]*self.zetars[cond]
 
     def updateTransit(self):
         """
@@ -2374,19 +2393,31 @@ class RingedPlanet(object):
         activep=np.arange(self.Np)[cond]
         for i in activep:
             msp,rijs,etaijs,zetaijs=self._getFacetsOnSky(self.rps_equ[i],observing_body="planet")
-            #self.Sip[i]=((self.fluxirs[msp]*zetaijs)*(self.normp*self.afp/(4*mh.pi*rijs**2))*etaijs*self.zetaps[i]).sum()
-            self.Sip[i]=((self.fluxirs[msp])*(self.normp*self.afp/(4*mh.pi*rijs**2))*etaijs).sum()
+            self.Sip[i]=((self.fluxirs[msp]*zetaijs)*(self.normp*self.afp/(4*mh.pi*rijs**2))*etaijs*self.zetaps[i]).sum()
+            #self.Sip[i]=((self.fluxirs[msp])*(self.normp*self.afp/(4*mh.pi*rijs**2))*etaijs).sum()
         #Ring
         self.Sir=np.zeros(self.Nr)
         cond=(self.ar[self.irn])*(self.nr[self.irn])*(~self.tp[self.irn])*(~self.cp[self.irn])
         activer=np.arange(self.Nr)[cond]
         for i in activer:
             msr,rijs,etaijs,zetaijs=self._getFacetsOnSky(self.rrs_equ[i],observing_body="ring")
-            #self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
-            self.Sir[i]=((self.fluxips[msr])*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs).sum()
+            self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
+            #self.Sir[i]=((self.fluxips[msr])*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs).sum()
 RingedPlanet.__doc__=RingedPlanet_doc
 
 # #### Debugging
+
+# DEBUG PLOT RINGED PLANET
+"""
+P=RingedPlanet(Nr=1000,Np=1000,Nb=0,
+               i=30*DEG,a=0.1,e=0.0,
+               lambq=0*DEG,
+               physics=dict(AL=1,AS=1,taug=1))
+
+P.changeObserver([90*DEG,90*DEG])
+fig1,fig2,fig3=P.plotRingedPlanet(view='top',showfig=0,axis=False,showtitle=0,bgdark=1)
+fig1
+#""";
 
 # DEBUG DIFFUSE REFLECTED LIGHT
 """
@@ -2454,6 +2485,8 @@ Arp=Util.calcRingedPlanetArea(P.Rp,P.fi,P.fe,P.io,beta)
 Tcr=Arp*Io
 print(f"Theoretical ring transit depth: {Tcr}")
 #""";
+
+import batman
 
 # ### Class Extra
 

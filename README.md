@@ -81,6 +81,9 @@ resolution and performance of the software for future releases.
 
 - **0.3.x versions**:
 
+  - A water mark with version number included.
+  - Version is now available in the __version__ variable.
+  - Scattering formulae tested and verified.
   - Package has been compared against similar packages (good
     agreement) but disclaimer has been done.
   - New version number scheme: 0.x.y (x-major, y-minor release),
