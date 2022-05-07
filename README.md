@@ -85,7 +85,7 @@ spangles.
 To see how the surface of the planet and the rings looks like run:
 
 ```python
-	P.plotRingedPlanet()
+P.plotRingedPlanet()
 ```
 
 You may change the position of the star in the orbit and see how the
@@ -99,35 +99,35 @@ P.plotRingedPlanet()
 Below is the sequence of commands to produce your first light curve:
 
 ```python
-	P.changeObserver([90*DEG,30*DEG])
-	lamb_initial=
-	lambs=np.linspace(+0.0*DEG,+360*DEG,100)
-	Rps=[]
-	Rrs=[]
-	ts=[]
-	for lamb in lambs:
-	    P.changeStellarPosition(lamb)
-	    ts+=[P.t*P.CU.UT]
-	    P.updateOpticalFactors()
-	    P.updateDiffuseReflection()
-	    Rps+=[P.Rip.sum()]
-	    Rrs+=[P.Rir.sum()]
+P.changeObserver([90*DEG,30*DEG])
+lamb_initial=
+lambs=np.linspace(+0.0*DEG,+360*DEG,100)
+Rps=[]
+Rrs=[]
+ts=[]
+for lamb in lambs:
+    P.changeStellarPosition(lamb)
+    ts+=[P.t*P.CU.UT]
+    P.updateOpticalFactors()
+    P.updateDiffuseReflection()
+    Rps+=[P.Rip.sum()]
+    Rrs+=[P.Rir.sum()]
 
-	ts=np.array(ts)
-	Rps=np.array(Rps)
-	Rrs=np.array(Rrs)
+ts=np.array(ts)
+Rps=np.array(Rps)
+Rrs=np.array(Rrs)
 
-	#Plot
-	import matplotlib.pyplot as plt
-	fig=plt.figure()
-	ax=fig.gca()
-	ax.plot(ts,1e6*Rps,label="Planet")
-	ax.plot(ts,1e6*Rrs,label="Ring")
-	ax.plot(ts,1e6*(Rps+Rrs),label="Planet+Ring")
+#Plot
+import matplotlib.pyplot as plt
+fig=plt.figure()
+ax=fig.gca()
+ax.plot(ts,1e6*Rps,label="Planet")
+ax.plot(ts,1e6*Rrs,label="Ring")
+ax.plot(ts,1e6*(Rps+Rrs),label="Planet+Ring")
 
-	ax.set_xlabel("Time [days]")
-	ax.set_ylabel("Flux anomaly [ppm]")
-	ax.legend();
+ax.set_xlabel("Time [days]")
+ax.set_ylabel("Flux anomaly [ppm]")
+ax.legend();
 ```
 
 And *voilà!*.
