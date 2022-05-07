@@ -34,11 +34,14 @@ show:
 branch:
 	git checkout -b dev
 
+make rmbranch:
+	git branch -d dev
+
+dev:
+	git checkout dev
+
 master:
 	git checkout master
-
-make rmbranch:
-	git 
 
 ##################################################################
 #BASIC RULES
