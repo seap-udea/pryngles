@@ -37,7 +37,7 @@ branch:
 make rmbranch:
 	git branch -d dev
 
-dev:
+devbranch:
 	git checkout dev
 
 master:
