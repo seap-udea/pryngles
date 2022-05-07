@@ -40,12 +40,16 @@ For the science behind the model please refer to the following papers:
 
 > Zuluaga, J.I., Sucerquia, M. & Alvarado-Montes, J.A. (2022), **The
   bright side of the light curve: a general photometric model for
-  non-transiting exorings**, in preparation (2022).
+  non-transiting exorings**, submitted to MNRAS (2022).
 
 > Sucerquia, M., Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos,
   M., & Bayo, A. (2020), **Scattered light may reveal the existence of
   ringed exoplanets**. Monthly Notices of the Royal Astronomical
   Society: Letters, 496(1), L85-L90.
+
+<p align="center">
+<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/light-curve.png?raw=true" alt="Logo" width="300"/>
+</p>
 
 ## Download and install
 
@@ -58,6 +62,77 @@ To install it, just execute:
 
 If you prefer, you may download and install from the
 [sources](https://pypi.org/project/pryngles/#files).
+
+## Quick start
+
+Any calculation in `Pryngles` start by creating`(or instantianting) a
+single object, a ringed planet:
+
+```python
+	import pryngles as pr
+	P=pr.RingedPlanet(Rint=1.4,Rext=2.4,i=30*pr.DEG,a=0.5,e=0.2,Np=1000,Nr=1500)
+```
+
+By default the planet has the radius of Saturn and it orbits a
+solar-mass star.  In the example before the planet has a ring
+extending from 1.4 to 2.4 planetary radius which is inclined 30
+degrees with respect to the orbital plane. It has an orbit with
+semimajor axis of 0.5 and eccentricity 0.2.  To discretize the surface
+of the planet the program will use 1000 spangles or sequins (surface
+elements with a circular shape) and the ring using 1500
+spangles.
+
+To see how the surface of the planet and the rings looks like run:
+
+```python
+	P.plotRingedPlanet()
+```
+
+You may change the position of the star in the orbit and see how the
+appearance of the planet changes:
+
+```python
+	P.changeStellarPosition(45*DEG)
+	P.plotRingedPlanet()
+```
+
+Below is the sequence of commands to produce your first light curve:
+
+```python
+	P.changeObserver([90*DEG,30*DEG])
+	lamb_initial=
+	lambs=np.linspace(+0.0*DEG,+360*DEG,100)
+	Rps=[]
+	Rrs=[]
+	ts=[]
+	for lamb in lambs:
+	    P.changeStellarPosition(lamb)
+	    ts+=[P.t*P.CU.UT]
+	    P.updateOpticalFactors()
+	    P.updateDiffuseReflection()
+	    Rps+=[P.Rip.sum()]
+	    Rrs+=[P.Rir.sum()]
+
+	ts=np.array(ts)
+	Rps=np.array(Rps)
+	Rrs=np.array(Rrs)
+
+	#Plot
+	import matplotlib.pyplot as plt
+	fig=plt.figure()
+	ax=fig.gca()
+	ax.plot(ts,1e6*Rps,label="Planet")
+	ax.plot(ts,1e6*Rrs,label="Ring")
+	ax.plot(ts,1e6*(Rps+Rrs),label="Planet+Ring")
+
+	ax.set_xlabel("Time [days]")
+	ax.set_ylabel("Flux anomaly [ppm]")
+	ax.legend();
+```
+
+And *voilà!*.
+
+Let's have some `Pryngles`.
 
 ## Tutorial
 
