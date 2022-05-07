@@ -48,7 +48,7 @@ For the science behind the model please refer to the following papers:
   Society: Letters, 496(1), L85-L90.
 
 <p align="center">
-<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/light-curve.png?raw=true" alt="Logo" width="300"/>
+<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/light-curve.png?raw=true" alt="Logo""/>
 </p>
 
 ## Download and install
