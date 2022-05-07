@@ -25,6 +25,12 @@
 
 ##HEADER
 from pryngles import *
+get_ipython().run_line_magic('load_ext', 'autoreload')
+get_ipython().run_line_magic('autoreload', '2')
+
+# ## Package macros use across the modules
+
+from collections import OrderedDict as odict
 
 # ## Global constants
 # 
@@ -60,7 +66,7 @@ Routines included:
 """;
 
 class util(object):
-    def get_data(path):
+    def getData(path):
         """
         Get the full path of the `datafile` which is one of the datafiles provided with the package.
         
@@ -73,4 +79,8 @@ class util(object):
         """
         return os.path.join(__rootdir__,'data',path);
 util.__doc__=util_doc
+
+class PrynglesCommon(object):
+    def __str__(self):
+        return str(self.__dict__)    
 
