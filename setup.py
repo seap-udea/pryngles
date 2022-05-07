@@ -65,7 +65,7 @@ setuptools.setup(
     #DEPENDENCIES
     #######################################################################
     install_requires=[
-        'scipy','ipython','matplotlib','tqdm','dill','spiceypy','cmasher'
+        'rebound','scipy','ipython','matplotlib','tqdm','dill','spiceypy','cmasher',
     ],
 
     #######################################################################

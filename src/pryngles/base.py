@@ -2486,8 +2486,6 @@ Tcr=Arp*Io
 print(f"Theoretical ring transit depth: {Tcr}")
 #""";
 
-import batman
-
 # ### Class Extra
 
 class Extra(object):

@@ -211,6 +211,8 @@ def stop():
 #Modules to auto import
 #################################################################################
 from pryngles.base import *
+from pryngles._init import *
+from pryngles._base import *
 
 #################################################################################
 #Program test
