@@ -69,8 +69,8 @@ Any calculation in `Pryngles` start by creating`(or instantianting) a
 single object, a ringed planet:
 
 ```python
-  import pryngles as pr
-  P=pr.RingedPlanet(Rint=1.4,Rext=2.4,i=30*pr.DEG,a=0.5,e=0.2,Np=1000,Nr=1500)
+import pryngles as pr
+P=pr.RingedPlanet(Rint=1.4,Rext=2.4,i=30*pr.DEG,a=0.5,e=0.2,Np=1000,Nr=1500)
 ```
 
 By default the planet has the radius of Saturn and it orbits a
@@ -92,8 +92,8 @@ You may change the position of the star in the orbit and see how the
 appearance of the planet changes:
 
 ```python
-	P.changeStellarPosition(45*DEG)
-	P.plotRingedPlanet()
+P.changeStellarPosition(45*DEG)
+P.plotRingedPlanet()
 ```
 
 Below is the sequence of commands to produce your first light curve:
