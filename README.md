@@ -65,12 +65,20 @@ If you prefer, you may download and install from the
 
 ## Quick start
 
-Any calculation in `Pryngles` start by creating`(or instantianting) a
-single object, a ringed planet:
+Any calculation in `Pryngles` start by creating a planetary system:
 
 ```python
 import pryngles as pr
-P=pr.RingedPlanet(Rint=1.4,Rext=2.4,i=30*pr.DEG,a=0.5,e=0.2,Np=1000,Nr=1500)
+sys=System()
+```
+
+Then we add objects to the planetary system using:
+
+```python
+S=sys.addStar()
+P=sys.addPlanet(center=S,a=0.5,e=0.2,N=1000)
+R=sys.addRing(center=P,fi=1.4,fe=2.4,i=30*pr.deg,N=1500)
+O=sys.addObserver()
 ```
 
 By default the planet has the radius of Saturn and it orbits a
@@ -82,34 +90,41 @@ of the planet the program will use 1000 spangles or sequins (surface
 elements with a circular shape) and the ring using 1500
 spangles.
 
+Once the system is set we can *ensamble* a simulation, ie. creating an
+object able to produce a light-curve.
+
+```python
+RP=sys.ensambleSystem()
+```
+
 To see how the surface of the planet and the rings looks like run:
 
 ```python
-P.plotRingedPlanet()
+RP.plotRingedPlanet()
 ```
 
 You may change the position of the star in the orbit and see how the
 appearance of the planet changes:
 
 ```python
-P.changeStellarPosition(45*DEG)
-P.plotRingedPlanet()
+RP.changeStellarPosition(45*DEG)
+RP.plotRingedPlanet()
 ```
 
 Below is the sequence of commands to produce your first light curve:
 
 ```python
-P.changeObserver([90*DEG,30*DEG])
+RP.changeObserver([90*DEG,30*DEG])
 lamb_initial=
 lambs=np.linspace(+0.0*DEG,+360*DEG,100)
 Rps=[]
 Rrs=[]
 ts=[]
 for lamb in lambs:
-    P.changeStellarPosition(lamb)
+    RP.changeStellarPosition(lamb)
     ts+=[P.t*P.CU.UT]
-    P.updateOpticalFactors()
-    P.updateDiffuseReflection()
+    RP.updateOpticalFactors()
+    RP.updateDiffuseReflection()
     Rps+=[P.Rip.sum()]
     Rrs+=[P.Rir.sum()]
 
@@ -130,9 +145,7 @@ ax.set_ylabel("Flux anomaly [ppm]")
 ax.legend();
 ```
 
-And *voilà!*.
-
-Let's have some `Pryngles`.
+And *voilà! Let's have some `Pryngles`.
 
 ## Tutorial
 

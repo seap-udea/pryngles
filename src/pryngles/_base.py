@@ -410,7 +410,7 @@ class System(PrynglesCommon):
                 #Behavior
                 behavior=dict(shadows=True),
                 #Units
-                CU=CanonicalUnits(UL=sys.ul,UM=sys.um),
+                CU=CanonicalUnits(UL=self.ul,UM=self.um),
                 #Basic
                 Rstar=self.stars[0].R,Rplanet=self.planets[0].R,
                 Rint=self.rings[0].fi,Rext=self.rings[0].fe,i=self.rings[0].i,
