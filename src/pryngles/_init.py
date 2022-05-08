@@ -53,6 +53,10 @@ import numpy as np
 rad=180/np.pi
 deg=1/rad
 
+#Astronomical constants
+import rebound as rb
+from rebound.units import times_SI,lengths_SI,masses_SI
+
 # ## Clases
 
 util_doc="""

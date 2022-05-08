@@ -32,6 +32,10 @@ import unittest
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
+#Astronomical constants
+import rebound as rb
+from rebound.units import times_SI,lengths_SI,masses_SI
+
 class Test(unittest.TestCase):
     from pryngles import _base
 
@@ -56,14 +60,14 @@ def test_Object(self):
     obj._updateChilds("child1")
     obj._updateChilds("child2")
     self.assertEqual([obj.parent],["parent"],True)
-    print(obj.parent,obj.childs)
+    self.assertEqual(obj.childs,["child1","child2"],True)
 Test.test_Object=test_Object
-unittest.main(argv=['first-arg-is-ignored'],exit=False)
+#unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 def addStar(self,
                  hash=None,
                  center=None,
-                 m=1,R=1,
+                 m=1,R=Const.Rsun/Const.au,
                  Prot=0.1,
                  N=1000,
              star=None
@@ -79,7 +83,8 @@ def addStar(self,
     else:
         self.stars+=[Star(hash,center,m,R,Prot,N)]
     self._updateSystem()
-    
+    return self.stars[-1]
+
 class Star(Object):
     """
     Creates a star.
@@ -87,7 +92,7 @@ class Star(Object):
     def __init__(self,
                  hash=None,
                  center=None,
-                 m=1,R=1,
+                 m=1,R=Const.Rsun/Const.au,
                  Prot=0.1,
                  N=1000,
                 ):
@@ -123,7 +128,8 @@ class Star(Object):
 def addPlanet(self,
                  hash=None,
                  center=None,
-                 m=1e-3,R=0.1,
+                 m=masses_SI["msaturn"]/masses_SI["msun"],R=Const.Rsat/Const.au,
+                 a=0.2,e=0.6,
                  Prot=0.01,
                  N=1000,
              planet=None
@@ -131,9 +137,10 @@ def addPlanet(self,
     if planet is not None:
         self._addObject("planet","Planet",planet)
     else:
-        self.planets+=[Planet(hash,center,m,R,Prot,N)]
+        self.planets+=[Planet(hash,center,m,R,a,e,Prot,N)]
     self._updateSystem()
-    
+    return self.planets[-1]
+
 class Planet(Object):
     """
     Creates a star.
@@ -141,11 +148,12 @@ class Planet(Object):
     def __init__(self,
                  hash=None,
                  center=None,
-                 m=1e-3,R=0.1,
+                 m=masses_SI["msaturn"]/masses_SI["msun"],R=Const.Rsat/Const.au,
+                 a=0.2,e=0.6,
                  Prot=0.01,
                  N=1000,
                 ):
-        #List of arguments: hash,center,m,r,Prot,N
+        #List of arguments: hash,center,m,R,a,e,Prot,N
         #Hash of the object
         self.hash=hash
         self.type="Planet"
@@ -163,6 +171,10 @@ class Planet(Object):
 
         #Dynamic parameters
         self.Prot=Prot
+        
+        #Orbital properties
+        self.a=a
+        self.e=e
 
         #Sampling parameters
         self.N=N #number of spangles
@@ -179,14 +191,16 @@ def addRing(self,
                  hash=None,
                  center=None,
                  fi=1.5,fe=2.5,
+                 i=30*deg,
                  N=1000,
              ring=None
             ):
     if ring is not None:
         self._addObject("ring","Ring",ring)
     else:
-        self.rings+=[Ring(hash,center,fi,fe,N)]
+        self.rings+=[Ring(hash,center,fi,fe,i,N)]
     self._updateSystem()
+    return self.rings[-1]
     
 class Ring(Object):
     """
@@ -196,9 +210,10 @@ class Ring(Object):
                  hash=None,
                  center=None,
                  fi=1.5,fe=2.5,
+                 i=0,
                  N=1000,
                 ):
-        #List of arguments: hash,center,fi,fe,N
+        #List of arguments: hash,center,fi,fe,i,N
         #Hash of the object
         self.hash=hash
         self.type="Ring"
@@ -213,6 +228,9 @@ class Ring(Object):
         #Basic common properties
         self.fi=fi
         self.fe=fe
+        
+        #Orientation
+        self.i=i
 
         #Sampling parameters
         self.N=N #number of spangles
@@ -228,6 +246,49 @@ class Ring(Object):
         #Derivative properties
         self.ri=self.fi*self.center.R
         self.re=self.fe*self.center.R
+
+def addObserver(self,
+                 center=None,
+                 beta=90*deg,lamb=90*deg,
+             observer=None
+            ):
+    if observer is not None:
+        self._addObject("observer","Observer",observer)
+    else:
+        self.observers+=[Observer(center,beta,lamb)]
+    self._updateSystem()
+    return self.observers[-1]
+    
+class Observer(Object):
+    """
+    Creates a star.
+    """
+    def __init__(self,
+                 center=None,
+                 beta=90*deg,lamb=90*deg,
+                ):
+        #List of arguments: center,beta,lamb
+        #Hash of the object
+        self.hash=hash
+        self.type="Observer"
+
+        #Center of the system (object)
+        self.center=center
+        if self.center is not None:
+            self.center._updateChilds(self)
+            self._updateParent(self.center)
+
+        #Basic common properties
+        self.beta=beta
+        self.lamb=lamb
+
+        #Update properties
+        self.updateObject(**self.__dict__)
+        
+    def updateObject(self,**props):
+        self.__dict__.update(props)
+        self._updateChilds()
+        self._updateParent()
 
 System_doc="""
 Creates a planetary system.
@@ -249,6 +310,8 @@ Initialization (primary) attributes:
         Planets in the system.
     rings = None: 
         Rings in the system.
+    observers = None: 
+        Observers in the system.
            
         NOTE: Objects are provided either by description or as an object. Those attributes can be lists or 
               a single value.
@@ -260,33 +323,45 @@ Initialization (primary) attributes:
 Other Public (secondary) attributes:
 
     N: Number of objects in the system.
+    No: Numeber of observers
 
 Important private attributes:
 
     _sim: Rebound simulation object.
 """;
 
+import rebound as rb
 class System(PrynglesCommon):
     
     def __init__(self,
-                 units=['Msun','au','yr'],
-                 stars=None,planets=None,rings=None,
+                 units=['au','yr','msun'],
+                 stars=None,planets=None,rings=None,observers=None,
                  rebound=True
                 ):
+        
         #Initialize rebound
         self.units=units
+        self._sim=rb.Simulation()
+        self._sim.units=self.units
+        self._ul,self._ut,self._um=self.units
+        self.G=self._sim.G
+        self.ul=rb.units.convert_length(1,self._ul,"m")
+        self.um=rb.units.convert_mass(1,self._um,"kg")
+        self.GSI=rb.units.convert_G(["m","s","kg"])
+        self.ut=np.sqrt(self.ul**3/(self.um*self.GSI))
 
         #Add components
         self._list2Objects("stars","Star",stars)
         self._list2Objects("planets","Planet",planets)
         self._list2Objects("rings","Ring",rings)
+        self._list2Objects("observers","Observer",observers)
 
         #Behavior
         self.rebound=True
         
         #Update system
         self._updateSystem()
-    
+        
     """
     #Freezer
     def addStar(self,star=None):
@@ -301,7 +376,6 @@ class System(PrynglesCommon):
         self._addObject("ring","Ring",ring)
         self._updateSystem()
     """
-
     def _addObject(self,kind,objclass,obj):
         error=""
         try:
@@ -311,13 +385,11 @@ class System(PrynglesCommon):
             if cond:
                 error=f"You cannot add a {objclass} with a {obj.type} object"
         except:
-            #exec(f"self.{kind}s+=self.{kind}s+[{objclass}(**obj)] if self.{kind}s[0] is not None else [{objclass}(**{kind})]")
             exec(f"self.{kind}s+=self.{kind}s+[obj] if len(self.{kind}s)!=0 else [obj]")
         if error!="":
             exec(f"self.{kind}s.pop()")
             raise AssertionError(error)
         self._updateSystem()
-        
     
     def _updateSystem(self):
         #Count components
@@ -325,6 +397,49 @@ class System(PrynglesCommon):
         for obj in "stars","planets","rings":
             exec(f"self.N{obj}=len(self.{obj})")
         self.N=self.Nstars+self.Nplanets+self.Nrings
+        self.No=len(self.observers)
+        
+    def ensambleSystem(self):
+        #Ensamble system
+        #--CONSISTENCY--
+        if self.Nstars==1 and self.Nplanets==1 and self.Nrings==1:
+            #Create ringed planet
+            self.G=self._sim.G
+            
+            self._ringedplanet=dict(
+                #Behavior
+                behavior=dict(shadows=True),
+                #Units
+                CU=CanonicalUnits(UL=sys.ul,UM=sys.um),
+                #Basic
+                Rstar=self.stars[0].R,Rplanet=self.planets[0].R,
+                Rint=self.rings[0].fi,Rext=self.rings[0].fe,i=self.rings[0].i,
+                a=self.planets[0].a,e=self.planets[0].e,
+                #Orbit 
+                Mstar=1,x=0,lambq=0,t0=0,kepler=False,
+                #Observer
+                eobs_ecl=np.array([self.observers[0].lamb,self.observers[0].beta]),
+                #Sampling
+                Np=self.planets[0].N,Nr=self.rings[0].N,Nb=100,Ns=30,
+                #Physical properties
+                physics=dict(
+                    #Albedos
+                    AS=0.5,AL=0.5,
+                    #Ring geometrical opacity
+                    taug=1.0, #Geometrical opacity
+                    diffeff=1.0, #Diffraction efficiency
+                    #Law of diffuse reflection on ring surface
+                    reflection_rings_law=lambda x,y:x,
+                    #Observations wavelength
+                    wavelength=550e-9,
+                    #Ring particle propeties (see French & Nicholson, 2000)
+                    particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
+                    #Stellar limb darkening
+                    limb_cs=[0.6550],
+                )
+            )
+            self.RP=RingedPlanet(**self._ringedplanet)
+            return self.RP
 
     def _list2Objects(self,attr,kind,comps):
         if comps is None:
@@ -344,5 +459,6 @@ class System(PrynglesCommon):
 System.addStar=addStar
 System.addPlanet=addPlanet
 System.addRing=addRing
+System.addObserver=addObserver
 System.__doc__=System_doc
 
