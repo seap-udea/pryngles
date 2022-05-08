@@ -173,6 +173,11 @@ resolution and performance of the software for future releases.
 
 ## What's new
 
+- **0.4.x versions**:
+
+  - A new model to create and populate planetary system has been
+    implemented.
+
 - **0.3.x versions**:
 
   - A water mark with version number included.
