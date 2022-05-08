@@ -69,7 +69,7 @@ Any calculation in `Pryngles` start by creating a planetary system:
 
 ```python
 import pryngles as pr
-sys=System()
+sys=pr.System()
 ```
 
 Then we add objects to the planetary system using:
@@ -107,16 +107,16 @@ You may change the position of the star in the orbit and see how the
 appearance of the planet changes:
 
 ```python
-RP.changeStellarPosition(45*DEG)
+RP.changeStellarPosition(45*pr.deg)
 RP.plotRingedPlanet()
 ```
 
 Below is the sequence of commands to produce your first light curve:
 
 ```python
-RP.changeObserver([90*DEG,30*DEG])
+RP.changeObserver([90*pr.deg,30*pr.deg])
 lamb_initial=
-lambs=np.linspace(+0.0*DEG,+360*DEG,100)
+lambs=np.linspace(+0.0*pr.deg,+360*pr.deg,100)
 Rps=[]
 Rrs=[]
 ts=[]
@@ -145,7 +145,11 @@ ax.set_ylabel("Flux anomaly [ppm]")
 ax.legend();
 ```
 
-And *voilà! Let's have some `Pryngles`.
+And *voilà*! 
+
+
+
+Let's have some `Pryngles`.
 
 ## Tutorial
 
