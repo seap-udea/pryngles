@@ -116,18 +116,17 @@ Below is the sequence of commands to produce your first light curve:
 ```python
 import numpy as np
 RP.changeObserver([90*pr.deg,30*pr.deg])
-lamb_initial=
 lambs=np.linspace(+0.0*pr.deg,+360*pr.deg,100)
 Rps=[]
 Rrs=[]
 ts=[]
 for lamb in lambs:
     RP.changeStellarPosition(lamb)
-    ts+=[P.t*P.CU.UT]
+    ts+=[RP.t*RP.CU.UT]
     RP.updateOpticalFactors()
     RP.updateDiffuseReflection()
-    Rps+=[P.Rip.sum()]
-    Rrs+=[P.Rir.sum()]
+    Rps+=[RP.Rip.sum()]
+    Rrs+=[RP.Rir.sum()]
 
 ts=np.array(ts)
 Rps=np.array(Rps)
@@ -148,7 +147,9 @@ ax.legend();
 
 And *voilà*! 
 
-
+<p align="center">
+<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/example-light-curve.png?raw=true" alt="Logo" width="300"/>
+</p>
 
 Let's have some `Pryngles`.
 
