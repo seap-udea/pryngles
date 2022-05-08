@@ -148,7 +148,7 @@ ax.legend();
 And *voilà*! 
 
 <p align="center">
-<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/example-light-curve.png?raw=true" alt="Logo" width="300"/>
+<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/example-light-curve.png?raw=true" alt="Light curve"/>
 </p>
 
 Let's have some `Pryngles`.
