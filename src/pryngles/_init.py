@@ -25,6 +25,10 @@
 
 ##HEADER
 from pryngles import *
+
+import sys
+IN_JUPYTER='ipykernel' in sys.modules
+
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
@@ -36,7 +40,6 @@ import sys
 import numpy as np
 import pkg_resources
 from rebound import units
-from rebound.units import times_SI as TIMES_SI,                          lengths_SI as LENGTHS_SI,                          masses_SI as MASSES_SI
 
 # ## Global constants
 # 
@@ -61,6 +64,9 @@ DEG=1/RAD
 
 #Physical constants
 GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
+
+#Units
+from rebound.units import times_SI as TIMES_SI,                          lengths_SI as LENGTHS_SI,                          masses_SI as MASSES_SI
 
 # ## Clases
 

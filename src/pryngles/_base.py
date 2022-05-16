@@ -33,6 +33,9 @@ import unittest
 import string
 import random
 
+import sys
+IN_JUPYTER='ipykernel' in sys.modules
+
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
@@ -1154,7 +1157,7 @@ if IN_JUPYTER:
         print(max(1e6*(Rps+Rrs)))
         
         #Plot
-        """
+        #"""
         fig=plt.figure()
         ax=fig.gca()    
         ax.plot(ts,1e6*Rps,label="Planet")
@@ -1165,9 +1168,9 @@ if IN_JUPYTER:
         ax.set_ylabel("Flux anomaly [ppm]")
 
         ax.legend();
-        """
+        #"""
         
-        """
+        #"""
         #LEGACY
         attributes=dict(
             #Behavior
@@ -1238,7 +1241,7 @@ if IN_JUPYTER:
         ax.set_ylabel("Flux anomaly [ppm]")
 
         ax.legend();
-        """;
+        #""";
         
         """
         self.assertEqual(np.isclose([P.physics.wrot],
