@@ -1,6 +1,44 @@
 To Do List
 ==========
 
+- Animation command using animated gif instead of ffmpeg.
+
+- Make code Python PEP8 compliant:
+  https://ellibrodepython.com/python-pep8#:~:text=La%20PEP8%20es%20una%20gu%C3%ADa,que%20una%20l%C3%ADnea%20debe%20tener.
+  https://peps.python.org/pep-0008/
+
+- Use snake_case naming convention.
+
+- Use standard docstring conventions:
+  https://peps.python.org/pep-0257/
+  https://numpydoc.readthedocs.io/en/latest/format.html
+  https://www.datacamp.com/tutorial/docstrings-python
+
+- Create an interact notebook to show orientation of the ring.
+
+- Include units transformation inside system class for providing
+  properties.
+
+- Include photomeric filters, http://svo2.cab.inta-csic.es/theory/fps/
+
+- Generate actual light curves including detector properties.
+
+- Create a spangle class to describe the properties of each spangle.
+
+- Create routines for creating the whole light-curve.
+
+- Create interfaces for the components of the package that can be
+  modified by the user: physics of scattering, physics of
+  transmission.
+
+  Example. scattering(lambda,eta,Ap): indicates the multiplying factors
+  that apply on the amount of light received from direction lambda,
+  outgoing in direction eta and at azimuth Ap.
+
+- Incorporate wavelength dependent limb-darkening coefficients.
+
+- Include forward scattering.
+
 - Plot returns information to render a photorealistic image of the
   planet.  Returns the value of each point in a plot.
 
@@ -11,7 +49,7 @@ To Do List
 Future version [1.0]
 ====================
 
-- REBOUND integration.
+- [PARTIALLY DONE] REBOUND integration.
 
 Done
 ====
@@ -57,3 +95,6 @@ Version management
 - All test versions have a trailing zero.  Thus for instance: if we
   are in version 0.2.1.2, the corresponding test version will ve
   0.2.0.3.
+
+- New version number scheme: 0.x.y (x-major, y-minor release), 0.x.y.z
+  (z test version).

@@ -31,31 +31,36 @@ get_ipython().run_line_magic('autoreload', '2')
 # ## Package macros use across the modules
 
 from collections import OrderedDict as odict
+import os
+import sys
+import numpy as np
+import pkg_resources
+from rebound import units
+from rebound.units import times_SI as TIMES_SI,                          lengths_SI as LENGTHS_SI,                          masses_SI as MASSES_SI
 
 # ## Global constants
 # 
 # All global constants in Pryngles have a capital name and a lowercase version in the class util.
 
 #Root directory
-import os
 try:
     __rootdir__=os.path.abspath(os.path.dirname(__file__))
 except:
     import IPython
     __rootdir__=os.path.abspath('')
 
+#Is this Jupyter
+IN_JUPYTER='ipykernel' in sys.modules
+    
 #Version
-import pkg_resources
 __version__=pkg_resources.require('pryngles')[0].version
 
 #Mathematical constants
-import numpy as np
-rad=180/np.pi
-deg=1/rad
+RAD=180/np.pi
+DEG=1/RAD
 
-#Astronomical constants
-import rebound as rb
-from rebound.units import times_SI,lengths_SI,masses_SI
+#Physical constants
+GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
 
 # ## Clases
 
@@ -70,7 +75,7 @@ Routines included:
 """;
 
 class util(object):
-    def getData(path):
+    def get_data(path):
         """
         Get the full path of the `datafile` which is one of the datafiles provided with the package.
         

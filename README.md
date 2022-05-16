@@ -122,7 +122,7 @@ Rrs=[]
 ts=[]
 for lamb in lambs:
     RP.changeStellarPosition(lamb)
-    ts+=[RP.t*RP.CU.UT]
+    ts+=[RP.t*sys.ut/pr.Const.days]
     RP.updateOpticalFactors()
     RP.updateDiffuseReflection()
     Rps+=[RP.Rip.sum()]
