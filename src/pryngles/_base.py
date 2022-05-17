@@ -43,7 +43,7 @@ get_ipython().run_line_magic('autoreload', '2')
 
 """DEVELOPERS:
 
-    _props is a class intended to treat the basic properties of an object 
+    Props is a class intended to treat the basic properties of an object 
     as an object and not as a dictionary.
     
     If you add another set of attributes just add the name of the attribute
@@ -54,7 +54,7 @@ get_ipython().run_line_magic('autoreload', '2')
         
 """
 _PROP_TYPES=["orbit","physics","optics"]
-class _props():
+class Props():
     def __init__(self,**pars):
         self.__dict__.update(**pars)
     def __str__(self):
@@ -79,16 +79,16 @@ Initialization attributes:
     primary: Body
         Object in the center of the orbit of this body.
 
-    orbit: _props
+    orbit: Props
         Object with the orbital properties of the body (eg. orbit.m is the mass)
         see each specific Body definition for attributes.
         orbit must be compatible with rebound.
 
-    physics: _props
+    physics: Props
         Object with the physical properties of the body (eg. physics.radius)
         see each specific Body definition for attributes.
 
-    optics: _props
+    optics: Props
         Object with the optical properties of the body (eg. physics.lamb_albedo)
         see each specific Body definition for attributes.
 
@@ -136,9 +136,9 @@ class Body(PrynglesCommon):
             if not isinstance(self.primary,Body):
                 raise AssertionError(f"Primary is not a valid Object")            
         
-        self.orbit=_props(**new_orbit)
-        self.physics=_props(**new_physics)
-        self.optics=_props(**new_optics)
+        self.orbit=Props(**new_orbit)
+        self.physics=Props(**new_physics)
+        self.optics=Props(**new_optics)
         if 'hash' in self.orbit.__dict__:
             self.hash=self.orbit.hash
         else:
@@ -148,9 +148,9 @@ class Body(PrynglesCommon):
         """Update properties of the Body.
         
         Parametes:
-            orbit: _props                
-            physics: _props
-            optics: _props
+            orbit: Props                
+            physics: Props
+            optics: Props
                 Properties to update. The current object orbit is updated with new 
                 values provided in this new object
                 
@@ -163,7 +163,7 @@ class Body(PrynglesCommon):
             if prop in props and type(props[prop]) is dict:
                 new_prop=self.__dict__[prop].__dict__
                 new_prop.update(**props[prop])
-                props[prop]=_props(**new_prop)
+                props[prop]=Props(**new_prop)
         
         self.__dict__.update(props)
         self._update_childs()
@@ -190,7 +190,7 @@ Body.__doc__=Body_doc
 
 # Default classes are classes that contains the default value of the main properties of the corresponding class.
 
-class _StarDefaults(object):
+class StarDefaults(object):
     """
     These are the default attributes for bodies of the kind 'Star'.
     
@@ -248,14 +248,14 @@ class Star(Body):
     """
     def __init__(self,
                  primary=None,
-                 orbit=_StarDefaults.orbit,
-                 physics=_StarDefaults.physics,
-                 optics=_StarDefaults.optics
+                 orbit=StarDefaults.orbit,
+                 physics=StarDefaults.physics,
+                 optics=StarDefaults.optics
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,_StarDefaults,"Star",primary,orbit,physics,optics)
+        Body.__init__(self,StarDefaults,"Star",primary,orbit,physics,optics)
 
         #Check primary
         if self.primary is not None:
@@ -274,7 +274,7 @@ class Star(Body):
         self.physics.wrot=2*np.pi/self.physics.prot
 
 
-class _PlanetDefaults(object):
+class PlanetDefaults(object):
     """
     These are the default attributes for bodies of the kind 'Planet'.
     
@@ -334,14 +334,14 @@ class Planet(Body):
     """
     def __init__(self,
                  primary=None,
-                 orbit=_PlanetDefaults.orbit,
-                 physics=_PlanetDefaults.physics,
-                 optics=_PlanetDefaults.optics
+                 orbit=PlanetDefaults.orbit,
+                 physics=PlanetDefaults.physics,
+                 optics=PlanetDefaults.optics
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,_PlanetDefaults,"Planet",primary,orbit,physics,optics)
+        Body.__init__(self,PlanetDefaults,"Planet",primary,orbit,physics,optics)
         
         #Check primary
         if self.primary is None:
@@ -360,7 +360,7 @@ class Planet(Body):
         self.physics.wrot=2*np.pi/self.physics.prot
 
 
-class _RingDefaults(object):
+class RingDefaults(object):
     """
     These are the default attributes for bodies of the kind 'Ring'.
     
@@ -417,14 +417,14 @@ class Ring(Body):
     """
     def __init__(self,
                  primary=None,
-                 orbit=_RingDefaults.orbit,
-                 physics=_RingDefaults.physics,
-                 optics=_RingDefaults.optics
+                 orbit=RingDefaults.orbit,
+                 physics=RingDefaults.physics,
+                 optics=RingDefaults.optics
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,_RingDefaults,"Ring",primary,orbit,physics,optics)
+        Body.__init__(self,RingDefaults,"Ring",primary,orbit,physics,optics)
         
         #Check primary
         if self.primary is None:
@@ -444,7 +444,7 @@ class Ring(Body):
         self.physics.re=self.physics.fe*self.primary.physics.radius
 
 
-class _ObserverDefaults(object):
+class ObserverDefaults(object):
     """
     These are the default attributes for bodies of the kind 'Observer'.
     
@@ -507,14 +507,14 @@ class Observer(Body):
     """
     def __init__(self,
                  primary=None,
-                 orbit=_ObserverDefaults.orbit,
-                 physics=_ObserverDefaults.physics,
-                 optics=_ObserverDefaults.optics
+                 orbit=ObserverDefaults.orbit,
+                 physics=ObserverDefaults.physics,
+                 optics=ObserverDefaults.optics
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,_ObserverDefaults,"Observer",primary,orbit,physics,optics)
+        Body.__init__(self,ObserverDefaults,"Observer",primary,orbit,physics,optics)
         
         #Check if observer is attached to any object
         self.primary=primary
@@ -721,18 +721,18 @@ def add(self,kind=None,primary=None,orbit=None,physics=None,optics=None):
     """
     #This code generalize the procedure:
     if orbit is None:
-        orbit = _StarDefaults.orbit.copy()
+        orbit = StarDefaults.orbit.copy()
     if physics is None:
-        physics = _StarDefaults.physics.copy()
+        physics = StarDefaults.physics.copy()
     if optics is None:
-        optics = _StarDefaults.optics.copy()
+        optics = StarDefaults.optics.copy()
     """
     pdict=dict()
     plist=[]
     for prop in _PROP_TYPES:
         exec(f"{prop}={prop}",locals(),pdict)
         if pdict[prop] is None:
-            exec(f"{prop}=_{kind}Defaults.{prop}.copy()",globals(),pdict)
+            exec(f"{prop}={kind}Defaults.{prop}.copy()",globals(),pdict)
         plist+=[pdict[prop]]
 
     """
