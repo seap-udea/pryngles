@@ -159,8 +159,7 @@ We have prepared several `Jupyter` tutorials to guide you in the usage
 of the package. The tutorials evolve as the package is being optimized.
 
 - **Quickstart**.  In this tutorial you will learn the basics about the package. 
- 
-  [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-exploration.ipynb)|[Google Colab]](https://bit.ly/pryngles-tutorial-exploration).
+  [Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-exploration.ipynb), [Google Colab](https://bit.ly/pryngles-tutorial-exploration).
 
 ## Disclaimer
 
