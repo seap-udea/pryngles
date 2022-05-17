@@ -735,14 +735,13 @@ class System(PrynglesCommon):
                  rebound=False
                 ):
         
-        #Initialize rebound
-        self.units=units
-        self._update_units()
-        
         #Behavior
         self.rebound=rebound
         self.rebound=False # Rebound not implemented yet
-        self._update_rebound()
+        self._update_rebound(units)
+
+        #Initialize rebound
+        self.update_units(units)
         
         #Initialize list of components
         self.hashes=dict()
@@ -788,21 +787,22 @@ class System(PrynglesCommon):
             self.__dict__[f"n{lobj}s"]=pdict[obj]
         self.nbodies=self.nstars+self.nplanets+self.nrings
         
-    def _update_units(self):
+    def update_units(self,units):
         """Update units of the system
         """
+        self.units=units
         self._ul,self._um,self._ut=self.units
+        self._sim.units=self.units
         self.ul=rb.units.convert_length(1,self._ul,"m")
         self.um=rb.units.convert_mass(1,self._um,"kg")
-        self.ut=np.sqrt(self.ul**3/(self.um*GSI))
+        self.ut=np.sqrt(self._sim.G*self.ul**3/(self.um*GSI))
 
-    def _update_rebound(self):
+    def _update_rebound(self,units):
         """Crteate and update rebound simulation object
         """
         #Units initialization
         self._sim=rb.Simulation()
-        self._sim.units=self.units
-        self.G=self._sim.G
+        self._sim.units=units
 
 System.__doc__=System_doc
 
@@ -811,12 +811,12 @@ if IN_JUPYTER:
         
         sys=System()
         print(sys.nbodies)
-        print(sys.G)
+        print(sys._sim.G)
         print(sys.ul,sys.um,sys.ut)
         
         sys=System(units=['m','kg','s'])
         print(sys.nbodies)
-        print(sys.G)
+        print(sys._sim.G)
         print(sys.ul,sys.um,sys.ut)
         
         S=Star()
@@ -1099,7 +1099,7 @@ def ensamble_system(self):
                 #Ring particle propeties (see French & Nicholson, 2000)
                 particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
                 #Stellar limb darkening
-                limb_cs=[0.6550],
+                limb_cs=self.stars[0].optics.limb_coeffs,
             )
         )
         self.RP=RingedPlanet(**self._ringedplanet)

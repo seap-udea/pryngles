@@ -175,6 +175,10 @@ resolution and performance of the software for future releases.
 
 - **0.4.x versions**:
 
+  - Physical and astronomical constants included.
+
+  - A new tutorial was included.
+
   - A new model to create and populate planetary system has been
     implemented.
 

@@ -58,15 +58,29 @@ IN_JUPYTER='ipykernel' in sys.modules
 #Version
 __version__=pkg_resources.require('pryngles')[0].version
 
+class Consts(object):pass
+
+#Constants and units
 #Mathematical constants
 RAD=180/np.pi
 DEG=1/RAD
+Consts.rad=RAD
+Consts.deg=DEG
 
 #Physical constants
 GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
 
-#Units
-from rebound.units import times_SI as TIMES_SI,                          lengths_SI as LENGTHS_SI,                          masses_SI as MASSES_SI
+from rebound import units
+for const in "times","lengths","masses":
+    values=eval(f"units.{const}_SI.copy()")
+    for key in values:
+        exec(f"Consts.{key}=values[key]")
+
+#Size of reference objects 
+Consts.rearth=6378.137e3 #m, volumetric mean radius
+Consts.rsun=695700e3 #m, nominal solar radius
+Consts.rjupiter=71492e3 #m, equatorial radius
+Consts.rsaturn=60268e3 #m
 
 # ## Clases
 
