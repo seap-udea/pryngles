@@ -33,7 +33,7 @@ non-transiting exoplanets.
 This is an example of what can be done with `Pryngles`:
 
 <p align="center">
-<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/ecliptic-i_3.0e+01-lambobs_9.0e+01-betaobs_9.0e+01.gif?raw=true" alt="Animation" width="400"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/ecliptic-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif" alt="Animation" width="400"/>
 </p>
 
 For the science behind the model please refer to the following papers:
