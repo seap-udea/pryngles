@@ -48,7 +48,7 @@ For the science behind the model please refer to the following papers:
   Society: Letters, 496(1), L85-L90.
 
 <p align="center">
-<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/light-curve.png?raw=true" alt="Logo""/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
 </p>
 
 ## Download and install
@@ -161,7 +161,7 @@ ax.legend();
 And *voilà*! 
 
 <p align="center">
-<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/example-light-curve.png?raw=true" alt="Light curve"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/example-light-curve.png" alt="Light curve"/>
 </p>
 
 Let's have some `Pryngles`.
@@ -177,7 +177,7 @@ of the package. The tutorials evolve as the package is being optimized.
 ## Disclaimer
 
 <p align="center">
-<img src="https://github.com/seap-udea/pryngles-public/blob/master/gallery/disco-planet.jpeg?raw=true" alt="Logo" width="150"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/disco-planet.jpeg" alt="Logo" width="150"/>
 </p>
 
 This is the *disco* version of Pryngles.  We are improving the
