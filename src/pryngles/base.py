@@ -1711,7 +1711,6 @@ class RingedPlanet(object):
                 ci='r',#Color of invisible points
                 si=3.0,#Size of invisible points         
         """
-        plt.close("all")
         fig1=fig2=fig3=None
         if not showfig:
             plt.ioff()
@@ -2005,8 +2004,13 @@ class RingedPlanet(object):
         #Common
         #========================================
         if not showfig:
+            #This work in Jupyter
             plt.ion()
-            plt.close("all")
+            #This is required for Google Colab
+            plt.close(fig1)
+            plt.close(fig2)
+            plt.close(fig3)
+            
         return fig1,fig2,fig3
 
     def animateRingedPlanet(self,nframes=1,

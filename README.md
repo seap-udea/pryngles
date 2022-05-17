@@ -33,23 +33,23 @@ non-transiting exoplanets.
 This is an example of what can be done with `Pryngles`:
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/ecliptic-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif" alt="Animation" width="400"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
 </p>
+
+<!--<p align="center">
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/ecliptic-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif" alt="Animation" width="400"/>
+</p>-->
 
 For the science behind the model please refer to the following papers:
 
 > Zuluaga, J.I., Sucerquia, M. & Alvarado-Montes, J.A. (2022), **The
   bright side of the light curve: a general photometric model for
-  non-transiting exorings**, submitted to MNRAS (2022).
+  non-transiting exorings**, submitted (2022).
 
 > Sucerquia, M., Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos,
   M., & Bayo, A. (2020), **Scattered light may reveal the existence of
   ringed exoplanets**. Monthly Notices of the Royal Astronomical
   Society: Letters, 496(1), L85-L90.
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
-</p>
 
 ## Download and install
 
@@ -186,6 +186,8 @@ resolution and performance of the software for future releases.
 ## What's new
 
 - **0.5.x versions**:
+
+  - Preview method plotRingedPlanet modified to work under Google Colab.
 
   - Physical and astronomical constants included.
 

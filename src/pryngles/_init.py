@@ -52,11 +52,10 @@ except:
     import IPython
     __rootdir__=os.path.abspath('')
 
-#Is this Jupyter
-IN_JUPYTER='ipykernel' in sys.modules
-    
 #Version
 __version__=pkg_resources.require('pryngles')[0].version
+
+# ### Mathematical and physical constants
 
 class Consts(object):pass
 
