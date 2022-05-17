@@ -33,12 +33,8 @@ non-transiting exoplanets.
 This is an example of what can be done with `Pryngles`:
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
-</p>
-
-<!--<p align="center">
 <img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/ecliptic-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif" alt="Animation" width="400"/>
-</p>-->
+</p>
 
 For the science behind the model please refer to the following papers:
 
@@ -51,13 +47,17 @@ For the science behind the model please refer to the following papers:
   ringed exoplanets**. Monthly Notices of the Royal Astronomical
   Society: Letters, 496(1), L85-L90.
 
+<p align="center">
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
+</p>
+
 ## Download and install
 
 `pryngles` is available in `PyPI`, https://pypi.org/project/pryngles/.
 To install it, just execute:
 
 ```
-   pip install pryngles
+   pip install -U pryngles
 ```
 
 If you prefer, you may download and install from the
@@ -81,7 +81,6 @@ sys=pr.System()
 Then we add objects to the planetary system using:
 
 ```python
-sys=pr.System()
 S=sys.add(kind="Star",
           physics=dict(radius=Consts.rsun/sys.ul),
           optics=dict(limb_coeffs=[0.65])
