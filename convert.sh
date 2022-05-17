@@ -96,7 +96,7 @@ function convert()
 	#(tail -n $elines /tmp/convert.py | head -n $rlines) > $test
 	echo -e "\tCreating test file $test..."
     fi
-	
+    
 }
 
 for notebook in $@

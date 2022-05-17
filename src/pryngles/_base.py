@@ -34,7 +34,7 @@ import string
 import random
 
 import sys
-IN_JUPYTER='ipykernel' in sys.modules
+IN_JUPYTER_TEST='ipykernel' in sys.modules
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
@@ -60,7 +60,7 @@ class _props():
     def __str__(self):
         return str(self.__dict__)
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_props(self):
         p=_props(m=1,a=2,b=3)
         self.assertEqual([p.m,p.a,p.b],[1,2,3],[True]*3)
@@ -191,7 +191,7 @@ class Body(PrynglesCommon):
             
 Body.__doc__=Body_doc
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_body(self):
         class defaults(object):
             orbit=dict()
@@ -303,7 +303,7 @@ class Star(Body):
         #Here place the commands to update this kind of body
         self.physics.wrot=2*np.pi/self.physics.prot
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_star(self):
         S=Star()
         print(S.physics)
@@ -410,7 +410,7 @@ class Planet(Body):
         #Here place the commands to update this kind of body
         self.physics.wrot=2*np.pi/self.physics.prot
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_planet(self):
         S=Star()
 
@@ -521,7 +521,7 @@ class Ring(Body):
         self.physics.ri=self.physics.fi*self.primary.physics.radius
         self.physics.re=self.physics.fe*self.primary.physics.radius
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_planet(self):
         S=Star(physics=dict(radius=3.0))
 
@@ -638,7 +638,7 @@ class Observer(Body):
         #Here place the commands to update this kind of body
         self.optics.inclination = 90*DEG - self.optics.beta
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_observer(self):
         O=Observer()
         print(O.optics)
@@ -806,7 +806,7 @@ class System(PrynglesCommon):
 
 System.__doc__=System_doc
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_system_init(self):
         
         sys=System()
@@ -934,7 +934,7 @@ def add(self,kind=None,primary=None,orbit=None,physics=None,optics=None):
     
 System.add=add
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_system_add(self):
         sys=System()
         S=sys.add(kind="Star",orbit=dict(m=2))
@@ -994,7 +994,7 @@ def remove(self,body_hash):
         raise ValueError("No object with hash 'body_hash' in the system")
 System.remove=remove
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_system_remove(self):
         sys=System()
         S=sys.add(kind="Star",orbit=dict(m=2))
@@ -1109,7 +1109,7 @@ def ensamble_system(self):
 
 System.ensamble_system=ensamble_system
 
-if IN_JUPYTER:
+if IN_JUPYTER_TEST:
     def test_system_ensamble(self):
 
         sys=System()

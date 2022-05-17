@@ -64,8 +64,10 @@ class Consts(object):pass
 #Mathematical constants
 RAD=180/np.pi
 DEG=1/RAD
-Consts.rad=RAD
-Consts.deg=DEG
+Consts.rad=180/np.pi
+Consts.deg=1/Consts.rad
+Consts.ppm=1e6 #parts per million
+Consts.ppb=1e9 #parts per billion
 
 #Physical constants
 GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
