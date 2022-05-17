@@ -145,9 +145,22 @@ do
     echo -e "\tDirectory: $targetdir"
     echo -e "\tFilename: $filename"
     echo -e "\tTarget object: $target"
-
+    filebase=$filename
+    
     convert $notebook $target $test $filename
 
+    # Parsing inline test code
+    echo -e "\tParsing python file $target"
+    ntests=$(python parse.py $target)
+    if [ $ntests -gt 0 ];then
+	echo -e "\tParsing tests from inline code"
+	cp -rf /tmp/test-$filebase.py $targetdir/tests/
+	cp -rf /tmp/$filebase.py $target
+    else
+	echo -e "\tNo inline test code"
+    fi
+
+    # Add new package file into git repository
     if [[ $notebook == *"$PACKNAME-"* ]]
     then
 	if [ $GIT -gt 0 ];then
