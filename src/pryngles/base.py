@@ -61,7 +61,8 @@ class Const(object):
     Rsun=6.95510e8 # meters
     Msun=1.98e30 #kg
     Rsat=5.8232e7 # meters
-
+    Rearth = 6378000
+    
     #Constants of nature
     au=1.496e11 #meters
     G=6.67e-11 # m^3/(kg*s^2)
