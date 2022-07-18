@@ -134,5 +134,5 @@ version:
 public:
 	@echo "Updating public github repo..."
 	@cp examples/pryngles-tutorial-quickstart.ipynb $(PUBLIC)/
-	@cp README.md $(PUBLIC)/
+	@cp README.md LICENSE $(PUBLIC)/
 	@make -C $(PUBLIC) commit
