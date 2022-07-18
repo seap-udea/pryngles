@@ -76,6 +76,8 @@ Import the package and some useful utilities:
 import pryngles as pr
 from pryngles import Consts
 ```
+                                                                                                                 
+> *Note*: If you are using `Google Colab` it is important to define the backend of matplotlib using `%matplotlib inline`.
 
 Any calculation in `Pryngles` starts by creating a planetary system:
 
