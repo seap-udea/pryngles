@@ -12,7 +12,8 @@
 [![implementation](https://img.shields.io/pypi/implementation/pryngles)](https://pypi.org/project/pryngles/)
 [![pythonver](https://img.shields.io/pypi/pyversions/pryngles)](https://pypi.org/project/pryngles/)
 <!--[![codesize](https://img.shields.io/github/languages/repo-size/seap-udea/pryngles-public)](https://pypi.org/project/pryngles/)-->
-[![arXiv](http://img.shields.io/badge/arXiv-2004.14121-orange.svg?style=flat)](http://arxiv.org/abs/2004.14121)
+<!--[![arXiv](http://img.shields.io/badge/arXiv-2004.14121-orange.svg?style=flat)](http://arxiv.org/abs/2004.14121)-->
+[![arXiv](http://img.shields.io/badge/arXiv-2207.08636-orange.svg?style=flat)](http://arxiv.org/abs/2207.08636)
 [![ascl](https://img.shields.io/badge/ascl-2205.016-blue.svg?colorB=262255)](https://ascl.net/2205.016)
 
 <!--
@@ -45,7 +46,8 @@ For the science behind the model please refer to the following papers:
 
 > Zuluaga, J.I., Sucerquia, M. & Alvarado-Montes, J.A. (2022), **The
   bright side of the light curve: a general photometric model for
-  non-transiting exorings**, submitted (2022).
+  non-transiting exorings**, accepted for publication in Astronomy and
+  Computing (2022), [arXiv:2207.08636](https://arxiv.org/abs/2207.08636).
 
 > Sucerquia, M., Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos,
   M., & Bayo, A. (2020), **Scattered light may reveal the existence of
@@ -76,6 +78,13 @@ Import the package and some useful utilities:
 import pryngles as pr
 from pryngles import Consts
 ```
+
+> **NOTE**: If you are working in `Google Colab` before producing any plot please load the 
+  matplotlib backend:
+
+  ```python
+  %matplotlib inline
+  ```
 
 Any calculation in `Pryngles` starts by creating a planetary system:
 
@@ -176,7 +185,7 @@ We have prepared several `Jupyter` tutorials to guide you in the usage
 of the package. The tutorials evolve as the package is being optimized.
 
 - **Quickstart**.  In this tutorial you will learn the basics about the package. 
-  [Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-quickstart.ipynb), [Google Colab](https://bit.ly/pryngles-tutorial-quickstart).
+  [Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-quickstart.ipynb), [Google Colab](https://drive.google.com/file/d/12ZzuhVlKNaxJcKhGAPKScHvkWQYa_fAJ/view?usp=sharinghttps://bit.ly/pryngles-tutorials-quickstart).
 
 ## Disclaimer
 
@@ -184,10 +193,16 @@ of the package. The tutorials evolve as the package is being optimized.
 <img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/disco-planet.jpeg" alt="Logo" width="150"/>
 </p>
 
-This is the *disco* version of Pryngles.  We are improving the
-resolution and performance of the software for future releases.
+This is the *disco* version of Pryngles.  We are improving resolution,
+performance, modularity and programming standards for future releases.
 
 ## What's new
+   
+- **0.6.x versions**:
+
+  - 0.6.0 is the official release version, after paper acceptance and
+    arXiv submission.
+  - Updated information about paper in the arXiv and ACL code.
 
 - **0.5.x versions**:
   
