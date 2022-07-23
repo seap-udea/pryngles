@@ -191,12 +191,12 @@ git checkout master
 Fuentes
 -------
 
-- https://janakiev.com/blog/jupyter-virtual-envs/
+- Virtual Environments in Python: https://janakiev.com/blog/jupyter-virtual-envs/
 
-- https://ripon-banik.medium.com/jupyter-notebook-is-unable-to-find-module-in-virtual-environment-fa0725c3f8fd
+- Virtual Environments in Python: https://ripon-banik.medium.com/jupyter-notebook-is-unable-to-find-module-in-virtual-environment-fa0725c3f8fd
 
-- https://virtualenvwrapper.readthedocs.io/en/latest/
+- Virtual Environments in Python: https://virtualenvwrapper.readthedocs.io/en/latest/
 
 - GitHub: https://git-scm.com/book/en/v2
 
-- 
+- Readthedocs: https://docs.readthedocs.io/en/stable/tutorial/
