@@ -1,0 +1,108 @@
+Guide to developers
+===================
+
+In this guide you will find common procedures for developers.
+
+Version management
+------------------
+
+- Versions are in .versions file.
+
+- Version 0: first release and design.  Example: 0.2.1
+
+- Version 1: this will be the release when modularity of the package
+  be improved.
+
+- Version advance according to major changes.  Version 0.2.x are a
+  family of the main version 0.2.
+
+- All test versions have number.  Thus for instance: if we are in
+  version 0.2.1, and want to release a test version it will be 0.2.1.1
+
+- New version number scheme: 0.x.y (x-major, y-minor release), 0.x.y.z
+  (z test version).
+
+
+Installing locally pryngles
+---------------------------
+
+To install pryngles from the local directory:
+
+```
+python -m pip install -e .
+```
+
+
+Release a new version
+---------------------
+
+To release a new version of the package to the PyPI repo use:
+
+```
+make release RELMODE=release VERSION=x.y.z
+```
+
+where `x.y.z` is the new version.  The latest version can be obtained with:
+
+```
+make version
+```
+
+Release a test version
+----------------------
+
+To release a test version use:
+
+```
+make release RELMODE=test VERSION=x.y.z.w
+```
+
+To install pryngles from the test repo use:
+
+```
+python -m pip install --index-url https://test.pypi.org/simple/ pryngles==x.y.z.w
+```
+
+You have to be sure that all dependencies are installed.  For instance
+in the case of version 0.6.x teh comman will be:
+
+```
+python -m pip install rebound scipy ipython matplotlib tqdm dill spiceypy cmasher
+```
+
+Create a virtual environment to test Pryngles
+---------------------------------------------
+
+Virtual environments are the ideal place to test if a given version of
+Pryngles is ready for being released.
+
+To create a virtual environment use:
+
+```
+virtualenv pryngles-lab
+```
+
+Once created go to that directory and activate the virtual environment:
+
+```
+cd pringles-lab
+source bin/activate
+```
+
+Install there a new version of pryngles (or update it).  Test if installation was succesful:
+
+```
+python -c "from pryngles import *"
+```
+
+and test the version installed:
+
+```
+python -c "from pryngles import *;print(__version__)"
+```
+
+To leave the virtual environmente use:
+
+```
+deactivate
+```
