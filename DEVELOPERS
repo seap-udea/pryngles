@@ -173,9 +173,24 @@ To leave the virtual environmente use:
 deactivate
 ```
 
+Create a branch 
+---------------
+
+If you want to create a branch `newbranch` use:
+
+```
+git checkout -b newbranch
+```
+
 Fuentes
 -------
 
 - https://janakiev.com/blog/jupyter-virtual-envs/
+
 - https://ripon-banik.medium.com/jupyter-notebook-is-unable-to-find-module-in-virtual-environment-fa0725c3f8fd
+
 - https://virtualenvwrapper.readthedocs.io/en/latest/
+
+- GitHub: https://git-scm.com/book/en/v2
+
+- 
