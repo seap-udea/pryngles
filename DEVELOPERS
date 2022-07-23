@@ -182,6 +182,12 @@ If you want to create a branch `newbranch` use:
 git checkout -b newbranch
 ```
 
+Change to another branch:
+
+```
+git checkout master
+```
+
 Fuentes
 -------
 
