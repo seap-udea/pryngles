@@ -52,7 +52,7 @@ deps:
 
 clean:cleancrap
 
-cleanall:cleancrap cleanout
+cleanall:cleancrap cleanout cleandist
 
 #=========================
 #Clean
@@ -80,6 +80,10 @@ cleanout:
 	@-find . -name "*.tout" -delete
 	@-find . -name "*.pyc" -delete
 	@-find . -name '__pycache__' -type d | xargs rm -fr
+
+cleandist:
+	@-rm -rf dist/
+	@-rm -rf build/
 
 ##################################################################
 #GIT

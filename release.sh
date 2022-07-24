@@ -66,6 +66,13 @@ echo "Removing previous version..."
 rm -rf dist/*
 
 ##################################################################
+# Report version
+##################################################################
+echo $version >> .versions
+cp src/$PACKNAME/version.py src/$PACKNAME/version.py.bak
+echo "version='$version'" > src/$PACKNAME/version.py
+
+##################################################################
 # Build package
 ##################################################################
 echo "Building packages..."
@@ -84,8 +91,3 @@ else
     python -m twine upload dist/*
 fi
 
-##################################################################
-# Report version
-##################################################################
-echo $version >> .versions
-echo "version='$version'" > src/$PACKNAME/version.py
