@@ -165,6 +165,7 @@ do
     then
 	if [ $GIT -gt 0 ];then
 	    git add -f $target
+	    git add -f $targetdir/tests/test-$filebase.py
 	fi
     fi
 done
