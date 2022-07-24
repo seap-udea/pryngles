@@ -14,6 +14,8 @@
 # Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
 ##################################################################
 [build-system]
-requires = ['setuptools>=42','scipy','ipython','matplotlib','tqdm','dill']
+requires = ['setuptools>=42',
+	    'rebound','scipy','ipython',
+	    'matplotlib','tqdm','dill',
+	    'spiceypy','cmasher']
 build-backend = "setuptools.build_meta"
-

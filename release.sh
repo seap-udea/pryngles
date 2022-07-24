@@ -55,6 +55,17 @@ fi
 echo "Releasing new version $version (current version $setversion) of the package in mode '$type'..."
 
 ##################################################################
+# Run tests before release
+##################################################################
+echo "Testing before releasing..."
+if ! nosetests
+then
+    echo "Software does not pass the tests."
+    exit 1
+fi
+echo "Success. Package ready to be released."
+
+##################################################################
 # Update setup.py file
 ##################################################################
 sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py 
