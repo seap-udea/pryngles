@@ -22,6 +22,12 @@ from pryngles import *
 
 # ## External modules
 
+import spiceypy as spy
+import math
+import numpy
+#mh=numpy
+mh=math
+
 # ## Ring Class
 
 class RingDefaults(object):
@@ -106,5 +112,22 @@ class Ring(Body):
         #Here place the commands to update this kind of body
         self.physics.ri=self.physics.fi*self.primary.physics.radius
         self.physics.re=self.physics.fe*self.primary.physics.radius
+        
+        #Set transformation matrices
+        self._set_transform()
+        
+    def _set_transform(self):
+        """
+        Set transformation matrices
+        """
+        #Normal vector to ring
+        self.nr_ecl=np.array([0,mh.sin(self.physics.i),mh.cos(self.physics.i)]) 
+        self.nr_equ=np.array([0,0,1]) 
+        #Build transformation matrices
+        ex_equ=np.array([1,0,0]) 
+        ey_equ=np.array([0,mh.cos(self.physics.i),-mh.sin(self.physics.i)])
+        ez_equ=self.nr_ecl
+        self.M_equ2ecl=np.array(list(np.vstack((ex_equ,ey_equ,ez_equ)).transpose())).reshape((3,3))
+        self.M_ecl2equ=spy.invert(self.M_equ2ecl)
 
 

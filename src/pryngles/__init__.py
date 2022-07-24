@@ -134,8 +134,5 @@ from pryngles.planet import *
 from pryngles.ring import *
 from pryngles.observer import *
 from pryngles.system import *
-from pryngles.legacy import *
-#from pryngles.base import *
-#from pryngles._init import *
-#from pryngles._base import *
+from pryngles.spangling import *
 

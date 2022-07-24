@@ -1195,6 +1195,7 @@ class RingedPlanet(object):
     ##############################################################
     # INTERNAL MACHINERY METHODS
     ##############################################################
+    #**
     def _setEquEclTransform(self):
         """
         Requires:

@@ -245,6 +245,20 @@ performance, modularity and programming standards for future releases.
 
   - First official version of the package.
 
+
+### Test versions
+
+These are the improvements coming in the next releases of the package.
+Improvements in the 0.6.1.x test versions will be released in the
+0.7.x official versions.
+
+- **0.6.1.x versions**:
+
+  - This is branch `refactor`.
+  - We have refactor the package to make it much more modular.
+  - The previous version (`Camel` version) have been preserved in the
+    `legacy` module.
+
 ------------
 
 This package has been designed and written originally by Jorge
