@@ -16,31 +16,37 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Pryngles module
+# # Pryngles module: Constants
 
-# ## Module template
-# 
-# Goals of the module:
-# - Template functions
+# This module contains the definitions of useful constants.
 
-##HEADER
+# ## Pryngles
+
 from pryngles import *
 
-Example_doc="""
-Class Example
-"""
+# ## Constants class
 
-class Example(object):
-    example=1
-    def __init__(self):
-        self.a=1
-Example.__doc__=Example_doc
+class Consts(object):pass
 
-Example_method_doc="""
-    This is a test method of class Example.
-"""
-def method(self):
-    print(self.a)
-Example.method=method
-Example.method.__doc__=Example_method_doc
+#Mathematical constants
+import numpy as np
+Consts.rad=180/np.pi
+Consts.deg=1/Consts.rad
+Consts.ppm=1e6 #parts per million
+Consts.ppb=1e9 #parts per billion
+
+#Physical constants
+from rebound import units
+GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
+for const in "times","lengths","masses":
+    values=eval(f"units.{const}_SI.copy()")
+    for key in values:
+        exec(f"Consts.{key}=values[key]")
+
+#Size of reference objects
+Consts.rearth=6378.137e3 #m, volumetric mean radius
+Consts.rsun=695700e3 #m, nominal solar radius
+Consts.rjupiter=71492e3 #m, equatorial radius
+Consts.rsaturn=60268e3 #m
+
 

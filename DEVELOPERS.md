@@ -23,6 +23,23 @@ Version management
   (z test version).
 
 
+Each time a new version is released, either in the production or test
+platform, the src/pryngles/version.py is updated.
+
+Version variable can be upload as:
+
+```
+from pryngles import *
+print(version)
+```
+
+or the preferred:
+
+```
+import pryngles as pr
+print(pr.version)
+```
+
 Installing locally pryngles
 ---------------------------
 

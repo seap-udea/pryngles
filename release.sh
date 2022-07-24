@@ -88,3 +88,4 @@ fi
 # Report version
 ##################################################################
 echo $version >> .versions
+echo "version='$version'" > src/$PACKNAME/version.py

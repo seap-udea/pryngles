@@ -25,9 +25,9 @@ and ends with
 Example:
 
   import sys
-  IN_JUPYTER_TEST='ipykernel' in sys.modules
+  IN_JUPYTER='ipykernel' in sys.modules
 
-  if IN_JUPYTER_TEST:
+  if IN_JUPYTER:
     def test_body(self):
         self.assertEqual([1],[1],True)
 
@@ -70,7 +70,7 @@ qtest=False
 qcont=False
 ntest=0
 for line in fp:
-    if "if IN_JUPYTER_TEST" in line:
+    if "if IN_JUPYTER" in line:
         ntest+=1
         qtest=True
     if qtest:

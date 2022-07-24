@@ -16,19 +16,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Pryngles
-# ## PlanetaRY spanGLES: the bright-side of the light-curve
+# # Pryngles module: legacy
 
-##HEADER
 from pryngles import *
 
-# ### Jupyter magics
-
-get_ipython().run_line_magic('load_ext', 'autoreload')
-get_ipython().run_line_magic('autoreload', '2')
-get_ipython().run_line_magic('matplotlib', 'nbagg')
-
-# ### External dependencies
+# ## External modules
 
 import spiceypy as spy
 import numpy as np
@@ -61,8 +53,7 @@ class Const(object):
     Rsun=6.95510e8 # meters
     Msun=1.98e30 #kg
     Rsat=5.8232e7 # meters
-    Rearth = 6378000
-    
+
     #Constants of nature
     au=1.496e11 #meters
     G=6.67e-11 # m^3/(kg*s^2)
@@ -2104,7 +2095,7 @@ class RingedPlanet(object):
         Notes:
             Tab. (2.3) in Sobolev (1975).
         """
-        data_ss=np.loadtxt(get_data("diffuse_reflection_function.data"))
+        data_ss=np.loadtxt(util.get_data("diffuse_reflection_function.data"))
         eta=data_ss[1:,0]
         gamma=data_ss[0,1:]
         f=data_ss[1:,1:]
@@ -2584,8 +2575,68 @@ class Extra(object):
         return fig
         
     def prynglesMark(ax):
-        from pryngles import __version__
-        text=ax.text(1,1,f"Pryngles {__version__}",rotation=270,ha='left',va='top',
+        from pryngles import version
+        text=ax.text(1,1,f"Pryngles {version}",rotation=270,ha='left',va='top',
                 transform=ax.transAxes,color='pink',fontsize=8,zorder=100);
         return text
+
+# ## Ensamble new and legacy modules
+
+def ensamble_system(self):
+    #Ensamble system
+    #--CONSISTENCY--
+    if self.nstars==1 and self.nplanets==1 and self.nrings==1:
+        self._ringedplanet=dict(
+            #Behavior
+            behavior=dict(shadows=True),
+            
+            #Units
+            CU=CanonicalUnits(UL=self.ul,UM=self.um),
+            
+            #Basic
+            Rstar=self.stars[0].physics.radius,
+            Rplanet=self.planets[0].physics.radius,
+            
+            Rint=self.rings[0].physics.fi,
+            Rext=self.rings[0].physics.fe,
+            i=self.rings[0].physics.i,
+            
+            a=self.planets[0].orbit.a,e=self.planets[0].orbit.e,
+            
+            #Orbit 
+            Mstar=1,x=0,lambq=0,t0=0,kepler=False,
+            
+            #Observer
+            eobs_ecl=np.array([self.observers[0].optics.lamb,
+                               self.observers[0].optics.beta]),
+            
+            #Sampling
+            Np=self.planets[0].optics.nspangles,
+            Nr=self.rings[0].optics.nspangles,
+            
+            Nb=0,Ns=30,
+            
+            #Physical properties
+            physics=dict(
+                #Albedos
+                AS=1,AL=1,
+                #Ring geometrical opacity
+                taug=1.0, #Geometrical opacity
+                diffeff=1.0, #Diffraction efficiency
+                #Law of diffuse reflection on ring surface
+                reflection_rings_law=lambda x,y:x,
+                #Observations wavelength
+                wavelength=550e-9,
+                #Ring particle propeties (see French & Nicholson, 2000)
+                particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
+                #Stellar limb darkening
+                limb_cs=self.stars[0].optics.limb_coeffs,
+            )
+        )
+        self.RP=RingedPlanet(**self._ringedplanet)
+        return self.RP
+    else:
+        raise AssertionError(f"You must have at least one star ({self.nstars}), a planet ({self.nplanets}) and a ring ({self.nrings})")
+
+System.ensamble_system=ensamble_system
 

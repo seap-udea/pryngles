@@ -3,6 +3,8 @@ To Do List
 
 - Create a full test notebook.
 
+- Create a version file.
+
 - Include the ACL code: https://ascl.net/code/v/3289 (when accepted).
 
 - Animation command using animated gif instead of ffmpeg.

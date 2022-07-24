@@ -202,6 +202,7 @@ performance, modularity and programming standards for future releases.
 
   - 0.6.0 is the official release version, after paper acceptance and
     arXiv submission.
+  - File `version.py` included.
   - Link to quickstart tutorial in Google Colab, updated.
   - Updated information about paper in the arXiv and ACL code.
 
