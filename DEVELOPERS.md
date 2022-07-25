@@ -106,6 +106,13 @@ To create a virtual environment use:
 mkvirtualenv pryngles-lab
 ```
 
+Install Jupyter in the new virtual environment:
+
+```
+workon pryngles-lab
+python -m pip install jupyter
+```
+
 Now you need to create a kernelspec for this virtual environment:
 
 ```
@@ -137,6 +144,9 @@ directory of the virtual environment:
  }
 }
 ```
+
+Now you can start jupyter in the new virtual environment and when
+running a given Notebook you must recall to switch kernel.
 
 Alternatively you can use `virtualenv`.
 
