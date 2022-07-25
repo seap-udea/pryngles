@@ -17,7 +17,7 @@ Tasks:
 
 1. Create a module from template:
 
-   ```bash
+   ```
    cp dev/template.ipynb dev/pryngles-module.ipynb
    ```
 
