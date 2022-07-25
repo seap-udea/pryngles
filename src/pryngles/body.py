@@ -26,6 +26,47 @@ from pryngles import *
 # 
 # The Body class is one of the most important classes in the package. 
 
+Body_doc="""A general body.  This calss is not intended to be used independently, just for inheritance purposes.
+    
+Initialization attributes:
+
+    kind : string
+        One of the kind of bodies defined in the package (see _BODY_KINDS)
+
+    primary: Body
+        Object in the center of the orbit of this body.
+
+    orbit: Props
+        Object with the orbital properties of the body (eg. orbit.m is the mass)
+        see each specific Body definition for attributes.
+        orbit must be compatible with rebound.
+
+    physics: Props
+        Object with the physical properties of the body (eg. physics.radius)
+        see each specific Body definition for attributes.
+
+    optics: Props
+        Object with the optical properties of the body (eg. physics.lamb_albedo)
+        see each specific Body definition for attributes.
+
+Secondary attributes:
+
+    hash: string
+        Hash of the object, ie. a unique string identifying the object 
+        (see hash Python function)
+
+    parent: Body
+        Body around this body is.  Attribute parent is the same as body.
+
+    childs: list
+        List with child bodies (bodies which have this body) as the center.
+
+Public methods:
+
+    update_body(props):
+        Update a given property.
+"""
+
 BODY_KINDS=[]
 class Body(PrynglesCommon):
     
@@ -91,46 +132,8 @@ class Body(PrynglesCommon):
         elif parent is not None:
             self.parent=parent
 
-Body_doc="""A general body.  This calss is not intended to be used independently, just for inheritance purposes.
-    
-Initialization attributes:
-
-    kind : string
-        One of the kind of bodies defined in the package (see _BODY_KINDS)
-
-    primary: Body
-        Object in the center of the orbit of this body.
-
-    orbit: Props
-        Object with the orbital properties of the body (eg. orbit.m is the mass)
-        see each specific Body definition for attributes.
-        orbit must be compatible with rebound.
-
-    physics: Props
-        Object with the physical properties of the body (eg. physics.radius)
-        see each specific Body definition for attributes.
-
-    optics: Props
-        Object with the optical properties of the body (eg. physics.lamb_albedo)
-        see each specific Body definition for attributes.
-
-Secondary attributes:
-
-    hash: string
-        Hash of the object, ie. a unique string identifying the object 
-        (see hash Python function)
-
-    parent: Body
-        Body around this body is.  Attribute parent is the same as body.
-
-    childs: list
-        List with child bodies (bodies which have this body) as the center.
-
-Public methods:
-
-    update_body(props):
-        Update a given property.
-"""
 Body.__doc__=Body_doc
+
+# ## Testing
 
 

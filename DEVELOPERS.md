@@ -10,10 +10,79 @@ Tasks:
 
 - Change an existing module.
 - Create a new module.
-- Test quickstart tutorial.
-- Test science tutorial.
 - Release and test a test version.
 - Release and test a production version.
+
+### Create a new module
+
+1. Create a module from template:
+
+   ```
+   cp dev/template.ipynb dev/pryngles-module.ipynb
+   ```
+
+2. Open module notebook in Jupyter.
+
+3. Develop module class and methods.
+
+4. Write module class tests:
+
+   ```
+   if IN_JUPYTER:
+       def test_fun(self):
+            """
+      	    self.assertEqual(self.P.Nr,8,True)
+            self.assertEqual(np.isclose([P.physics.wrot],
+                                    [2*np.pi/PlanetDefaults.physics["prot"]],
+                                    rtol=1e-7),
+                         [True]*1)
+            self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
+	    """
+
+	class Test(unittest.TestCase):pass
+        Test.test_fun=test_fun
+	unittest.main(argv=['first-arg-is-ignored'],exit=False)
+   ```
+
+5. Convert module notebooks to source code:
+
+   ```
+   make convert
+   ```
+
+6. Test the module:
+
+   ```
+   nosetest src/pryngles/tests/test-<module>.py
+   ```
+
+7. Test the whole package:
+   
+   ```
+   nosetest
+   ```
+
+### Change an existing module
+
+1. Change the corresponding module notebook `dev/pryngles-<module>.ipynb`.
+
+2. Convert module notebooks to source code:
+
+   ```
+   make convert
+   ```
+
+3. Test the module:
+
+   ```
+   nosetest src/pryngles/tests/test-<module>.py
+   ```
+
+4. Test the whole package:
+   
+   ```
+   nosetest
+   ```
 
 ### Release and test a test version
 
@@ -37,6 +106,40 @@ Tasks:
 
    ```
    python -m pip install --index-url https://test.pypi.org/simple/ pryngles==x.y.z.w
+   ```
+
+4. Open `Jupyter`:
+
+   ```
+   jupyter-notebook
+   ```
+
+5. Execute all notebooks:
+   - `examples/pryngles-tutorial-quickstart.ipynb`
+   - `papers/bright-side/pryngles-paper-figures.ipynb`
+
+### Release and test a production version
+
+1. Check the latest version: `tail .versions`
+
+2. Execute
+
+   ```
+   make release RELMODE=release VERSION=x.y.z
+   ```
+
+   For version numbers see below.
+
+3. Change to the test virtual environment:
+
+   ```
+   workon pryngles-stable
+   ```
+
+4. Update the local version:
+
+   ```
+   python -m pip install -U pryngles
    ```
 
 4. Open `Jupyter`:
