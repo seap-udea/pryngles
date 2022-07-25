@@ -135,4 +135,5 @@ from pryngles.ring import *
 from pryngles.observer import *
 from pryngles.system import *
 from pryngles.spangling import *
+from pryngles.legacy import *
 

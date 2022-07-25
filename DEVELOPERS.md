@@ -148,6 +148,12 @@ directory of the virtual environment:
 Now you can start jupyter in the new virtual environment and when
 running a given Notebook you must recall to switch kernel.
 
+To remove a virtualenvironment use:
+
+```
+rmvirtualenv pryngles-lab
+```
+
 Alternatively you can use `virtualenv`.
 
 ```
