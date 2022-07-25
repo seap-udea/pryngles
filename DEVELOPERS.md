@@ -17,7 +17,7 @@ Tasks:
 
 1. Create a module from template:
 
-   ```
+   ```bash
    cp dev/template.ipynb dev/pryngles-module.ipynb
    ```
 
@@ -27,7 +27,7 @@ Tasks:
 
 4. Write module class tests:
 
-   ```
+   ```python
    if IN_JUPYTER:
        def test_fun(self):
             """
