@@ -353,7 +353,7 @@ python -c "from pryngles import *"
 and test the version installed:
 
 ```
-python -c "from pryngles import __version__;print(__version__)"
+python -c "import pryngles as pr;print(pr.version)"
 ```
 
 To leave the virtual environmente use:
