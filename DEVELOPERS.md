@@ -142,15 +142,22 @@ Tasks:
    python -m pip install -U pryngles
    ```
 
-4. Open `Jupyter`:
+5. Open `Jupyter`:
 
    ```
    jupyter-notebook
    ```
 
-5. Execute all notebooks:
+6. Execute all notebooks:
    - `examples/pryngles-tutorial-quickstart.ipynb`
    - `papers/bright-side/pryngles-paper-figures.ipynb`
+
+
+7. Update public repository:
+
+   ```
+   make public
+   ```
 
 Version management
 ------------------
