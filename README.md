@@ -32,14 +32,16 @@ of transiting exoplanets (a problem that has been extensively studied)
 but also in the light of stars having non-transiting exoplanets (the
 bright side of the light curve).
 
+<!--
 *If `PyPI` does not render properly the images if this README please
 check it in our [public github
 repo](https://github.com/seap-udea/pryngles-public).*
+-->
 
 This is an example of what can be done with `Pryngles`:
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/ecliptic-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif" alt="Animation" width="400"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
 </p>
 
 For the science behind the model please refer to the following papers:
@@ -55,7 +57,7 @@ For the science behind the model please refer to the following papers:
   Society: Letters, 496(1), L85-L90.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/ecliptic-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif" alt="Animation" width="400"/>
 </p>
 
 ## Download and install
@@ -184,10 +186,9 @@ Let's have some `Pryngles`.
 We have prepared several `Jupyter` tutorials to guide you in the usage
 of the package. The tutorials evolve as the package is being optimized.
 
-- **Quickstart**.  In this tutorial you will learn the basics about
-  the package:
-  [Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-quickstart.ipynb),
-  [Google Colab](https://bit.ly/pryngles-tutorials-quickstart).
+- **Quickstart** [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-quickstart.ipynb),
+  [Google Colab](https://bit.ly/pryngles-tutorials-quickstart)]. In
+  this tutorial you will learn the very basics about the package.
 
 ## Examples
 
@@ -195,11 +196,12 @@ Working with `Pryngles` we have created several `Jupyter` notebooks to
 illustrate many of its capabilities.  In the examples below you will
 find the package at work to do actual science: 
 
-- **Full-science exploration**.  In this example we include the code
-  we used to generate the plots of the release paper
-  [arXiv:2207.08636](https://arxiv.org/abs/2207.08636):
-  [Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-examples-exploration.ipynb),
-  [Google Colab](https://bit.ly/pryngles-examples-exploration).
+- **Full-science exploration** [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-examples-exploration.ipynb),
+  [Google Colab](https://bit.ly/pryngles-examples-exploration)].  In
+  this example we include the code we used to generate the plots of
+  the release paper
+  [arXiv:2207.08636](https://arxiv.org/abs/2207.08636) as a complete
+  example of how the package can be used in a research context.
 
 ## Disclaimer
 
@@ -211,6 +213,19 @@ This is the *disco* version of Pryngles.  We are improving resolution,
 performance, modularity and programming standards for future releases.
 
 ## What's new
+
+- **0.7.x versions**:
+
+  - All changes from the 0.6.1.x tests were assumed.
+  - The code was refactored to make it more modular.
+  - In the new version of the code we have made public a complete
+    notebook illustrating the use of the package for producing
+    light-curves of scientific uses
+    (pryngles-examples-exploration.ipynb).
+  - New class, `Spangler`, intented to sample with a Fibonacci
+    distribution of points the surface of spheres and disks.  In the
+    `Camel` version of `Pryngles` the `Spangler` class correspond to
+    the class `Sample`.
    
 - **0.6.x versions**:
 
