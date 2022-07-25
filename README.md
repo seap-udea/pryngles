@@ -288,6 +288,10 @@ Improvements in the 0.6.1.x test versions will be released in the
   - The previous version (`Camel` version) have been preserved in the
     `legacy` module.
 
+- **0.7.0.x versions**:
+
+  - New.
+
 ------------
 
 This package has been designed and written originally by Jorge

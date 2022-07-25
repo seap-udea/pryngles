@@ -3,6 +3,52 @@ Guide to developers
 
 In this guide you will find common procedures for developers.
 
+Developing Cycle
+----------------
+
+Tasks:
+
+- Change an existing module.
+- Create a new module.
+- Test quickstart tutorial.
+- Test science tutorial.
+- Release and test a test version.
+- Release and test a production version.
+
+### Release and test a test version
+
+1. Check the latest version: `tail .versions`
+
+2. Execute
+
+   ```
+   make release RELMODE=test VERSION=x.y.z.w
+   ```
+
+   For version numbers see below.
+
+3. Change to the test virtual environment:
+
+   ```
+   workon pryngles-lab
+   ```
+
+4. Update the local version:
+
+   ```
+   python -m pip install --index-url https://test.pypi.org/simple/ pryngles==x.y.z.w
+   ```
+
+4. Open `Jupyter`:
+
+   ```
+   jupyter-notebook
+   ```
+
+5. Execute all notebooks:
+   - `examples/pryngles-tutorial-quickstart.ipynb`
+   - `papers/bright-side/pryngles-paper-figures.ipynb`
+
 Version management
 ------------------
 

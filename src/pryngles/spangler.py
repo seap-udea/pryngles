@@ -24,7 +24,6 @@ from pryngles import *
 
 import matplotlib.pyplot as plt
 import numpy as np
-get_ipython().run_line_magic('matplotlib', 'nbagg')
 
 # ## Spangling class
 

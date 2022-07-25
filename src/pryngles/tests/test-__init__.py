@@ -17,6 +17,7 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
     def test_fun(self):
+        print(util.get_data("test"))
         """
         self.assertEqual(np.isclose([P.physics.wrot],
                                     [2*np.pi/PlanetDefaults.physics["prot"]],

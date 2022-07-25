@@ -26,11 +26,6 @@ from pryngles import *
 # 
 # The Body class is one of the most important classes in the package. 
 
-"""DEVELOPERS:
-
-    There are different kind of bodies in Pryngles.  The global list _BODY_KINDS is built
-    by adding new kind of objects.
-"""
 BODY_KINDS=[]
 class Body(PrynglesCommon):
     
@@ -96,7 +91,7 @@ class Body(PrynglesCommon):
         elif parent is not None:
             self.parent=parent
 
-Body_doc="""A general body.
+Body_doc="""A general body.  This calss is not intended to be used independently, just for inheritance purposes.
     
 Initialization attributes:
 
@@ -137,4 +132,5 @@ Public methods:
         Update a given property.
 """
 Body.__doc__=Body_doc
+
 
