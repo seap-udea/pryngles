@@ -138,6 +138,7 @@ version:
 public:
 	@echo "Updating public github repo..."
 	@cp examples/pryngles-tutorial-quickstart.ipynb $(PUBLIC)/
+	@cp examples/pryngles-tutorial-developers.ipynb $(PUBLIC)/
 	@cp papers/bright-side/pryngles-paper-figures.ipynb examples/pryngles-examples-exploration.ipynb
 	@cp examples/pryngles-examples-exploration.ipynb $(PUBLIC)/
 	@cp README.md LICENSE $(PUBLIC)/
