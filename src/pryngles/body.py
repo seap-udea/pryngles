@@ -67,6 +67,31 @@ Public methods:
         Update a given property.
 """
 
+class BodyDefaults(object):
+    """
+    These are the default attributes for any body.
+    
+    orbit:
+    
+        These attributes should be compatible with rebound.
+    
+        m: float [rebound mass units], default = 1
+            Mass of the body.  If m = 0 the body does not produce gravitation.
+            
+    physics:
+    
+        radius: float [rebound length units], default = 1
+            Radius of the body.
+            
+    optics:
+            
+        nspangles: int, default = 1000
+            Number of spangles on which the object will be discretized.
+    """
+    orbit=dict(m=1)
+    physics=dict(radius=1)
+    optics=dict(nspangles=1000)
+
 BODY_KINDS=[]
 class Body(PrynglesCommon):
     
@@ -85,7 +110,10 @@ class Body(PrynglesCommon):
         self.primary=primary
         if self.primary is not None:
             if not isinstance(self.primary,Body):
-                raise AssertionError(f"Primary is not a valid Object")            
+                raise AssertionError(f"Primary is not a valid Object")
+            else:
+                self.parent=primary
+                primary._update_childs(self)
         
         self.orbit=Props(**new_orbit)
         self.physics=Props(**new_physics)
@@ -131,6 +159,7 @@ class Body(PrynglesCommon):
             self.parent=parent
         elif parent is not None:
             self.parent=parent
+            parent._update_childs(self)
 
 Body.__doc__=Body_doc
 

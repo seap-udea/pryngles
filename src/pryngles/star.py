@@ -95,8 +95,8 @@ class Star(Body):
         if self.primary is not None:
             if self.primary.kind=="Planet":
                 raise ValueError(f"Planet cannot be the primary of a Star")
-            self.primary._update_childs(self)
-            self._update_parent(self.primary)
+            #self.primary._update_childs(self)
+            #self._update_parent(self.primary)
                 
         #Update properties
         self.update_body(**self.__dict__)

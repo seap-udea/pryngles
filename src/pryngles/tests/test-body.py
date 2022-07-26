@@ -17,6 +17,19 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
     def test_fun(self):
+        B=Body(BodyDefaults,"Body",None,dict(x=0),dict(mass=2.3),dict())
+        print(B)
+        print(B.orbit)
+        print(B.physics)
+        print(B.optics)
+        
+        B.update_body(orbit=dict(m=2))
+        print(B.orbit)
+        
+        
+        C=Body(BodyDefaults,"Body",B,dict(),dict(),dict())
+        print(C)
+        print(B)
         """
         self.assertEqual(np.isclose([P.physics.wrot],
                                     [2*np.pi/PlanetDefaults.physics["prot"]],

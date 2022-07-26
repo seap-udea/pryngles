@@ -96,9 +96,9 @@ class Planet(Body):
         #Check primary
         if self.primary is None:
             raise ValueError(f"Primary not provided and it is mandatory for {self.kind}.")
-        self.primary=primary
-        self.primary._update_childs(self)
-        self._update_parent(self.primary)
+        #self.primary=primary
+        #self.primary._update_childs(self)
+        #self._update_parent(self.primary)
         
         #Update properties
         self.update_body(**self.__dict__)

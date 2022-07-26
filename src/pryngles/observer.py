@@ -97,10 +97,12 @@ class Observer(Body):
         Body.__init__(self,ObserverDefaults,"Observer",primary,orbit,physics,optics)
         
         #Check if observer is attached to any object
+        """
         self.primary=primary
         if self.primary is not None:
             self.primary._update_childs(self)
             self._update_parent(self.primary)
+        """
         
         #Update properties
         self.update_body(**self.__dict__)
