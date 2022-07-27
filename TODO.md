@@ -1,11 +1,7 @@
 To Do List
 ==========
 
-- Create a full test notebook.
-
-- Create a version file.
-
-- Include the ACL code: https://ascl.net/code/v/3289 (when accepted).
+- REBOUND integration [PARTIALLY DONE].
 
 - Animation command using animated gif instead of ffmpeg.
 
@@ -23,9 +19,6 @@ To Do List
 - Allow to change dynamically the orientation of the ring.
 
 - Create an interact notebook to show orientation of the ring.
-
-- Include units transformation inside system class for providing
-  properties.
 
 - Include photomeric filters, http://svo2.cab.inta-csic.es/theory/fps/
 
@@ -54,13 +47,17 @@ To Do List
 
 - Include a citation command.
 
-Future version [1.0]
-====================
-
-- [PARTIALLY DONE] REBOUND integration.
-
 Done
 ====
+
+- Include units transformation inside system class for providing
+  properties [DONE].
+
+- Create a full test notebook [DONE].
+
+- Create a version file [DONE]. 
+
+- Include the ACL code: https://ascl.net/code/v/3289 (when accepted) [DONE].
 
 - [DONE] Remove: Javascript Error: IPython is not defined.
 
@@ -86,4 +83,3 @@ Done
     python -m twine upload --repository testpypi dist/* --verbose
 
 - [DONE] Disable showing figure when plotting with showfig=0 in Google Colab.
-
