@@ -68,30 +68,22 @@ except AttributeError:
             if "timeit" in command:
                 replaceTimeIt(command)
 
-IN_JUPYTER='ipykernel' in sys.modules
+#Magics can only be located from here
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
-# ## Global variables
+# ## PrynglesCommon
 # 
-# All global constants in Pryngles have a capital name and a lowercase version in the class util.
+# Many of the classes in Pryngles inherite methods of this common class
 
-import os
-#Root directory
-try:
-    FILE=__file__
-    ROOTDIR=os.path.abspath(os.path.dirname(FILE))
-except:
-    import IPython
-    FILE=""
-    ROOTDIR=os.path.abspath('')
-    
-BODY_KINDS=[]
+class PrynglesCommon(object):
+    def __str__(self):
+        return str(self.__dict__)    
 
-# ## Util Class
+# ## Miscelaneous Class
 
-util_doc="""
-Util routines.
+Misc_doc="""
+Miscelaneous routines.
 
 This is a set of util routines intended for a diversity of purposes.
 
@@ -100,7 +92,7 @@ Routines included:
     get_data(file)
 """;
 
-class util(object):
+class Misc(object):
     def get_data(path):
         """
         Get the full path of the `datafile` which is one of the datafiles provided with the package.
@@ -113,28 +105,22 @@ class util(object):
             
         """
         return os.path.join(ROOTDIR,'data',path);
-util.__doc__=util_doc
-
-# ## PrynglesCommon
-# 
-# Many of the classes in Pryngles inherite methods of this common class
-
-class PrynglesCommon(object):
-    def __str__(self):
-        return str(self.__dict__)    
+Misc.__doc__=Misc_doc
 
 # ## Pryngles modules
 
 from pryngles.version import *
 from pryngles.consts import *
+from pryngles.science import *
 from pryngles.props import *
 from pryngles.body import *
+from pryngles.spangler import *
+from pryngles.spangle import *
 from pryngles.star import *
 from pryngles.planet import *
 from pryngles.ring import *
 from pryngles.observer import *
 from pryngles.system import *
-from pryngles.spangler import *
 from pryngles.legacy import *
 
 

@@ -1,6 +1,13 @@
 To Do List
 ==========
 
+- When purging points in Spangler calculate distances using the arc
+  distance instead of the cartesian (euclidean) distance.
+
+- Include Rossiter-McLaughlin effect, https://arxiv.org/pdf/1709.00680.pdf.
+
+- Include radial velocities calculation.
+
 - REBOUND integration [PARTIALLY DONE].
 
 - Animation command using animated gif instead of ffmpeg.

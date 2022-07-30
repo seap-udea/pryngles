@@ -430,7 +430,6 @@ class Util(object):
         ARp=np.pi*Rp**2+np.pi*(re2-ri2)*Rp**2
 
         return ARp
-    
 
 # ### Configuration
 
@@ -2096,7 +2095,7 @@ class RingedPlanet(object):
         Notes:
             Tab. (2.3) in Sobolev (1975).
         """
-        data_ss=np.loadtxt(util.get_data("diffuse_reflection_function.data"))
+        data_ss=np.loadtxt(Misc.get_data("diffuse_reflection_function.data"))
         eta=data_ss[1:,0]
         gamma=data_ss[0,1:]
         f=data_ss[1:,1:]

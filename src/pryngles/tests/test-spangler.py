@@ -16,26 +16,51 @@
 import unittest
 from pryngles import *
 class Test(unittest.TestCase):
-    def test_sample(self):
-        #Create
-        S=Spangling(1000,seed=10)
-        
-        #Generate
-        #S.gen_circle()
-        #S.gen_circle_gaps([[0.3,0.05],[0.5,0.05]])
-        S.gen_sphere()
+    def test_circle(self):
 
+        #Generate circle
+        S=Spangler(1000,seed=10)
+        S.gen_circle()
+        S.plot()
+        S.plot(c='b',spangled=dict(color='r'))
+        S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}",fontsize=10)
+        S.fig.tight_layout()
+        
+    def test_ring(self):
+
+        #Generate rings
+        S=Spangler(500,seed=10)
+        S.gen_ring([[0.0,0.3],[0.5,0.1]])
+        print(S.aes)
+            
+        #Test area
+        print(S.A)
+        print(np.pi*(1-0.3**2)-np.pi*(0.6**2-0.5**2))
+    
+        S.plot()
+        S.plot(spangled=dict(color='r'))
+        S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}",fontsize=10)
+        S.fig.tight_layout()
+
+    def test_sphere(self):
+        
+        #Generate sphere
+        S=Spangler(100,seed=10)
+        S.gen_sphere()
+        S.plot()
+        S.plot(spangled=dict(color='r'))
+        S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}",fontsize=10)
+        S.fig.tight_layout()
+        
+    def test_purge(self):
+        
+        #Generate sphere
+        S=Spangler(1000,seed=10)
+        S.gen_sphere()
         S.purge_sample()
-        print(S.dmin,S.dmed,S.dmax,S.dran,S.dstar,S.N)
-        S.plot_sample()
-        """
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        #Check exception: primary could not be different from None or Body
-        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
-        """
+        S.plot()
+        S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}",fontsize=10)
+        S.fig.tight_layout()
         
 
 if __name__=="__main__":

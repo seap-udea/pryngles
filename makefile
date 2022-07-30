@@ -23,6 +23,7 @@ DEVFILES=$(shell ls dev/$(PACKNAME)-*.ipynb)
 BRANCH=$(shell bash .getbranch.sh)
 VERSION=$(shell tail -n 1 .versions)
 PUBLIC=../$(PACKNAME)-public/
+MOD=None
 
 show:
 	@echo "Development files:" $(DEVFILES)
@@ -128,9 +129,13 @@ install:
 	@echo "Installing locally..."
 	@$(PIP) install -e .
 
-test:
+test:convert
 	@echo "Testing package..."
-	@$(NOSETESTS) $(PACKNAME)
+ifeq ($(MOD),None)
+	@$(NOSETESTS)
+else
+	@$(NOSETESTS) src/pryngles/tests/test-$(MOD).py
+endif
 
 version:
 	@pip show $(PACKNAME)
@@ -143,3 +148,5 @@ public:
 	@cp examples/pryngles-examples-exploration.ipynb $(PUBLIC)/
 	@cp README.md LICENSE $(PUBLIC)/
 	@make -C $(PUBLIC) commit
+
+prueba:

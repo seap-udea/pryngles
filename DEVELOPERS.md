@@ -3,6 +3,12 @@ Guide to developers
 
 In this guide you will find common procedures for developers.
 
+
+Error types
+-----------
+
+See https://www.tutorialsteacher.com/python/error-types-in-python
+
 Developing Cycle
 ----------------
 

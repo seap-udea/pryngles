@@ -16,37 +16,53 @@
 import unittest
 from pryngles import *
 class Test(unittest.TestCase):
-    def test_planet(self):
-        S=Star(physics=dict(radius=3.0))
+    def test_init(self):
+        
+        #Define first star and planet
+        S=Star()
+        P=Planet(primary=S)
 
-        #Check exception: primary is mandatory for planets
         self.assertRaises(ValueError,lambda:Ring())
-
-        R=Ring(primary=S)
+        R=Ring(primary=P)
         
         print(R.physics)
+        print(R.optics)
         print(R.hash)
         
-        print(R.M_equ2ecl)
-        print(R.M_ecl2equ)
+    def test_update(self):
+
+        #Define first star and planet
+        S=Star()
+        P=Planet(primary=S)
+        R=Ring(primary=P)
+        
+        R.update_body(physics=dict(fe=3))
+        print(R.physics)
         
         #Check derived properties
         print(R.M_equ2ecl)
         print(R.M_ecl2equ)
         print(R.nr_ecl)
         print(R.nr_equ)
-        """
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        """
         
-        R.update_body(physics=dict(fe=3))
-        print(R.physics)
+    def test_spangle(self):
+        S=Star()
+        P=Planet(primary=S)
+        R=Ring(primary=P)  
+        R.spangle_body()
+        print(R.sp.N)
+        print(R.optics)
+        print(R.spangles[0].xyz)
         
-        #Check exception: primary could not be different from None or Body
-        self.assertRaises(AssertionError,lambda:Planet(primary="Nada"))
+        #return
+        #"""
+        spangled=None
+        spangled=dict(color='r')
+        R.sp.plot(spangled=spangled)
+        #"""
+        #print(len(R.spangles))
+        print(R.sp.aes)
+        print(R.spangles[0].asp)
         
 
 if __name__=="__main__":

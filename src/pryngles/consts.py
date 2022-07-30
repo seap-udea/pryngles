@@ -16,27 +16,59 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Pryngles module: Constants
-
-# This module contains the definitions of useful constants.
-
-# ## Pryngles
+# # Pryngles module: Constants and Enumerators
+# 
+# This module contains all the constants required by other modules in the package.
 
 from pryngles import *
 
-# ## Constants class
+# ## External modules
+
+import numpy as np
+from rebound import units
+
+# ## Constants and enumerators by Module
+
+# ### System related
+
+import os
+#Root directory
+try:
+    FILE=__file__
+    ROOTDIR=os.path.abspath(os.path.dirname(FILE))
+except:
+    import IPython
+    FILE=""
+    ROOTDIR=os.path.abspath('')
+    
+IN_JUPYTER='ipykernel' in sys.modules
+
+# ### Body related
+
+BODY_KINDS=[]
+
+# ### Spangle related
+
+#Type of spangle
+SOLID_SPANGLE=0
+GRANULAR_SPANGLE=1
+ATMOSPHERIC_SPANGLE=2
+
+#Reference system
+EQU=0
+ECL=1
+
+# ## Constants
 
 class Consts(object):pass
 
 #Mathematical constants
-import numpy as np
 Consts.rad=180/np.pi
 Consts.deg=1/Consts.rad
 Consts.ppm=1e6 #parts per million
 Consts.ppb=1e9 #parts per billion
 
 #Physical constants
-from rebound import units
 GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
 for const in "times","lengths","masses":
     values=eval(f"units.{const}_SI.copy()")
