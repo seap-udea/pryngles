@@ -49,24 +49,26 @@ BODY_KINDS=[]
 
 # ### Spangle related
 
-#Type of spangle
+#ENUMERATOR: Type of spangle
 SOLID_SPANGLE=0
 GRANULAR_SPANGLE=1
 ATMOSPHERIC_SPANGLE=2
 
-#Reference system
+#ENUMERATOR: Reference system
 EQU=0
 ECL=1
 
-# ## Constants
+# ## Constants class
+# 
+# This class contains several physical and astronomical constants.  It takes constants from other packages (rebound, astropy) and define other constants based on reliable sources.
 
 class Consts(object):pass
 
 #Mathematical constants
 Consts.rad=180/np.pi
 Consts.deg=1/Consts.rad
-Consts.ppm=1e6 #parts per million
-Consts.ppb=1e9 #parts per billion
+Consts.ppm=1e6 #parts per million factor
+Consts.ppb=1e9 #parts per billion factor
 
 #Physical constants
 GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
@@ -76,9 +78,9 @@ for const in "times","lengths","masses":
         exec(f"Consts.{key}=values[key]")
 
 #Size of reference objects
-Consts.rearth=6378.137e3 #m, volumetric mean radius
-Consts.rsun=695700e3 #m, nominal solar radius
-Consts.rjupiter=71492e3 #m, equatorial radius
-Consts.rsaturn=60268e3 #m
+Consts.rearth=6378.137e3 #m, volumetric mean radius, source: 
+Consts.rsun=695700e3 #m, nominal solar radius, source: 
+Consts.rjupiter=71492e3 #m, equatorial radius, source: 
+Consts.rsaturn=60268e3 #m, equatorial radius, source: 
 
 

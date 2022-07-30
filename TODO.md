@@ -1,14 +1,17 @@
 To Do List
 ==========
 
+- Create a spangle class to describe the properties of each spangle
+  [PARTIALLY DONE].
+
+- REBOUND integration [PARTIALLY DONE].
+
 - When purging points in Spangler calculate distances using the arc
   distance instead of the cartesian (euclidean) distance.
 
 - Include Rossiter-McLaughlin effect, https://arxiv.org/pdf/1709.00680.pdf.
 
 - Include radial velocities calculation.
-
-- REBOUND integration [PARTIALLY DONE].
 
 - Animation command using animated gif instead of ffmpeg.
 
@@ -23,15 +26,12 @@ To Do List
   https://numpydoc.readthedocs.io/en/latest/format.html
   https://www.datacamp.com/tutorial/docstrings-python
 
-- Allow to change dynamically the orientation of the ring.
-
-- Create an interact notebook to show orientation of the ring.
+- Allow to change dynamically the orientation of the ring. Create an
+  interact notebook to show orientation of the ring.
 
 - Include photomeric filters, http://svo2.cab.inta-csic.es/theory/fps/
 
 - Generate actual light curves including detector properties.
-
-- Create a spangle class to describe the properties of each spangle.
 
 - Create routines for creating the whole light-curve.
 
