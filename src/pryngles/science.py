@@ -23,13 +23,36 @@ from pryngles import *
 # ## External modules
 
 import numpy as np
+import math as mh
+import spiceypy as spy
 
 # ## The Science class
 # 
 # The Science class is a class with routines intended to perform a wide diversity of mathematical, physical and astronomical calculations.
 
-class Science(object):
-    pass
+# ### Template method
+
+def template(foo=1):
+    """
+    Method
+
+    Parameters:
+
+        foo: type [units], default = 1:
+            Description.
+
+    Return:
+
+        fee: type [units]:
+            Desctiption.
+
+    """
+    return foo
+
+Science.template=template
+
+
+# ### Cartesian to spherical
 
 def xyz2rqf(xyz):
     """
@@ -51,10 +74,9 @@ def xyz2rqf(xyz):
             the ezimutal one.
 
     """
-    rho=(xyz[0]**2+xyz[1]**2)**0.5
-    r=(rho**2+xyz[2]**2)**0.5
-    theta=np.arctan2(xyz[1],xyz[0])
-    phi=np.arctan2(xyz[2],rho)
+    r,theta,phi=spy.reclat(xyz)
+    theta=2*mh.pi+theta if theta<0 else theta
+
     return np.array([r,theta,phi])
 
 Science.xyz2rqf=xyz2rqf

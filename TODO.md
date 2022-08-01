@@ -4,14 +4,25 @@ To Do List
 - Create a spangle class to describe the properties of each spangle
   [PARTIALLY DONE].
 
+- Create spherical shell type of object.
+
+- Simulate different transit depths superposing spherical shells
+  responding differently to wavelengths.
+
 - REBOUND integration [PARTIALLY DONE].
+
+- Create an animation showing how the appearance of the object change
+  as the observer, the star or the orientation of the body change.
 
 - When purging points in Spangler calculate distances using the arc
   distance instead of the cartesian (euclidean) distance.
 
 - Include Rossiter-McLaughlin effect, https://arxiv.org/pdf/1709.00680.pdf.
 
-- Include radial velocities calculation.
+- Include radial velocities calculation.  For each object generate a
+  curve of radial velocity in the direction of the observer.  Radial
+  velocities could be calculated for individual spangles so we can
+  simulate spectra modifications due for instance to stellar rotation.
 
 - Animation command using animated gif instead of ffmpeg.
 
@@ -45,7 +56,7 @@ To Do List
 
 - Incorporate wavelength dependent limb-darkening coefficients.
 
-- Include forward scattering.
+- Include forward scattering for rings.
 
 - Plot returns information to render a photorealistic image of the
   planet.  Returns the value of each point in a plot.

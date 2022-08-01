@@ -16,6 +16,19 @@
 import unittest
 from pryngles import *
 class Test(unittest.TestCase):
+    def test_temp(self):
+        
+        #Test
+        Science.template()
+        """
+        self.assertEqual(self.P.Nr,8,True)
+        self.assertEqual(np.isclose([P.physics.wrot],
+                                    [2*np.pi/PlanetDefaults.physics["prot"]],
+                                    rtol=1e-7),
+                         [True]*1)
+        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
+        """
+        
     def test_xyz(self):
         
         #Test

@@ -64,6 +64,14 @@ class Test(unittest.TestCase):
         print(R.sp.aes)
         print(R.spangles[0].asp)
         
+    def test_plot(self):
+        S=Star()
+        P=Planet(primary=S)
+        R=Ring(primary=P)  
+        R.spangle_body()
+        print(R.spangles[0].xyz)
+        #R.plot_body()
+        
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

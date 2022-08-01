@@ -172,9 +172,11 @@ def spangle_body(self,seed=0):
     self.sp.gen_ring([
         [0.0,uri],#Internal gap
     ],boundary=0)
+    
+    #Purge to avoid close-in spangles
     self.sp.purge_sample()
     
-    #Body spangles
+    #Generate spangle properties
     self.spangles=np.array([],dtype=Spangle)
     for i in range(self.sp.N):
 
@@ -186,11 +188,12 @@ def spangle_body(self,seed=0):
         
         #Coordinates of the spangle
         xyz_equ=np.append(self.sp.ss[i]*self.re,0) #Complete coordinates with z = 0
-        xyz_ecl=spy.mxv(self.M_equ2ecl,xyz_equ)
+        xyz_ecl=spy.mxv(self.M_equ2ecl,xyz_equ) #Rotate to ecliptic coordinates
         
         rqf_equ=np.append(self.sp.pp[i],0) #Complete coordinates with phi = 0
-        rqf_equ[0]*=self.re
+        rqf_equ[0]*=self.re #Scale radial coordinate
         rqf_ecl=sci.xyz2rqf(xyz_ecl) #Convert equatorial to spherical
+        
         spangle.set_position([xyz_equ,xyz_ecl],[rqf_equ,rqf_ecl])
 
         #Unitary vector normal to the spangle
@@ -211,5 +214,51 @@ def spangle_body(self,seed=0):
         del spangle
 
 Ring.spangle_body=spangle_body
+
+
+#Trasnform from observer to other system
+"""
+    self.eobs_ecl=eobs_ecl
+    self.nobs_ecl=spy.latrec(1,self.eobs_ecl[0],self.eobs_ecl[1])
+    self.nobs_equ=spy.mxv(self.M_ecl2equ,self.nobs_ecl)
+    self.eobs_equ=np.array(Util.transformRecLat(self.nobs_equ))
+    #Build transformation matrices
+    self.M_ecl2obs=spy.mxm(
+        spy.rotate(+(mh.pi/2-self.eobs_ecl[1]),1),
+        spy.rotate(np.mod(self.eobs_ecl[0]+np.pi/2,2*mh.pi),3)
+    )
+    self.M_obs2ecl=spy.invert(self.M_ecl2obs)
+    #Observer<->Equatorial
+    self.M_equ2obs=spy.mxm(self.M_ecl2obs,self.M_equ2ecl)
+    self.M_obs2equ=spy.invert(self.M_equ2obs)
+""";
+
+def plot_body(self,
+              observer=(1,0*Const.deg,90*Const.deg),
+              source=(1,0,0)):
+    """
+    Plot spangle positions from the vantage point of an observer located at (lamb_obs,beta_obs)
+    in the ecliptic reference frame.
+    
+    Parameters:
+    
+        observer: array (3) [rad], default = (1,0 deg, 90 deg):
+            Ecliptic coordinates of the observer (lambda, beta) or longitud and latitude.
+            beta = 90 deg sets the observer above the plane of the ecliptic.
+            
+        ilumination: array (3) [rad], default = (1,0,0):
+            Location of the source of light for test purposes.
+            
+    """
+    fig,axs=plt.subplots(1,figsize=(5,5))
+    fig.patch.set_facecolor("black")
+    
+    for i in range(self.sp.N):
+        #Transform coordinates of the spangle to observer
+        pass
+    
+    axs.axis("off")
+
+Ring.plot_body=plot_body
 
 
