@@ -69,8 +69,7 @@ class Test(unittest.TestCase):
         P=Planet(primary=S)
         R=Ring(primary=P)  
         R.spangle_body()
-        print(R.spangles[0].xyz)
-        #R.plot_body()
+        R.plot_body()
         
 
 if __name__=="__main__":

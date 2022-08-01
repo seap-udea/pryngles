@@ -250,15 +250,34 @@ def plot_body(self,
             Location of the source of light for test purposes.
             
     """
-    fig,axs=plt.subplots(1,figsize=(5,5))
+    fig,ax=plt.subplots(1,figsize=(5,5))
     fig.patch.set_facecolor("black")
     
+    #ax.scatter(self.spangles[:].xyz[ECL][0],self.spangles[:].xyz[ECL][1],c='w',s=0.5)
+    ax.scatter(self.sp.ss[:,0],self.sp.ss[:,1],c='w',s=2,marker='o')
+    """
     for i in range(self.sp.N):
         #Transform coordinates of the spangle to observer
-        pass
+        ax.scatter(self.spangles[i].xyz[ECL][0],self.spangles[i].xyz[ECL][1],c='w')
+    """
     
-    axs.axis("off")
+    ax.axis("off")
 
 Ring.plot_body=plot_body
 
+
+import pandas as pd
+
+df=pd.DataFrame(columns=["name",
+                         "x_equ","y_equ","z_equ","function","xyz_equ"])
+
+df=df.append(dict(name="sin",function=np.sin),ignore_index=True)
+
+df.loc[0].function=np.cos
+df.loc[0][["x_equ","y_equ","z_equ"]]=np.array([1,2,3])
+df.loc[0,"xyz_equ"]=[1,2,3]
+
+df
+
+df.loc[0,"xyz_equ"][:,0]
 
