@@ -160,21 +160,7 @@ Ring.update_body=update_body
 # 
 # This method creates the spangles taht will cover the body.
 
-def spangle_body(self,seed=0):
-    #Create spangler
-    self.sp=Spangler(N=self.optics.nspangles)
-    
-    #Limits of the ring (normalized to re)
-    uri=self.ri/self.re
-    ure=1
-    
-    #Generate spangles
-    self.sp.gen_ring([
-        [0.0,uri],#Internal gap
-    ],boundary=0)
-    
-    #Purge to avoid close-in spangles
-    self.sp.purge_sample()
+"""
     
     #Generate spangle properties
     self.spangles=np.array([],dtype=Spangle)
@@ -212,7 +198,49 @@ def spangle_body(self,seed=0):
         
         self.spangles=np.append(self.spangles,copy.deepcopy(spangle))
         del spangle
+""";
 
+def spangle_body(self,seed=0):
+    #Create spangler
+    self.sp=Spangler(N=self.optics.nspangles)
+    
+    #Limits of the ring (normalized to re)
+    uri=self.ri/self.re
+    ure=1
+    
+    #Generate spangles
+    self.sp.gen_ring([
+        [0.0,uri],#Internal gap
+    ],boundary=0)
+    
+    #Purge to avoid close-in spangles
+    self.sp.purge_sample()
+    self.optics.nspangles=self.sp.N
+    
+    #Create a spangling
+    self.sg=Spangling(nspangles=self.optics.nspangles,body_hash=self.hash)
+    
+    #Common
+    self.sg.df["type"]=GRANULAR_SPANGLE
+    self.sg.df["albedo_gray_normal"]=self.optics.albedo_gray_normal
+    self.sg.df["tau_gray_optical"]=self.optics.tau_gray_optical
+    
+    #Equatorial cartesian coordinates
+    xyz_equ=np.hstack((self.sp.ss,np.zeros((self.sp.N,1))))
+    xyz_equ*=self.re
+    self.sg.df[["x_equ","y_equ","z_equ"]]=xyz_equ
+    
+    #Ecliptic cartesian coordinates
+    self.sg.df[["x_ecl","y_ecl","z_ecl"]]=    self.sg.df.apply(lambda df:pd.Series(spy.mxv(self.M_equ2ecl,[df.x_equ,df.y_equ,df.z_equ])),axis=1)
+    
+    #Equatorial spherical coordinates
+    rtf_equ=np.hstack((self.sp.pp,np.zeros((self.sp.N,1))))
+    rtf_equ[:,0]*=self.re
+    self.sg.df[["r_equ","t_equ","f_equ"]]=rtf_equ
+    
+    #Ecliptic spherical coordinates
+    self.sg.df[["r_ecl","t_ecl","f_ecl"]]=    self.sg.df.apply(lambda df:pd.Series(sci.xyz2rtf([df.x_ecl,df.y_ecl,df.z_ecl])),axis=1)
+   
 Ring.spangle_body=spangle_body
 
 
@@ -234,7 +262,7 @@ Ring.spangle_body=spangle_body
 """;
 
 def plot_body(self,
-              observer=(1,0*Const.deg,90*Const.deg),
+              observer=(1,0*Consts.deg,90*Consts.deg),
               source=(1,0,0)):
     """
     Plot spangle positions from the vantage point of an observer located at (lamb_obs,beta_obs)
@@ -254,7 +282,7 @@ def plot_body(self,
     fig.patch.set_facecolor("black")
     
     #ax.scatter(self.spangles[:].xyz[ECL][0],self.spangles[:].xyz[ECL][1],c='w',s=0.5)
-    ax.scatter(self.sp.ss[:,0],self.sp.ss[:,1],c='w',s=2,marker='o')
+    ax.scatter(self.sg.df.x_equ,self.sg.df.y_equ,c='w',s=2,marker='o')
     """
     for i in range(self.sp.N):
         #Transform coordinates of the spangle to observer
@@ -265,19 +293,4 @@ def plot_body(self,
 
 Ring.plot_body=plot_body
 
-
-import pandas as pd
-
-df=pd.DataFrame(columns=["name",
-                         "x_equ","y_equ","z_equ","function","xyz_equ"])
-
-df=df.append(dict(name="sin",function=np.sin),ignore_index=True)
-
-df.loc[0].function=np.cos
-df.loc[0][["x_equ","y_equ","z_equ"]]=np.array([1,2,3])
-df.loc[0,"xyz_equ"]=[1,2,3]
-
-df
-
-df.loc[0,"xyz_equ"][:,0]
 

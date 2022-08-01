@@ -32,25 +32,25 @@ class Test(unittest.TestCase):
     def test_xyz(self):
         
         #Test
-        rqf=Science.xyz2rqf([1,1,0])
+        rqf=Science.xyz2rtf([1,1,0])
         
         #Test it in each quadrant
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([+1,+1,1])
+        rqf=Science.xyz2rtf([+1,+1,1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([-1,1,1])
+        rqf=Science.xyz2rtf([-1,1,1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([-1,-1,1])
+        rqf=Science.xyz2rtf([-1,-1,1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([+1,-1,1])
+        rqf=Science.xyz2rtf([+1,-1,1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([+1,+1,-1])
+        rqf=Science.xyz2rtf([+1,+1,-1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([-1,1,-1])
+        rqf=Science.xyz2rtf([-1,1,-1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([-1,-1,-1])
+        rqf=Science.xyz2rtf([-1,-1,-1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.xyz2rqf([+1,-1,-1])
+        rqf=Science.xyz2rtf([+1,-1,-1])
         print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
         """
         self.assertEqual(self.P.Nr,8,True)

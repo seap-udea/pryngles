@@ -30,6 +30,8 @@ import spiceypy as spy
 # 
 # The Science class is a class with routines intended to perform a wide diversity of mathematical, physical and astronomical calculations.
 
+class Science(PrynglesCommon):pass
+
 # ### Template method
 
 def template(foo=1):
@@ -54,7 +56,7 @@ Science.template=template
 
 # ### Cartesian to spherical
 
-def xyz2rqf(xyz):
+def xyz2rtf(xyz):
     """
     Transform cartesian coordinates into spherical coordinates
 
@@ -79,6 +81,6 @@ def xyz2rqf(xyz):
 
     return np.array([r,theta,phi])
 
-Science.xyz2rqf=xyz2rqf
+Science.xyz2rtf=xyz2rtf
 
 

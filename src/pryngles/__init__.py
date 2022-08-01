@@ -46,7 +46,7 @@ For instance, the magic "%matplotlib nbagg" is converted into:
 
 So, the routinge "magic" should be add to the get_ipython() class.        
 """
-from IPython.display import HTML, Image
+from IPython.display import HTML, Image, display
 import IPython.core.autocall as autocall
 from IPython import get_ipython
 import sys
@@ -105,6 +105,10 @@ class Misc(object):
             
         """
         return os.path.join(ROOTDIR,'data',path);
+    
+    def print_html(string):
+        display(HTML(string))
+        
 Misc.__doc__=Misc_doc
 
 # ## Pryngles modules
@@ -115,7 +119,7 @@ from pryngles.science import *
 from pryngles.props import *
 from pryngles.body import *
 from pryngles.spangler import *
-from pryngles.spangle import *
+from pryngles.spangling import *
 from pryngles.star import *
 from pryngles.planet import *
 from pryngles.ring import *
