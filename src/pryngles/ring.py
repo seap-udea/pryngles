@@ -51,8 +51,7 @@ class RingDefaults(object):
             Fraction of the radius of the primary object where ring ends.
             
         i: float [radians], default = 0:
-            Inclination of the ring with respect to the equator of the primary
-            object.
+            Inclination of the ring with respect to the ecliptic plane.
             
         roll: float [radians], default = 0:
             Roll angle.  This is the angle with respect to ecliptic x-axis in which 
@@ -118,9 +117,6 @@ class Ring(Body):
         #Check primary
         if self.primary is None:
             raise ValueError(f"Primary not provided and mandatory for {self.kind}.")
-        #self.primary=primary
-        #self.primary._update_childs(self)
-        #self._update_parent(self.primary)
         
         #Update properties
         self.update_body(**self.__dict__)
@@ -160,49 +156,10 @@ Ring.update_body=update_body
 # 
 # This method creates the spangles taht will cover the body.
 
-"""
-    
-    #Generate spangle properties
-    self.spangles=np.array([],dtype=Spangle)
-    for i in range(self.sp.N):
-
-        #Create spangle
-        spangle=Spangle()
-        
-        #Type of spangles
-        spangle.type=GRANULAR_SPANGLE
-        
-        #Coordinates of the spangle
-        xyz_equ=np.append(self.sp.ss[i]*self.re,0) #Complete coordinates with z = 0
-        xyz_ecl=spy.mxv(self.M_equ2ecl,xyz_equ) #Rotate to ecliptic coordinates
-        
-        rqf_equ=np.append(self.sp.pp[i],0) #Complete coordinates with phi = 0
-        rqf_equ[0]*=self.re #Scale radial coordinate
-        rqf_ecl=sci.xyz2rqf(xyz_ecl) #Convert equatorial to spherical
-        
-        spangle.set_position([xyz_equ,xyz_ecl],[rqf_equ,rqf_ecl])
-
-        #Unitary vector normal to the spangle
-        ns_equ=np.array([0,0,1])
-        ns_ecl=spy.mxv(self.M_equ2ecl,ns_equ)
-        spangle.set_orientation([ns_equ,ns_ecl])
-            
-        #Spangle Area
-        spangle.asp=self.sp.aes*self.re**2
-        
-        #Optical properties
-        spangle.set_optical(
-            albedo_gray_normal=self.optics.albedo_gray_normal,
-            tau_gray_optical=self.optics.tau_gray_optical
-        )
-        
-        self.spangles=np.append(self.spangles,copy.deepcopy(spangle))
-        del spangle
-""";
-
 def spangle_body(self,seed=0):
+    
     #Create spangler
-    self.sp=Spangler(N=self.optics.nspangles)
+    self.sp=Spangler(N=self.optics.nspangles,seed=seed)
     
     #Limits of the ring (normalized to re)
     uri=self.ri/self.re
@@ -219,20 +176,24 @@ def spangle_body(self,seed=0):
     
     #Create a spangling
     self.sg=Spangling(nspangles=self.optics.nspangles,body_hash=self.hash)
+    #Misc.print_html(self.sg.df.to_html())
     
     #Common
     self.sg.df["type"]=GRANULAR_SPANGLE
     self.sg.df["albedo_gray_normal"]=self.optics.albedo_gray_normal
     self.sg.df["tau_gray_optical"]=self.optics.tau_gray_optical
+    self.sg.df["asp"]=self.sp.aes*self.re**2
     
     #Equatorial cartesian coordinates
     xyz_equ=np.hstack((self.sp.ss,np.zeros((self.sp.N,1))))
     xyz_equ*=self.re
     self.sg.df[["x_equ","y_equ","z_equ"]]=xyz_equ
+    self.sg.df["ns_equ"]=[[0,0,1]]*self.sg.nspangles
     
     #Ecliptic cartesian coordinates
     self.sg.df[["x_ecl","y_ecl","z_ecl"]]=    self.sg.df.apply(lambda df:pd.Series(spy.mxv(self.M_equ2ecl,[df.x_equ,df.y_equ,df.z_equ])),axis=1)
-    
+    self.sg.df["ns_ecl"]=[spy.mxv(self.M_equ2ecl,[0,0,1])]*self.sg.nspangles
+
     #Equatorial spherical coordinates
     rtf_equ=np.hstack((self.sp.pp,np.zeros((self.sp.N,1))))
     rtf_equ[:,0]*=self.re
@@ -262,19 +223,20 @@ Ring.spangle_body=spangle_body
 """;
 
 def plot_body(self,
-              observer=(1,0*Consts.deg,90*Consts.deg),
-              source=(1,0,0)):
+              observer=(1.0,0*Consts.deg,90*Consts.deg),
+              source=(1.0,0*Consts.deg,0*Consts.deg)):
     """
     Plot spangle positions from the vantage point of an observer located at (lamb_obs,beta_obs)
     in the ecliptic reference frame.
     
     Parameters:
     
-        observer: array (3) [rad], default = (1,0 deg, 90 deg):
+        observer: array (3) [ul, rad, rad], default = (1,0 deg, 90 deg):
             Ecliptic coordinates of the observer (lambda, beta) or longitud and latitude.
             beta = 90 deg sets the observer above the plane of the ecliptic.
+            The distance to the observer is in the present version irrelevant.
             
-        ilumination: array (3) [rad], default = (1,0,0):
+        source: array (3) [ul, rad, rad], default = (1,0 deg,0 deg):
             Location of the source of light for test purposes.
             
     """
@@ -293,4 +255,29 @@ def plot_body(self,
 
 Ring.plot_body=plot_body
 
+
+def calculate_flux(self,
+                   df,
+                   observer=(1.0,0*Consts.deg,90*Consts.deg),
+                   source=(1.0,0*Consts.deg,0*Consts.deg)
+                  ):
+    """
+    Calculate the flux scattered from the spangles of the body.
+    
+    Parameters:
+    
+        observer: array (3) [ul, rad, rad], default = (1,0 deg, 90 deg):
+            Ecliptic coordinates of the observer (lambda, beta) or longitud and latitude.
+            beta = 90 deg sets the observer above the plane of the ecliptic.
+            The distance to the observer is in the present version irrelevant.
+            
+        source: array (3) [ul, rad, rad], default = (1,0 deg,0 deg):
+            Location of the source of light for test purposes.
+
+    Return:
+        
+        
+    
+    """
+    pass
 

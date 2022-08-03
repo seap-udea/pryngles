@@ -106,8 +106,15 @@ class Misc(object):
         """
         return os.path.join(ROOTDIR,'data',path);
     
-    def print_html(string):
-        display(HTML(string))
+    def print_df(df):
+        """
+        Print DataFrame.
+        
+        Parameters:
+            df: Pandas DataFrame:
+                DataFrame to print.
+        """
+        display(HTML(df.to_html()))
         
 Misc.__doc__=Misc_doc
 

@@ -22,11 +22,11 @@ class Test(unittest.TestCase):
         filepath=Misc.get_data("diffuse_reflection_function.data")
         print(filepath)
         
-        #print_html dataframe
+        #print_df dataframe
         import pandas as pd
         import numpy as np
         df=pd.DataFrame(np.zeros((5,3)),columns=["a","b","c"])
-        Misc.print_html(df.to_html())
+        Misc.print_df(df)
         """
         self.assertEqual(os.path.exists(filename),False)
         self.assertEqual(np.isclose([P.physics.wrot],

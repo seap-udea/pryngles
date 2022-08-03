@@ -32,12 +32,14 @@ from copy import deepcopy
 # 
 # This class contains a family of routines useful for spangling
 
-Spangling_doc="""A general body.  This calss is not intended to be used independently, just for inheritance purposes.
+Spangling_doc="""A Spangling associated to an object or set of objects.
     
 Initialization attributes:
 
-    kind : string
-        One of the kind of bodies defined in the package (see _BODY_KINDS)
+    df : Pandas DataFrame: 
+        Dataframe containing the information on the spangling.
+        
+    body_hash
 
 Secondary attributes:
 
@@ -51,6 +53,7 @@ Public methods:
         Update a given property.
 """
 
+#Columns of spangling
 SPANGLING_COLUMNS=odict(
     {
         "body_hash":"",
@@ -65,12 +68,21 @@ SPANGLING_COLUMNS=odict(
         "r_ecl":0,"t_ecl":0,"f_ecl":0,
         "r_obs":0,"t_obs":0,"f_obs":0,
         #Normal to spangle
-        "nr_equ":[0,0,1],
-        "nr_ecl":[0,0,1],
-        "nr_obs":[0,0,1],
-        #Optical constants
+        "ns_equ":[0,0,1],
+        "ns_ecl":[0,0,1],
+        "ns_obs":[0,0,1],
+        #Optical parameters
+        "asp":0.0,
         "albedo_gray_normal":1,
-        "tau_gray_optical":0
+        "tau_gray_optical":0,
+        #Spangle state
+        "unset":1, #State has not been set
+        "visible":0, #The spangle is visible from observer
+        "shadow":0, #The spangle is in the shadow of other spangle
+        "illuminated":0, #The spangle is illuminated
+        "transit":0, #The spangle is transiting
+        "indirect":0, #The spangle is indirectly illuminated
+        "occult":0, #The spangle is occulted by a light source
     }
 )
 
@@ -80,7 +92,6 @@ class Spangling(object):
 
         #Attributes
         self.nspangles=nspangles
-        self.body_hash=body_hash
         
         #Update default values
         self.defaults=deepcopy(SPANGLING_COLUMNS)
@@ -89,7 +100,7 @@ class Spangling(object):
             self.defaults.update(dict(body_hash=body_hash))
         
         #Declare dataframe
-        if nspangles>0:
+        if self.nspangles>0:
             self.df=pd.DataFrame([list(self.defaults.values())]*nspangles,columns=self.defaults.keys())
         else:
             self.df=pd.DataFrame(columns=self.defaults.keys())
