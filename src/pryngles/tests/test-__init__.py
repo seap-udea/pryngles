@@ -27,14 +27,6 @@ class Test(unittest.TestCase):
         import numpy as np
         df=pd.DataFrame(np.zeros((5,3)),columns=["a","b","c"])
         Misc.print_df(df)
-        """
-        self.assertEqual(os.path.exists(filename),False)
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
-        """
         
 
 if __name__=="__main__":

@@ -240,6 +240,10 @@ def update_positions(self,n_equ=[],n_obs=[],force=False,
         if len(n_obs)>0:
             verbose("Generating transform obs")
             n_obs,one=spy.unorm(n_obs)
+            
+            #Transform direction of observer to spherical
+            self.d_obs=sci.xyz2rtf(n_obs)
+
             self.data["n_obs"]=self.data.apply(lambda df:n_obs,axis=1)
             ez_obs=n_obs
             ex_obs=spy.ucrss(n_obs,[0,0,1]) #Spice is 5 faster for vcrss
@@ -293,6 +297,7 @@ def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
     """
     #Create sampler
     self.sample=Sampler(N=self.nspangles,seed=seed)
+    self.geometry=geometry
     
     #Generate sampling points
     exec(f"self.sample.gen_{geometry}(**geometry_args)")
@@ -338,7 +343,7 @@ def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
 Spangler.populate_spangler=populate_spangler
 
 
-def plot3d(self,spangled=dict(),**args):
+def plot3d(self,spangled=dict(),factor=1.2,**args):
     """
     Plot spangle.
 
@@ -347,11 +352,15 @@ def plot3d(self,spangled=dict(),**args):
     """
     sargs=dict(c='k',s=0.1)
     sargs.update(args)
-    
+    bgcolor='k'
+
     #Figure
-    self.fig=plt.figure()
-    self.ax=self.fig.add_subplot(111,projection='3d')
-    self.ax.scatter(self.data.x_ecl,self.data.y_ecl,self.data.z_ecl,**sargs)
+    fig=plt.figure()
+    fig.patch.set_facecolor(bgcolor)
+    ax=fig.add_subplot(111,projection='3d',facecolor=bgcolor)
+
+    ax.axis("off")
+    ax.scatter(self.data.x_ecl,self.data.y_ecl,self.data.z_ecl,**sargs)
 
     #Spangles
     for i in range(self.nspangles):
@@ -359,22 +368,44 @@ def plot3d(self,spangled=dict(),**args):
         radius=self.data.dsp[i]/2
         zDir=self.data.ns_ecl[i]
         verbose(i,center,radius,zDir)
-        Plot.circle3d(self.ax,
+        Plot.circle3d(ax,
                       center=center,
                       radius=radius,
                       zDir=zDir,
-                      color='r',alpha=0.1)
+                      color='c',alpha=0.5)    
 
     #Decoration
-    self.ax.set_box_aspect([1,1,1])
-    self.ax.set_xlabel("$x_{ecl}$")
-    self.ax.set_ylabel("$y_{ecl}$")
-    self.ax.set_zlabel("$z_{ecl}$")
+    ax.set_box_aspect([1,1,1])
+    xmin,xmax=factor*np.array(list(ax.get_xlim()))
+    ymin,ymax=factor*np.array(list(ax.get_ylim()))
+    zmin,zmax=factor*np.array(list(ax.get_zlim()))
+
+    #Axis
+    ax.plot([xmin,xmax],[0,0],[0,0],'w-',alpha=0.3)
+    ax.plot([0,0],[ymin,ymax],[0,0],'w-',alpha=0.3)
+    ax.plot([0,0],[0,0],[zmin,zmax],'w-',alpha=0.3)
+    ax.text(xmax,0,0,r"$x_{ecl}$",color='w',alpha=0.5,fontsize=8)
+    ax.text(0,ymax,0,r"$y_{ecl}$",color='w',alpha=0.5,fontsize=8)
+    ax.text(0,0,zmax,r"$z_{ecl}$",color='w',alpha=0.5,fontsize=8)
+
+    """
+    lamb_equ=self.d_equ[1]*Consts.rad
+    phi_equ=self.d_equ[2]*Consts.rad
+    label_equ=f"Equ ($\lambda$,$\\beta$) : ({lamb_equ:.1f}$^\circ$,{phi_equ:.1f}$^\circ$)"
+    """
     
+    #Title
+    ax.set_title(f"Spangler {self.geometry}, N = {self.nspangles}, scale = {self.scale}",
+                 color='w',fontsize=10)
+    Plot.pryngles_mark(ax)
+
     #Orientation
-    self.ax.view_init(elev=15,azim=15)
-    self.fig.tight_layout()
-    
+    ax.view_init(azim=30)
+    fig.tight_layout()
+
+    self.fig3d=fig
+    self.ax3d=ax
+
 Spangler.plot3d=plot3d
 
 
@@ -385,14 +416,49 @@ def plot_obs(self,spangled=dict(),**args):
     Parameters:
         args: scatter plotting options, dictionary.
     """
-    sargs=dict(c='k',s=1.5)
+    sargs=dict(c='c',s=3.5)
     sargs.update(args)
-    
-    self.fig,self.ax=plt.subplots()
-    self.ax.scatter(self.data.x_obs,self.data.y_obs,**sargs)
-    self.ax.set_aspect("equal")
-    self.fig.tight_layout()
-    
+    bgcolor='k'
+
+    #Figure
+    fig=plt.figure(figsize=(5,5))
+    fig.patch.set_facecolor(bgcolor)
+    ax=fig.add_subplot(111,facecolor=bgcolor)
+    ax.axis("off")
+
+    #Plot
+    cond=self.data.z_obs>0
+    ax.scatter(self.data.x_obs[cond],self.data.y_obs[cond],**sargs)
+    cond=self.data.z_obs<0
+    sargs.update(dict(alpha=0.4))
+    ax.scatter(self.data.x_obs[cond],self.data.y_obs[cond],**sargs)
+
+    #Ranges
+    factor=1
+    xmin,xmax=factor*np.array(list(ax.get_xlim()))
+    ymin,ymax=factor*np.array(list(ax.get_ylim()))
+
+    #Axis
+    ax.plot([xmin,xmax],[0,0],'w-',alpha=0.3)
+    ax.plot([0,0],[ymin,ymax],'w-',alpha=0.3)
+    ax.text(xmax,0,r"$x_{obs}$",color='w',alpha=0.5,fontsize=8)
+    ax.text(0,ymax,r"$y_{obs}$",color='w',alpha=0.5,fontsize=8)
+
+    #Title
+    lamb_obs=self.d_obs[1]*Consts.rad
+    phi_obs=self.d_obs[2]*Consts.rad
+    label_obs=f"Obs ($\lambda$,$\\beta$) : ({lamb_obs:.1f}$^\circ$,{phi_obs:.1f}$^\circ$)"
+    ax.set_title(f"Spangler {self.geometry}, N = {self.nspangles}, {label_obs}",
+                 color='w',fontsize=10,position=(0.5,-0.1),ha='center')
+    Plot.pryngles_mark(ax)
+
+    #Decoration
+    ax.set_aspect("equal")
+
+    fig.tight_layout()
+    self.fig2d=ax
+    self.ax2d=ax
+
 Spangler.plot_obs=plot_obs
 
 

@@ -82,6 +82,21 @@ class Plot(object):
         """
         pc = Circle(center[0:2], radius, **kwargs)
         ax.add_patch(Plot.pathpatch_2d_to_3d(pc, center, zDir))
+        
+    def pryngles_mark(ax):
+        args=dict(
+            rotation=270,ha='left',va='top',
+            transform=ax.transAxes,color='pink',fontsize=8,zorder=100
+        )
+        mark=f"Pryngles {version}"
+        try:
+            ax.add_collection3d
+            plt_text=ax.text2D
+        except:
+            plt_text=ax.text
+            
+        text=plt_text(1,1,mark,**args);
+        return text
 
 # ## Testing
 

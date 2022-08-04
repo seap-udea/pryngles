@@ -30,6 +30,7 @@ class Test(unittest.TestCase):
         ax.set_ylabel("$y_{ecl}$")
         ax.set_zlabel("$z_{ecl}$")
         ax.view_init(elev=15,azim=1)
+        Plot.pryngles_mark(ax)
         
 
 if __name__=="__main__":

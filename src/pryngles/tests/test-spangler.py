@@ -54,11 +54,11 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=0
         sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1])
         sg.populate_spangler(geometry="sphere",scale=2,seed=1)
-        sg.plot3d(c='b',s=3)
+        sg.plot3d(factor=1.3,c='b',s=3)
         
-        sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,0,0])
-        sg.populate_spangler(geometry="circle",scale=2,seed=1,boundary=0)
-        sg.plot3d()
+        sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1])
+        sg.populate_spangler(geometry="ring",scale=2,seed=1,boundary=0)
+        sg.plot3d(factor=0.4)
         #sg.populate_spangler(geometry="ring",scale=2,seed=1,gaps=[[0,0.2],[0.5,0.1]],boundary=0)
         Verbose.VERBOSITY=0
 
@@ -66,12 +66,17 @@ class Test(unittest.TestCase):
     def test_plotobs(self):
         Verbose.VERBOSITY=0
         sg=Spangler(nspangles=1000,body_hash="123",n_equ=[1,1,1])
-        #sg.populate_spangler(geometry="ring",scale=2,seed=1,gaps=[[0,0.2],[0.5,0.1]],boundary=0)
-        #sg.populate_spangler(geometry="circle",scale=2,seed=1,boundary=0)
+        
+        sg.populate_spangler(geometry="circle",scale=2,seed=1,boundary=0)
+        sg.plot_obs()
+
+        sg.populate_spangler(geometry="ring",scale=2,seed=1,gaps=[[0,0.2],[0.5,0.1]],boundary=0)
+        sg.plot_obs()
+        
         sg.populate_spangler(geometry="sphere",scale=2,seed=1)
         sg.update_positions(n_obs=[1,0,1])
         sg.plot_obs()
-        
+
         Verbose.VERBOSITY=0
 
         
