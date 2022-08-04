@@ -118,15 +118,31 @@ class Misc(object):
         
 Misc.__doc__=Misc_doc
 
+class Verbose(object):
+    """Verbose print in the package
+    
+    Example:
+    
+        Verbose.print("Hello world") #No output
+        
+        Verbose.VERBOSITY=1
+        Verbose.print("Hello world") #Output
+    """
+    VERBOSITY=0
+    def print(*args):
+        if Verbose.VERBOSITY:
+            print(*args)
+
 # ## Pryngles modules
 
 from pryngles.version import *
 from pryngles.consts import *
 from pryngles.science import *
+from pryngles.plot import *
 from pryngles.props import *
 from pryngles.body import *
+from pryngles.sampler import *
 from pryngles.spangler import *
-from pryngles.spangling import *
 from pryngles.star import *
 from pryngles.planet import *
 from pryngles.ring import *

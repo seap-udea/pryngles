@@ -45,7 +45,7 @@ class Test(unittest.TestCase):
         print(R.nr_ecl)
         print(R.nr_equ)
         
-    def test_spangle(self):
+    def test_spangler(self):
         S=Star()
         P=Planet(primary=S)
         R=Ring(primary=P,optics=dict(albedo_gray_normal=0.5,tau_gray_optical=0.2,nspangles=100))  
@@ -53,7 +53,7 @@ class Test(unittest.TestCase):
         print(R.sp.N)
         print(R.optics)
         
-        Misc.print_html(R.sg.df.head(5).to_html())
+        Misc.print_df(R.sg.data.head(5))
         
         spangled=None
         spangled=dict(color='r')
@@ -65,7 +65,7 @@ class Test(unittest.TestCase):
     def test_plot(self):
         S=Star()
         P=Planet(primary=S)
-        R=Ring(primary=P,optics=dict(nspangles=100))  
+        R=Ring(primary=P,optics=dict(nspangles=1000))  
         R.spangle_body()
         R.plot_body()
         

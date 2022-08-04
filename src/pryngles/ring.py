@@ -159,7 +159,7 @@ Ring.update_body=update_body
 def spangle_body(self,seed=0):
     
     #Create spangler
-    self.sp=Spangler(N=self.optics.nspangles,seed=seed)
+    self.sp=Sampler(N=self.optics.nspangles,seed=seed)
     
     #Limits of the ring (normalized to re)
     uri=self.ri/self.re
@@ -175,32 +175,32 @@ def spangle_body(self,seed=0):
     self.optics.nspangles=self.sp.N
     
     #Create a spangling
-    self.sg=Spangling(nspangles=self.optics.nspangles,body_hash=self.hash)
-    #Misc.print_html(self.sg.df.to_html())
+    self.sg=Spangler(nspangles=self.optics.nspangles,body_hash=self.hash)
+    #Misc.print_html(self.sg.data.to_html())
     
     #Common
-    self.sg.df["type"]=GRANULAR_SPANGLE
-    self.sg.df["albedo_gray_normal"]=self.optics.albedo_gray_normal
-    self.sg.df["tau_gray_optical"]=self.optics.tau_gray_optical
-    self.sg.df["asp"]=self.sp.aes*self.re**2
+    self.sg.data["type"]=GRANULAR_SPANGLE
+    self.sg.data["albedo_gray_normal"]=self.optics.albedo_gray_normal
+    self.sg.data["tau_gray_optical"]=self.optics.tau_gray_optical
+    self.sg.data["asp"]=self.sp.aes*self.re**2
     
     #Equatorial cartesian coordinates
     xyz_equ=np.hstack((self.sp.ss,np.zeros((self.sp.N,1))))
     xyz_equ*=self.re
-    self.sg.df[["x_equ","y_equ","z_equ"]]=xyz_equ
-    self.sg.df["ns_equ"]=[[0,0,1]]*self.sg.nspangles
+    self.sg.data[["x_equ","y_equ","z_equ"]]=xyz_equ
+    self.sg.data["ns_equ"]=[[0,0,1]]*self.sg.nspangles
     
     #Ecliptic cartesian coordinates
-    self.sg.df[["x_ecl","y_ecl","z_ecl"]]=    self.sg.df.apply(lambda df:pd.Series(spy.mxv(self.M_equ2ecl,[df.x_equ,df.y_equ,df.z_equ])),axis=1)
-    self.sg.df["ns_ecl"]=[spy.mxv(self.M_equ2ecl,[0,0,1])]*self.sg.nspangles
+    self.sg.data[["x_ecl","y_ecl","z_ecl"]]=    self.sg.data.apply(lambda df:pd.Series(spy.mxv(self.M_equ2ecl,[df.x_equ,df.y_equ,df.z_equ])),axis=1)
+    self.sg.data["ns_ecl"]=[spy.mxv(self.M_equ2ecl,[0,0,1])]*self.sg.nspangles
 
     #Equatorial spherical coordinates
     rtf_equ=np.hstack((self.sp.pp,np.zeros((self.sp.N,1))))
     rtf_equ[:,0]*=self.re
-    self.sg.df[["r_equ","t_equ","f_equ"]]=rtf_equ
+    self.sg.data[["r_equ","t_equ","f_equ"]]=rtf_equ
     
     #Ecliptic spherical coordinates
-    self.sg.df[["r_ecl","t_ecl","f_ecl"]]=    self.sg.df.apply(lambda df:pd.Series(sci.xyz2rtf([df.x_ecl,df.y_ecl,df.z_ecl])),axis=1)
+    self.sg.data[["r_ecl","t_ecl","f_ecl"]]=    self.sg.data.apply(lambda df:pd.Series(sci.xyz2rtf([df.x_ecl,df.y_ecl,df.z_ecl])),axis=1)
    
 Ring.spangle_body=spangle_body
 
@@ -240,16 +240,16 @@ def plot_body(self,
             Location of the source of light for test purposes.
             
     """
+
+    #Prepare plotting area
     fig,ax=plt.subplots(1,figsize=(5,5))
     fig.patch.set_facecolor("black")
     
-    #ax.scatter(self.spangles[:].xyz[ECL][0],self.spangles[:].xyz[ECL][1],c='w',s=0.5)
-    ax.scatter(self.sg.df.x_equ,self.sg.df.y_equ,c='w',s=2,marker='o')
-    """
-    for i in range(self.sp.N):
-        #Transform coordinates of the spangle to observer
-        ax.scatter(self.spangles[i].xyz[ECL][0],self.spangles[i].xyz[ECL][1],c='w')
-    """
+    #Prepare Spangling
+    
+    
+    #Scatter plot 
+    ax.scatter(self.sg.data.x_equ,self.sg.data.y_equ,c='w',s=2,marker='o')
     
     ax.axis("off")
 
@@ -277,7 +277,6 @@ def calculate_flux(self,
     Return:
         
         
-    
     """
     pass
 
