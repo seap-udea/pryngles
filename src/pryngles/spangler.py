@@ -102,25 +102,39 @@ SPANGLER_COLUMNS=odict(
         #Coordinates of the spangle (cartesian and spherical)
         "x_ecl":0,"y_ecl":0,"z_ecl":0,#Calculated in the class
         "r_ecl":0,"t_ecl":0,"f_ecl":0,#Calculated in the class
+
+        #Coordinates of the spangle with an arbitrary origin
+        "X_ecl":0,"Y_ecl":0,"Z_ecl":0,#Calculated in the class
         
+        #Equatorial system
         "n_equ":[0,0,1],#Direction of the equator
         "alpha_equ":0,#Zero meridian of equatorial system
         "x_equ":0,"y_equ":0,"z_equ":1,
         "r_equ":0,"t_equ":0,"f_equ":90*Consts.deg,
         
+        #Observer system
         "n_obs":[0,0,1],
         "alpha_obs":0,#Zero meridian of observer system
         "x_obs":0,"y_obs":0,"z_obs":0,#Calculated in the class
         "r_obs":0,"t_obs":0,"f_obs":0,#Calculated in the class
         
+        #Coordinates with respect to the light source
+        "n_luz":[0,0,1],
+        "alpha_luz":0,#Zero meridian of observer system
+        "x_luz":0,"y_luz":0,"z_luz":0,#Calculated in the class
+        "r_luz":0,"t_luz":0,"f_luz":0,#Calculated in the class
+
         #Unitary vector normal to spangle
         "ns_equ":[0,0,1],
         "ns_ecl":[0,0,0],#Calculated in the class
         "ns_obs":[0,0,0],#Calculated in the class
+        "ns_luz":[0,0,0],#Calculated in the class
         
-        #Optical parameters
+        #Geometrical parameters
         "asp":1.0, #Area
         "dsp":1.0, #Effective diameter of spangle
+        
+        #Optical parameters
         "albedo_gray_normal":1,
         "tau_gray_optical":0.0,
         
