@@ -26,6 +26,7 @@ from pryngles import *
 
 import numpy as np
 from rebound import units
+import re
 
 # ## Constants and enumerators by Module
 
@@ -82,5 +83,9 @@ Consts.rearth=6378.137e3 #m, volumetric mean radius, source:
 Consts.rsun=695700e3 #m, nominal solar radius, source: 
 Consts.rjupiter=71492e3 #m, equatorial radius, source: 
 Consts.rsaturn=60268e3 #m, equatorial radius, source: 
+
+#For compatibility purposes with legacy: remove when legacy is retired
+RAD=Consts.rad
+DEG=Consts.deg
 
 

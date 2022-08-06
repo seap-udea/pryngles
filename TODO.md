@@ -1,8 +1,8 @@
 To Do List
 ==========
 
-- Create a spangle class to describe the properties of each spangle
-  [PARTIALLY DONE].
+- For intersections, transit and occult use the shape of the figure
+  for defining the region on which this intersections occur.
 
 - Create spherical shell type of object.
 
@@ -67,6 +67,9 @@ To Do List
 
 Done
 ====
+
+- Create a spangle class to describe the properties of each spangle
+  [DONE].
 
 - Include units transformation inside system class for providing
   properties [DONE].
