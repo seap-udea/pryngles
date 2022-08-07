@@ -59,13 +59,13 @@ Tasks:
 6. Test the module:
 
    ```
-   nosetest src/pryngles/tests/test-<module>.py
+   make test MOD=<module>
    ```
 
 7. Test the whole package:
    
    ```
-   nosetest
+   make test
    ```
 
 ### Change an existing module
@@ -81,13 +81,13 @@ Tasks:
 3. Test the module:
 
    ```
-   nosetest src/pryngles/tests/test-<module>.py
+   make test MOD=<module>
    ```
 
 4. Test the whole package:
    
    ```
-   nosetest
+   make test
    ```
 
 ### Release and test a test version
@@ -99,7 +99,8 @@ Tasks:
    ```
    make release RELMODE=test VERSION=x.y.z.w
    ```
-
+   user: seap-udea, pass: Fmunu;mu=0
+ 
    For version numbers see below.
 
 3. Change to the test virtual environment:
@@ -133,6 +134,7 @@ Tasks:
    ```
    make release RELMODE=release VERSION=x.y.z
    ```
+   user: jorge.zuluaga, pass: Fmunu;mu=0
 
    For version numbers see below.
 

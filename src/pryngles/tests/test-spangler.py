@@ -19,7 +19,7 @@ class Test(unittest.TestCase):
     def test_init(self):
         Verbose.VERBOSITY=1
         print("Basic definition:")
-        sg=Spangler(nspangles=3,spangle_type=GRANULAR_SPANGLE)
+        sg=Spangler(nspangles=3,spangle_type=GRANULAR_SPANGLE,center=[1,0,0])
         Misc.print_df(sg.data.head(5))
         print("Equ->Ecl:\n",sg.M_equ2ecl)
         print("Equ->Obs:\n",sg.M_obs2ecl)
@@ -35,8 +35,10 @@ class Test(unittest.TestCase):
         Misc.print_df(sg.data.head(5))
         print("Equ->Ecl:\n",sg.M_equ2ecl)
         print("Obs->Ecl:\n",sg.M_obs2ecl)
+        Verbose.VERBOSITY=0
 
     def test_pop(self):
+        Verbose.VERBOSITY=1
         sg=Spangler(nspangles=100)
         sg.populate_spangler(geometry="ring",scale=1,seed=1,gaps=[[0,0.2],[0.5,0.1]],boundary=0)
         print_df(sg.data.head(5))
@@ -45,6 +47,7 @@ class Test(unittest.TestCase):
         sg=Spangler(nspangles=1000,body_hash="123",n_equ=[1,0,1])
         sg.populate_spangler(geometry="sphere",scale=2,seed=1)
         print(sg.nspangles,sg.sample.N,len(sg.data))
+        Verbose.VERBOSITY=0
         
     def test_plot3d(self):
         Verbose.VERBOSITY=0
@@ -60,7 +63,7 @@ class Test(unittest.TestCase):
 
     def test_plotobs(self):
         Verbose.VERBOSITY=0
-        sg=Spangler(nspangles=1000,body_hash="123",n_equ=[1,1,1])
+        sg=Spangler(nspangles=1000,body_hash="123",n_equ=[1,1,1],center=[1,1,1])
         
         sg.populate_spangler(geometry="circle",scale=2,seed=1,boundary=0)
         sg.plot_obs()
@@ -69,7 +72,7 @@ class Test(unittest.TestCase):
         sg.plot_obs()
         
         sg.populate_spangler(geometry="sphere",scale=2,seed=1)
-        sg.set_observer(n_obs=[1,0,1])
+        sg.set_observer(n_obs=[1,0,0])
         sg.plot_obs()
 
         Verbose.VERBOSITY=0
