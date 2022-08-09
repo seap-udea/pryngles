@@ -43,20 +43,42 @@ Spangler_doc="""A Spangler associated to an object or set of objects.
    There are two ways to initialize a Spangler:
     
         Creating a Spangler for a single object:
-
-            nspangles: int, default = 0:
-                Number of spangles in spangling.
-
-            body_hash: string, default = None:
-                Hash identifying the body to which spangles are associated 
-                (see Body documentation for explanation about hash).
-                
-            spangle_type: int, default = 0:
-                Type of spangle (see *_SPANGLE in Consts module).
-
-            n_equ: numpy Array (3), default = [0,0,1]:
-                unitary vector normal to {equ} (equatorial) plane.
         
+            Mandatory:
+
+                nspangles: int, default = 0:
+                    Number of spangles in spangling.
+
+            Optional:
+
+                body_hash: string, default = None:
+                    Hash identifying the body to which spangles are associated 
+                    (see Body documentation for explanation about hash).
+
+                spangle_type: int, default = 0:
+                    Type of spangle (see *_SPANGLE in Consts module).
+
+                n_equ: numpy Array (3), default = [0,0,1]:
+                    unitary vector normal to {equ} (equatorial) plane.
+
+                alpha_equ: float, default = 0:
+                    Roll angle of x-axis of equatorial system (not implemented yet)
+
+                n_obs: list/array (3), default = []:
+                    Normal vector towards the observer.
+
+                alpha_obs: float, default = 0:
+                    Roll angle of x-axis of observer system (not implemented yet)
+
+                center_equ: numpy Array (3), default = [0,0,0]:
+                    Position of the spnagler in the {equ} (equatorial) system.
+
+                center_ecl: numpy Array (3), default = [0,0,0]:
+                    Position of the spnagler in the {ecl} (ecliptic) system.
+                    
+                w, t0: float [rad, rad/ut, ut], default = 0, 0, 0:
+                    Angular velocity and reference time.
+
         Joining a set of Spanglers (several objects):
 
             spanglers: list of Spanglers. default = []:
@@ -80,8 +102,11 @@ Secondary attributes:
     M_ecl2obs, M_obs2ecl: array (3x3):
         Transformation matrices going from {obs} <-> {ecl}.
 
-    M_ecl2equ, M_equ2ecl: array (nspanglersx3x3):
+    M_ecl2equ, M_equ2ecl: array (3x3):
         Transformation matrices going from {equ} <-> {ecl}.
+        
+    M_ecl2luz, M_luz2ecl: array (3x3):
+        Transformation matrices going from {luz} <-> {ecl}.
         
 Public methods:
     
@@ -95,41 +120,38 @@ SPANGLER_COLUMNS=odict(
         
         #Type of spangle
         "type":SOLID_SPANGLE,#For a list of spangle types see the constants module.
+        "dim":2,#Dimension of the spangle
         
         #Lengh-scale
         "scale":1,#The length scale of the body, eg. for a ring this is the outer radius
         
         #Coordinates of the spangle (cartesian and spherical) in the ecliptic system
-        "center":[0,0,0],#Center of the body with respect to barycenter
+        "center_ecl":[0,0,0],#Center of the body with respect to barycenter
         "x_ecl":0,"y_ecl":0,"z_ecl":0,#Calculated in the class
-        "r_ecl":0,"t_ecl":0,"f_ecl":0,#Calculated in the class
+        "r_ecl":0,"q_ecl":0,"f_ecl":0,#Calculated in the class
         "ns_ecl":[0,0,0],#Unitary vector normal to the spangle, calculated in the class
 
         #Coordinates of the spangle (cartesian and spherical) in the observer system
-        "n_obs":[0,0,1],#Direction of the observer, provided 
-        "alpha_obs":0,#Zero meridian of observer system
         "x_obs":0,"y_obs":0,"z_obs":0,#Calculated in the class
-        "r_obs":0,"t_obs":0,"f_obs":0,#Calculated in the class
+        "r_obs":0,"q_obs":0,"f_obs":0,#Calculated in the class
         "ns_obs":[0,0,0],#Unitary vector normal to the spangle, calculated in the class
         
         #Coordinates of the spangle (cartesian and spherical) in the light-source system
-        "n_luz":[0,0,1],#Direction of the light-source, provided
-        "alpha_luz":0,#Zero meridian of observer system
         "x_luz":0,"y_luz":0,"z_luz":0,#Calculated in the class
-        "r_luz":0,"t_luz":0,"f_luz":0,#Calculated in the class
+        "r_luz":0,"q_luz":0,"f_luz":0,#Calculated in the class
         "ns_luz":[0,0,0],#Unitary vector normal to the spangle, calculated in the class
 
         #Coordinates of the spangle (cartesian and spherical) in the body-centric system
         "n_equ":[0,0,1],#Direction of the equator
         "alpha_equ":0,#Zero meridian of equatorial system
+        "center_equ":[0,0,0],#Center of the body with respect to barycenter
         "x_equ":0,"y_equ":0,"z_equ":1,
-        "r_equ":0,"t_equ":0,"f_equ":90*Consts.deg,
+        "r_equ":0,"q_equ":0,"f_equ":90*Consts.deg,
         "ns_equ":[0,0,1],#Unitary vector normal to the spangle
         
-        #Rotational parameteres, t = t0 + w (T - T0)
-        "w_equ":0,#Rotational angular velocity
-        "t0_equ":0,#Initial longitude 
-        "T0_equ":0,#Initial time
+        #Rotational parameteres, q = q0 + w (t - t0)
+        "w":0,#Rotational angular velocity
+        "t0":0,#Initial time
         
         #Geometrical parameters
         "asp":1.0, #Area of the spangle
@@ -148,6 +170,7 @@ SPANGLER_COLUMNS=odict(
         "indirect":0, #The spangle is indirectly illuminated
         "occult":0, #The spangle is occulted by a light source
         "emit":0, #The spangle is emmitting
+        "hidden":0, #The spangle is not taken into account for photometry
     }
 )
 
@@ -159,19 +182,26 @@ class Spangler(PrynglesCommon):
                  body_hash=None,
                  spangle_type=SOLID_SPANGLE,
                  n_equ=SPANGLER_COLUMNS["n_equ"],
-                 center=SPANGLER_COLUMNS["center"],
+                 alpha_equ=SPANGLER_COLUMNS["alpha_equ"],
+                 n_obs=[0,0,1],
+                 alpha_obs=0,
+                 n_luz=[0,0,1],
+                 center_equ=SPANGLER_COLUMNS["center_equ"],
+                 center_ecl=SPANGLER_COLUMNS["center_ecl"],
+                 w_equ=SPANGLER_COLUMNS["w"],
+                 t0_equ=SPANGLER_COLUMNS["t0"],
                  #Initialization with a list of 
-                 spanglers=[],
-                 n_obs=SPANGLER_COLUMNS["n_obs"]):
+                 spanglers=[]):
 
         #Create a spanglers with a list of other spanglers
         if len(spanglers)>0:
-            self._join_spanglers(spanglers,n_obs=n_obs)
+            self._join_spanglers(spanglers,n_obs=n_obs,n_luz=n_luz)
             
         #Create a spangler with the desired options
         else:
             #Attributes
             self.nspangles=nspangles
+            self.geometry="Vanilla"
             
             #Update default values
             self._defaults=deepcopy(SPANGLER_COLUMNS)
@@ -189,18 +219,41 @@ class Spangler(PrynglesCommon):
                 self.data=pd.DataFrame([list(self._defaults.values())]*self.nspangles,columns=self._defaults.keys())
 
                 #Update positions
-                self.set_positions(n_equ=n_equ,n_obs=n_obs,center=center)
+                self.set_positions(n_equ=n_equ,alpha_equ=alpha_equ,
+                                   n_obs=n_obs,alpha_obs=alpha_obs,
+                                   n_luz=n_luz,
+                                   center_equ=center_equ,center_ecl=center_ecl)
         
             else:        
                 #Creat a blank DataFrame
                 self.data=pd.DataFrame(columns=self._defaults.keys())
                 
     # Prototype
-    def _join_spanglers(self,spanglers,nobs):pass
+    def _join_spanglers(self,spanglers,nobs=[0,0,1],n_luz=[0,0,1]):pass
     
 Spangler.__doc__=Spangler_doc
 
-def set_observer(self,n_obs=[],alpha_obs=0,force=False):
+def update_visibility(self):
+    """
+    Set visibility of spangles
+    """
+    #Set state
+    self.data.unset=0
+    
+    #Reset
+    self.data.visible=0
+    
+    #Conditions:
+    """
+    & Dimension = 3 (sphere) 
+    & z_obs > 0: it is towards the observer
+    """
+    cond=((self.data.dim==3)&([(np.dot(n_ecl,self.n_obs)>0) for n_ecl in self.data.ns_ecl]))|(self.data.dim==2)
+    self.data.loc[cond,"visible"]=1
+
+Spangler.update_visibility=update_visibility
+
+def set_observer(self,n_obs=[],alpha_obs=0):
     """
     Set the positions and orientation of spanglers in the observer system.
 
@@ -228,43 +281,105 @@ def set_observer(self,n_obs=[],alpha_obs=0,force=False):
     """
 
     if len(n_obs)>0:
+        
         #Unitary observer vector
-        n_obs,one=spy.unorm(n_obs)
-        self.data["n_obs"]=self.data.apply(lambda df:n_obs,axis=1)
-
-        #Observer direction in spherical coordinates
-        self.d_obs=sci.xyz2rtf(n_obs)
+        self.n_obs,one=spy.unorm(n_obs)
+        self.alpha_obs=alpha_obs
+        self.d_obs=sci.spherical(self.n_obs)
 
         #Transformation matrices
-        ez_obs=n_obs
-        ex_obs=spy.ucrss([0,0,1],n_obs) #Spice is 5 faster for vcrss
-        if spy.vnorm(ex_obs)==0:
-            ex_obs=np.array([1,0,0]) if np.sum(ez_obs)>0 else np.array([-1,0,0])
-        ey_obs=spy.ucrss(ez_obs,ex_obs)
-        self.M_obs2ecl=np.array(list(np.vstack((ex_obs,ey_obs,ez_obs)).transpose())).reshape((3,3))
-        self.M_ecl2obs=spy.invert(self.M_obs2ecl)
-        verbose("Axis obs:",ex_obs,ey_obs,ez_obs)
-        self.axis_obs=[ex_obs,ey_obs,ez_obs]
-
+        self.M_obs2ecl,self.M_ecl2obs=Science.rotation_matrix(self.n_obs,self.alpha_obs)
+        
     #Update positions
-    #Use: df[["a","b","c"]]=[np.matmul(M,x)+[0,1,0] for x in np.array(df[["x","y","z"]])] is 10 times faster
-    self.data[["x_obs","y_obs","z_obs"]]=        self.data.apply(lambda df:pd.Series(np.matmul(self.M_ecl2obs,
-                                                    [df.x_ecl,df.y_ecl,df.z_ecl])),
-                        axis=1)
+    self.data[["x_obs","y_obs","z_obs"]]=        [np.matmul(self.M_ecl2obs,r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
+    self.data[["r_obs","q_obs","f_obs"]]=        [sci.spherical(r) for r in np.array(self.data[["x_obs","y_obs","z_obs"]])]
     
-    self.data[["r_obs","t_obs","f_obs"]]=        self.data.apply(lambda df:pd.Series(sci.xyz2rtf([df.x_obs,df.y_obs,df.z_obs])),
-                        axis=1)
-
     #Update spangles orientations
-    self.data["ns_obs"]=self.data.apply(lambda df:np.matmul(self.M_ecl2obs,df["ns_ecl"]),axis=1)
-
+    self.data["ns_obs"]=[np.matmul(self.M_ecl2obs,n) for n in self.data["ns_ecl"]]
+    
+    #Update visibility
+    self.update_visibility()
+    
 Spangler.set_observer=set_observer
+
+def update_illumination(self):
+    """
+    Set illumination of spangles
+    """
+    #Set state
+    self.data.unset=0
+    
+    #Reset
+    self.data.illuminated=0
+    
+    #Conditions:
+    """
+    & Dimension = 3 (sphere) 
+    & z_obs > 0: it is towards the observer
+    """
+    cond=(self.data.dim==3)&([(np.dot(n_ecl,self.n_luz)>0) for n_ecl in self.data.ns_ecl])
+    self.data.loc[cond,"illuminated"]=1
+    
+Spangler.update_illumination=update_illumination
+
+def set_luz(self,n_luz=[]):
+    """
+    Set the positions and orientation of spanglers in the light-source {luz} system.
+
+    Parameters:
+
+        n_luz: list/array (3), default = []:
+            Normal vector towards the light-source.
+
+    Return:
+        None
+
+    Update:
+
+        Coordinates of the spangles, (x_luz,y_luz,z_luz) and their spherical 
+        counterparts (r_luz,t_luz,f_luz).
+
+        Normal to spangles, ns_luz.
+
+        Rotation matrices M_ecl2luz, M_luz2ecl, 
+    """
+
+    if len(n_luz)>0:
+        #Unitary luzerver vector
+        self.n_luz,one=spy.unorm(n_luz)
+        self.d_luz=sci.spherical(self.n_luz)
+
+        #Transformation matrices
+        self.M_luz2ecl,self.M_ecl2luz=Science.rotation_matrix(self.n_luz,0)
+        
+    #Update positions
+    self.data[["x_luz","y_luz","z_luz"]]=        [np.matmul(self.M_ecl2luz,r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
+    self.data[["r_luz","q_luz","f_luz"]]=        [sci.spherical(r) for r in np.array(self.data[["x_luz","y_luz","z_luz"]])]
+    
+    #Update spangles orientations
+    self.data["ns_luz"]=[np.matmul(self.M_ecl2luz,n) for n in self.data.ns_ecl]
+    
+    #Update illumination
+    self.update_illumination()
+
+Spangler.set_luz=set_luz
+
+def set_rotation(self,body_hash,w,t0):
+    """
+    Set rotational parameters
+    """
+    cond=(self.data.body_hash==body_hash)
+    self.data.loc[cond,"w"]=w
+    self.data.loc[cond,"t0"]=t0
+    
+Spangler.set_rotation=set_rotation
 
 def set_positions(self,
                   n_equ=[],alpha_equ=0,
                   n_obs=[],alpha_obs=0,
-                  center=[],
-                  T=0
+                  n_luz=[],
+                  center_equ=[],center_ecl=[],
+                  t=None
                  ):
     """
     Set the positions and orientation of spanglers in all reference systems.
@@ -277,10 +392,16 @@ def set_positions(self,
         n_obs: list/array (3), default = []:
             Normal vector towards the observer.
             
-        center: list/array (3), default = []:
+        n_obs: list/array (3), default = []:
+            Normal vector towards the light-source.
+            
+        center_equ: list/array (3), default = []:
             Location of the center of the body with respect to the barycenter.
             
-        T: float, default = 0:
+        center_ecl: list/array (3), default = []:
+            Location of the center of the body with respect to the barycenter.
+            
+        t: float, default = None:
             Time.  This quantity is used to update the equatorial coordinates.
 
     Optional:
@@ -313,47 +434,49 @@ def set_positions(self,
     if len(n_equ)>0:
         #Unitary equatorial vector
         n_equ,one=spy.unorm(n_equ)
-        self.data["n_equ"]=self.data.apply(lambda df:n_equ,axis=1)
+        self.data["n_equ"]=[n_equ]*self.nspangles
 
         #Transformation matrices
-        ez_equ=n_equ
-        ex_equ=spy.ucrss([0,0,1],n_equ)
-        if spy.vnorm(ex_equ)==0:
-            ex_equ=np.array([1,0,0]) if np.sum(ez_equ)>0 else np.array([-1,0,0])
-        ey_equ=spy.ucrss(ez_equ,ex_equ)
+        self.M_equ2ecl,self.M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ)
         
-        self.M_equ2ecl=np.array(list(np.vstack((ex_equ,ey_equ,ez_equ)).transpose())).reshape((3,3))
-        self.M_ecl2equ=spy.invert(self.M_equ2ecl)
-        self.axis_equ=[ex_equ,ey_equ,ez_equ]
-        verbose("Axis equ:",ex_equ,ey_equ,ez_equ)
+    if len(n_obs)>0:
+        self.n_obs,one=spy.unorm(n_obs)
+
+    if len(n_luz)>0:
+        self.n_luz,one=spy.unorm(n_luz)
      
     #Update equatorial coordinates by rotation
-    """
-    #Not implemented yet
-    self.data["t_equ"]=self.data.apply(lambda df:pd.Series(df.t0_equ+df.w_equ*(T-df.T0_equ)),axis=1)
-    self.data[["x_equ","t_equ","f_equ"]]=\
-        self.data.apply(lambda df:pd.Series(sci.rtf2xyz([df.r_equ,df.t_equ,df.f_equ])),
-                        axis=1)
-    """
-
-    #Update spangles positions
-    if len(center)>0:
-        self.data["center"]=self.data.apply(lambda df:np.array(center),axis=1)
-    self.data[["x_ecl","y_ecl","z_ecl"]]=        self.data.apply(lambda df:pd.Series(np.matmul(self.M_equ2ecl,
-                                                    [df.x_equ,df.y_equ,df.z_equ])+df.center),
-                        axis=1)
-
-    self.data[["r_ecl","t_ecl","f_ecl"]]=        self.data.apply(lambda df:pd.Series(sci.xyz2rtf([df.x_ecl,df.y_ecl,df.z_ecl])),
-                        axis=1)
+    if t is not None:
+        self.data["q_equ"]=[q+w*(t-t0) for q,w,t0 in zip(self.data.q_equ,self.data.w,self.data.t0)]
+        self.data[["x_equ","y_equ","z_equ"]]=            [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
+        #Update normal vectors
+        if self.sample.dim>2:
+            self.data["ns_equ"]=[spy.unorm(list(r))[0] for r in np.array(self.data[["x_equ","y_equ","z_equ"]])]
+                
+    #Update center
+    if len(center_equ)>0:
+        self.data["center_equ"]=[center_equ]*self.nspangles
+    if len(center_ecl)>0:
+        self.data["center_ecl"]=[center_ecl]*self.nspangles
+        
+    #Convert from equatorial to ecliptic
+    self.data[["x_ecl","y_ecl","z_ecl"]]=        [np.matmul(self.M_equ2ecl,r+cequ)+cecl         for r,cequ,cecl in zip(np.array(self.data[["x_equ","y_equ","z_equ"]]),
+                      self.data.center_equ,
+                      self.data.center_ecl)]
+    
+    self.data[["r_ecl","q_ecl","f_ecl"]]=        [sci.spherical(r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
 
     #Update spangles orientations
-    self.data["ns_ecl"]=self.data.apply(lambda df:np.matmul(self.M_equ2ecl,np.array(df["ns_equ"])),axis=1)
+    self.data["ns_ecl"]=[np.matmul(self.M_equ2ecl,n) for n in self.data.ns_equ]
     
     #Update velocities
     #Not implemented yet
     
     #Set observer
-    self.set_observer(n_obs=n_obs)
+    self.set_observer(n_obs=self.n_obs,alpha_obs=alpha_obs)
+    
+    #Set luz
+    self.set_luz(n_luz=self.n_luz)
     
 Spangler.set_positions=set_positions
 
@@ -377,7 +500,8 @@ def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
     
     #Generate sampling points
     exec(f"self.sample.gen_{geometry}(**geometry_args)")
-    
+    self.data["dim"]=self.sample.dim
+
     #Purge sample if it is in 3d
     if self.sample.dim>2:
         verbose("Purging sample")
@@ -403,14 +527,14 @@ def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
 
     #Store positions in DataFrame
     self.data[["x_equ","y_equ","z_equ"]]=self.sample.ss*scale
+    self.data[["r_equ","q_equ","f_equ"]]=self.sample.pp
+    self.data["r_equ"]*=scale
 
     #Update normal vectors
     if self.sample.dim>2:
-        self.data["ns_equ"]=self.data.apply(
-            lambda df:spy.unorm([df["x_equ"],df["y_equ"],df["z_equ"]])[0],axis=1)
+        self.data["ns_equ"]=[spy.unorm(list(r))[0] for r in np.array(self.data[["x_equ","y_equ","z_equ"]])]
     else:
-        self.data["ns_equ"]=self.data.apply(
-            lambda df:[0,0,1],axis=1)
+        self.data["ns_equ"]=[[0,0,1]]*self.nspangles
         
     #Update positions
     self.set_positions()
@@ -418,17 +542,14 @@ def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
 Spangler.populate_spangler=populate_spangler
 
 
-#sg=Spangler(nspangles=100)
-#print_df(sg.data.head(5))
-
-def plot3d(self,spangled=dict(),factor=1.2,**args):
+def plot3d(self,spangled=True,factor=1.2,**args):
     """
     Plot spangle.
 
     Parameters:
         args: scatter plotting options, dictionary.
     """
-    sargs=dict(c='k',s=0.1)
+    sargs=dict(c='c',s=0.1)
     sargs.update(args)
     bgcolor='k'
 
@@ -441,16 +562,31 @@ def plot3d(self,spangled=dict(),factor=1.2,**args):
     ax.scatter(self.data.x_ecl,self.data.y_ecl,self.data.z_ecl,**sargs)
 
     #Spangles
-    for i in range(self.nspangles):
-        center=[self.data.x_ecl[i],self.data.y_ecl[i],self.data.z_ecl[i]]
-        radius=self.data.dsp[i]/2
-        zDir=self.data.ns_ecl[i]
-        verbose(i,center,radius,zDir)
-        Plot.circle3d(ax,
-                      center=center,
-                      radius=radius,
-                      zDir=zDir,
-                      color='c',alpha=0.5)    
+    if spangled:
+        for i in range(self.nspangles):
+
+            #Define color according to observer
+            if self.data.loc[i,"visible"]:
+                color='c'
+            else:
+                color='g'
+
+            #Define color according to illumination
+            if self.data.loc[i,"illuminated"]:
+                color='y'
+
+            #Define alpha according to albedo
+            alpha=0.5*self.data.albedo_gray_normal[i]
+
+            center=[self.data.x_ecl[i],self.data.y_ecl[i],self.data.z_ecl[i]]
+            radius=self.data.dsp[i]/2
+            zDir=self.data.ns_ecl[i]
+            verbose(i,center,radius,zDir)
+            Plot.circle3d(ax,
+                          center=center,
+                          radius=radius,
+                          zDir=zDir,
+                          color=color,alpha=alpha)
 
     ax.set_box_aspect([1,1,1])
 
@@ -495,7 +631,7 @@ def plot_obs(self,spangled=dict(),**args):
     Parameters:
         args: scatter plotting options, dictionary.
     """
-    sargs=dict(c='c',s=3.5)
+    sargs=dict(c='c',sizes=3.5)
     sargs.update(args)
     bgcolor='k'
 
@@ -505,11 +641,16 @@ def plot_obs(self,spangled=dict(),**args):
     ax=fig.add_subplot(111,facecolor=bgcolor)
     ax.axis("off")
 
-    #Plot
-    cond=self.data.z_obs>=0
+    #Plot according to state
+    
+    #Visible
+    cond=((self.data.dim==3)&(self.data.visible==1))|((self.data.dim==2))
+    sargs.update(dict(c='c',sizes=3.5*self.data.scale[cond]))    
     ax.scatter(self.data.x_obs[cond],self.data.y_obs[cond],**sargs)
-    cond=self.data.z_obs<0
-    sargs.update(dict(alpha=0.4))
+
+    #Illuminated
+    cond=((self.data.illuminated==1)&(self.data.visible==1))
+    sargs.update(dict(c='y',sizes=3.5*self.data.scale[cond]))    
     ax.scatter(self.data.x_obs[cond],self.data.y_obs[cond],**sargs)
 
     #Ranges
@@ -545,15 +686,36 @@ def plot_obs(self,spangled=dict(),**args):
 Spangler.plot_obs=plot_obs
 
 
-def _join_spanglers(self,spanglers,n_obs):
+def _join_spanglers(self,spanglers,n_obs=[0,0,1],n_luz=[0,0,1]):
     """
     Join spanglers into a single spangler
+    
+    Parameters:
+        spanglers: list of Spanglers:
+            Spanglers to join.
+            
+        n_obs: array(3), default = [0,0,1]:
+            Direction of observer.
+            
+        n_luz: array(3), default = [0,0,1]:
+            Direction of light-source.
+            
+    Return:
+        
     """
+    #Set of spanglers
     self.spanglers=spanglers
+    
+    #Concatenate data
     datas=[spangler.data for spangler in spanglers]
     self.data=pd.concat(datas,ignore_index=True)
+    
+    #Join properties
     self.nspangles=len(self.data)
     self.geometry="Join"
+    
+    #Set luz and set observer
+    self.set_luz(n_luz)
     self.set_observer(n_obs)
     
 Spangler._join_spanglers=_join_spanglers
@@ -565,7 +727,8 @@ def set_scale(self,scale):
         "x_equ","y_equ","z_equ",
         "x_ecl","y_ecl","z_ecl",
         "x_obs","y_obs","z_obs",
-        "r_equ","r_ecl","r_obs",
+        "x_luz","y_luz","z_luz",
+        "r_equ","r_ecl","r_obs","r_luz",
         "dsp",
     ]
     self.data[lengths]*=scale
