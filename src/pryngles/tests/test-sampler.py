@@ -26,6 +26,17 @@ class Test(unittest.TestCase):
         S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}",fontsize=10)
         S.fig.tight_layout()
         
+    def test_cut(self):
+
+        #Generate circle
+        S=Sampler(1000,seed=10)
+        S.gen_circle()
+        S._cut_hole(0.5)
+        S.plot()
+        S.plot(c='b',spangled=dict(color='r'))
+        S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}",fontsize=10)
+        S.fig.tight_layout()
+        
     def test_ring(self):
 
         #Generate rings
@@ -66,6 +77,14 @@ class Test(unittest.TestCase):
         
     def test_pre(self):
         sp=Sampler(preset="sphere",N=2750)
+        print(sp.Npreset,sp.N)
+        sp.plot(spangled=dict(color='b',alpha=0.1))
+        
+        sp=Sampler(preset="circle",N=850)
+        print(sp.Npreset,sp.N)
+        sp.plot(spangled=dict(color='b',alpha=0.1))
+        
+        sp=Sampler(preset="ring",N=1150,ri=0.5)
         print(sp.Npreset,sp.N)
         sp.plot(spangled=dict(color='b',alpha=0.1))
     
