@@ -39,6 +39,13 @@ class Test(unittest.TestCase):
         #Check exception: primary could not be different from None or Body
         self.assertRaises(AssertionError,lambda:Planet(primary="Nada"))
         
+    def test_sp(self):
+        S=Star()
+        P=Planet(primary=S)
+        P.spangle_body()
+        print_df(P.sp.data.tail())
+        P.sp.plot3d()
+        
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

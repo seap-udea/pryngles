@@ -207,8 +207,11 @@ class Spangler(PrynglesCommon):
             self._defaults=deepcopy(SPANGLER_COLUMNS)
 
             if not body_hash:
-                body_hash=str(random.getrandbits(16))
-            self._defaults.update(dict(body_hash=body_hash))
+                self.body_hash=str(random.getrandbits(16))
+            else:
+                self.body_hash=body_hash
+            self._defaults.update(dict(body_hash=self.body_hash))
+            
             if spangle_type:
                 self._defaults.update(dict(type=spangle_type))
 
@@ -489,10 +492,12 @@ def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
         geometry: string, default = "circle":
             Geometry of the Sampler.  Available: "circle", "ring", "sphere"
             
-            
         seed: integer. default = 0:
             Value of the integer seed of random number generation (if 0 no random seed is set).
             If a non-zero seed is used the position of the spangle will be always the same.
+            
+        geometry_args: dictionary:
+            See Sampler methods documentation.
     """
     #Create sampler
     self.sample=Sampler(N=self.nspangles,seed=seed)
@@ -709,6 +714,9 @@ def _join_spanglers(self,spanglers,n_obs=[0,0,1],n_luz=[0,0,1]):
     #Concatenate data
     datas=[spangler.data for spangler in spanglers]
     self.data=pd.concat(datas,ignore_index=True)
+    
+    #Create a list of hashehs
+    self.body_hash=[spangler.body_hash for spangler in spanglers]
     
     #Join properties
     self.nspangles=len(self.data)

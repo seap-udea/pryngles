@@ -29,6 +29,7 @@
 
 import unittest
 import warnings
+import dill
 warnings.filterwarnings('ignore')
 
 # ## Jupyter compatibilty
@@ -77,8 +78,33 @@ get_ipython().run_line_magic('autoreload', '2')
 # Many of the classes in Pryngles inherite methods of this common class
 
 class PrynglesCommon(object):
+    
+    def save_to(self,filename):
+        """Save object to a binary file
+        
+        Parameters:
+            filename: string:
+                Name of the file where the object will be stored.
+                
+            compressed: boolean, default = False:
+                If True the file will be stored compressed.
+        
+        Notes:
+            Based on https://betterprogramming.pub/load-fast-load-big-with-compressed-pickles-5f311584507e.
+        """
+        pikd = open(filename,"wb")
+        dill.dump(self, pikd)
+        pikd.close()
+            
+    def load_from(self,filename,compressed=False):
+        pikd = open(filename,"rb")
+        data = dill.load(pikd)
+        pikd.close()
+        self.__dict__=data.__dict__
+        return data
+    
     def __str__(self):
-        return str(self.__dict__)    
+        return str(self.__dict__)
 
 # ## Miscelaneous Class
 
@@ -116,6 +142,10 @@ class Misc(object):
         """
         display(HTML(df.to_html()))
         
+    def load_from(filename,compressed=False):
+        
+        pass
+        
 Misc.__doc__=Misc_doc
 
 class Verbose(object):
@@ -149,5 +179,8 @@ from pryngles.ring import *
 from pryngles.observer import *
 from pryngles.system import *
 from pryngles.legacy import *
+
+# ## Tests
+
 
 

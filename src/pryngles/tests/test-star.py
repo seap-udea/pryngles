@@ -33,6 +33,12 @@ class Test(unittest.TestCase):
         #Check exception: primary could not be different from None or Body
         self.assertRaises(AssertionError,lambda:Star(primary="Nada"))
         
+    def test_sp(self):
+        S=Star()
+        S.spangle_body()
+        print_df(S.sp.data.tail())
+        S.sp.plot3d()
+        
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

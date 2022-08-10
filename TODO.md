@@ -1,8 +1,11 @@
 To Do List
 ==========
 
+- Use already store sampling sets for spangling objects.
+
 - For intersections, transit and occult use the shape of the figure
-  for defining the region on which this intersections occur.
+  for defining the region on which this intersections occur. Use
+  ConvexHull.
 
 - Create spherical shell type of object.
 

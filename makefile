@@ -142,6 +142,9 @@ version:
 
 public:
 	@echo "Updating public github repo..."
+	@cp src/pryngles/*.py $(PUBLIC)/src/pryngles
+	@cp src/pryngles/tests/*.py $(PUBLIC)/src/pryngles/tests
+	@cp -rf src/pryngles/data $(PUBLIC)/src/pryngles
 	@cp examples/pryngles-tutorial-quickstart.ipynb $(PUBLIC)/
 	@cp examples/pryngles-tutorial-developers.ipynb $(PUBLIC)/
 	@cp papers/bright-side/pryngles-paper-figures.ipynb examples/pryngles-examples-exploration.ipynb
