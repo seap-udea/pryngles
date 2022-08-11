@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
     def test_pop(self):
         Verbose.VERBOSITY=1
         sg=Spangler(nspangles=100)
-        sg.populate_spangler(geometry="ring",scale=1,seed=1,gaps=[[0,0.2],[0.5,0.1]],boundary=0)
+        sg.populate_spangler(geometry="ring",scale=1,seed=1,boundary=0)
         print_df(sg.data.head(5))
         sg.set_observer(n_obs=[1,1,1])
         print_df(sg.data.head(5))
@@ -75,7 +75,7 @@ class Test(unittest.TestCase):
         sg.populate_spangler(geometry="circle",scale=2,seed=1,boundary=0)
         sg.plot_obs()
 
-        sg.populate_spangler(geometry="ring",scale=2,seed=1,gaps=[[0,0.2],[0.5,0.1]],boundary=0)
+        sg.populate_spangler(geometry="ring",scale=2,seed=1,ri=0.2,boundary=0)
         sg.plot_obs()
         
         Verbose.VERBOSITY=0
@@ -85,7 +85,7 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=0
 
         sg1=Spangler(nspangles=1000,body_hash="123",n_equ=[1,0,1])
-        sg1.populate_spangler(geometry="ring",scale=2.5,seed=1,gaps=[[0,1.5/2.5]],boundary=0)
+        sg1.populate_spangler(geometry="ring",scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
 
         sg2=Spangler(nspangles=1000,body_hash="345",n_equ=[0,0,1])
         sg2.populate_spangler(geometry="sphere",scale=1,seed=1)
