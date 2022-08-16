@@ -33,9 +33,6 @@ from mpl_toolkits import mplot3d
 from scipy.spatial.transform import Rotation
 import math
 
-#Verbose
-verbose=Verbose.print
-
 # ## Constants
 
 """ Sampler presets are the values of N 
@@ -131,17 +128,27 @@ Sampler_doc = f"""    Fibonacci sampling of disks and spheres.
 """
 
 class Sampler(PrynglesCommon):
-    def __init__(self,filename=None,preset=None,N=1000,seed=0):
+    def __init__(self,
+                 #Initialize from a file
+                 filename=None,
+                 #Initialize from a preset
+                 preset=None,
+                 #Initialize from parameters
+                 N=1000,seed=0):
         
         #If filename is provided load object from filename
         if filename:
+            verbose(VERB_SIMPLE,f"Loading sampler from {filename}")
             self.load_from(filename)
             return
         
         #If preset is provided, read preset from file
         if preset:
+            verbose(VERB_SIMPLE,f"Loading sampler from preset: {preset}")
+            
             geometry = preset[0]
             geometry_args = preset[1]
+            
             if geometry not in SAMPLER_PRESETS:
                 raise ValueError(f"No presets for {geometry} available.  This are the available presets: {SAMPLER_PRESETS}.")
             
@@ -149,7 +156,9 @@ class Sampler(PrynglesCommon):
             qring = False
             if geometry is "ring":
                 ri = geometry_args["ri"]
-                N = N / (1-ri**2)
+                verbose(VERB_VERIFY,f"Original ring preset {N}")
+                N = int(N / (1-ri**2))
+                verbose(VERB_VERIFY,f"Computed ring preset {N}")
                 geometry = "circle"
                 qring = True
             
@@ -158,13 +167,14 @@ class Sampler(PrynglesCommon):
             
             Npreset = self.Npreset
             filename = Misc.get_data(f"sampler_presets/sample_{geometry}_N_{Npreset}.pkl")
-            verbose(f"Reading preset data from {filename}")
+            verbose(VERB_SYSTEM,f"Reading preset data from {filename}")
             self.load_from(filename)
             self.Npreset = Npreset
             self.filename = filename
             
             #If the preset is a ring cut a hole
             if qring:
+                verbose(VERB_VERIFY,f"Cutting hole with ri = {ri}")
                 self._cut_hole(ri) 
             return
         
@@ -429,8 +439,10 @@ def purge_sample(self, tol=0.5):
         ss, pp, N, _purge
     """
     if self.purged:
-        verbose("Already purged.")
+        verbose(VERB_SIMPLE,"Already purged.")
         return 0
+    else:
+        verbose(VERB_SIMPLE,"Purging sample")
 
     self.purged = True
     purge = True

@@ -17,6 +17,8 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
     def test_circle(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
 
         #Generate circle
         S = Sampler(N=1000, seed=10)
@@ -26,7 +28,11 @@ class Test(unittest.TestCase):
         S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}", fontsize=10)
         S.fig.tight_layout()
         
+        Verbose.VERBOSITY=VERB_NONE
+        
     def test_cut(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
 
         #Generate circle
         S = Sampler(N=1000, seed=10)
@@ -37,8 +43,12 @@ class Test(unittest.TestCase):
         S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}", fontsize=10)
         S.fig.tight_layout()
         
+        Verbose.VERBOSITY=VERB_NONE
+
     def test_ring(self):
 
+        Verbose.VERBOSITY=VERB_ALL
+        
         #Generate rings
         S = Sampler(N=500,seed=10)
         fi = 0.6
@@ -55,7 +65,11 @@ class Test(unittest.TestCase):
         S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}",fontsize = 10)
         S.fig.tight_layout()
 
+        Verbose.VERBOSITY=VERB_NONE
+        
     def test_sphere(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
         
         #Generate sphere
         S = Sampler(N=100, seed=10)
@@ -65,7 +79,11 @@ class Test(unittest.TestCase):
         S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}", fontsize=10)
         S.fig.tight_layout()
         
+        Verbose.VERBOSITY=VERB_NONE
+        
     def test_purge(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
         
         #Generate sphere
         S=Sampler(N=1000, seed=10)
@@ -75,7 +93,12 @@ class Test(unittest.TestCase):
         S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}", fontsize=10)
         S.fig.tight_layout()
         
+        Verbose.VERBOSITY=VERB_NONE
+        
     def test_pre(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         sp=Sampler(preset=("sphere",dict()), N=2750)
         print(sp.Npreset,sp.N)
         sp.plot(spangled=dict(color='b', alpha=0.1))
@@ -88,6 +111,8 @@ class Test(unittest.TestCase):
         print(sp.Npreset, sp.N)
         sp.plot(spangled=dict(color='b', alpha=0.1))
     
+        Verbose.VERBOSITY=VERB_NONE
+
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

@@ -22,6 +22,8 @@ class Test(unittest.TestCase):
         import pandas as pd
         import os
         
+        Verbose.VERBOSITY=VERB_ALL
+        
         p=PrynglesCommon()
         p.casa=dict(perro=0,gato=3)
         p.data=pd.DataFrame(np.random.rand(4000,100))
@@ -30,6 +32,8 @@ class Test(unittest.TestCase):
         g=PrynglesCommon()
         g.load_from("/tmp/save.pck")
         print(g.casa,np.array(g.data).shape)
+        
+        Verbose.VERBOSITY=VERB_NONE
         
     def test_fun(self):
         

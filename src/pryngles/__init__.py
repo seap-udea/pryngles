@@ -30,6 +30,7 @@
 import unittest
 import warnings
 import dill
+import inspect
 warnings.filterwarnings('ignore')
 
 # ## Jupyter compatibilty
@@ -69,9 +70,19 @@ except AttributeError:
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
-# ## PrynglesCommon
-# 
-# Many of the classes in Pryngles inherite methods of this common class
+# ## Verbosity
+
+"""Verbosity levels:
+SIMPLE: Simple messages.
+SYSTEM: System operations.
+VERIFY: Message to verify operations
+"""
+VERB_NONE=0
+VERB_SIMPLE=1
+VERB_SYSTEM=2
+VERB_VERIFY=3
+VERB_DEEP=4
+VERB_ALL=100
 
 class Verbose(object):
     """Verbose print in the package
@@ -99,12 +110,16 @@ class Verbose(object):
         Verbose.VERBOSITY=2
         Verbose.print(4,"Hello world") #No print
     """
-    VERBOSITY=0
+    VERBOSITY=VERB_ALL
     def print(level,*args):
         if level<=Verbose.VERBOSITY:
-            print(">"*level+f"VERB{level}::",*args)
+            print("  "*level+f"VERB{level}::{inspect.stack()[1][3]}::",*args)
 
 verbose=Verbose.print
+
+# ## PrynglesCommon
+# 
+# Many of the classes in Pryngles inherite methods of this common class
 
 class PrynglesCommon(object):
     
@@ -121,17 +136,17 @@ class PrynglesCommon(object):
         Notes:
             Based on https://betterprogramming.pub/load-fast-load-big-with-compressed-pickles-5f311584507e.
         """
-        verbose(2,f"Saving object to {filename}")
+        verbose(VERB_SYSTEM,f"Saving object to {filename}")
         pikd = open(filename,"wb")
         dill.dump(self, pikd)
         pikd.close()
             
     def load_from(self,filename,compressed=False):
-        verbose(2,f"Loading object from {filename}")
+        verbose(VERB_SYSTEM,f"Loading object from {filename}")
         pikd = open(filename,"rb")
         data = dill.load(pikd)
         pikd.close()
-        verbose(2,f"Transferring data to new object")
+        verbose(VERB_VERIFY,f"Transferring data to new object")
         self.__dict__=data.__dict__
         return data
     
@@ -173,10 +188,6 @@ class Misc(object):
                 DataFrame to print.
         """
         display(HTML(df.to_html()))
-        
-    def load_from(filename,compressed=False):
-        
-        pass
         
 Misc.__doc__=Misc_doc
 

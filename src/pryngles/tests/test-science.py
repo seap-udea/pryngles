@@ -72,7 +72,8 @@ class Test(unittest.TestCase):
         print(xyz) 
 
     def test_rot(self):
-        Verbose.VERBOSITY=1
+        
+        Verbose.VERBOSITY=VERB_ALL
         
         #Test rotation
         Msys2uni,Muni2sys=Science.rotation_matrix([0,0,1],0)
@@ -81,7 +82,7 @@ class Test(unittest.TestCase):
         Msys2uni,Muni2sys=Science.rotation_matrix([0,0,-1],0)
         print(Msys2uni)
 
-        Verbose.VERBOSITY=0
+        Verbose.VERBOSITY=VERB_NONE
 
 
 if __name__=="__main__":

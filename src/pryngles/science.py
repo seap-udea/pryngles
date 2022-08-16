@@ -26,8 +26,6 @@ import numpy as np
 import math as mh
 import spiceypy as spy
 
-verbose=Verbose.print
-
 # ## The Science class
 # 
 # The Science class is a class with routines intended to perform a wide diversity of mathematical, physical and astronomical calculations.
@@ -134,7 +132,7 @@ def rotation_matrix(ez,alpha):
     ey=spy.ucrss(ez,ex)
     Msys2uni=np.array(list(np.vstack((ex,ey,ez)).transpose())).reshape((3,3))
     Muni2sys=spy.invert(Msys2uni)
-    verbose("Rotation axis:",ex,ey,ez)
+    verbose(VERB_VERIFY,"Rotation axis:",ex,ey,ez)
     return Msys2uni,Muni2sys
 
 Science.rotation_matrix=rotation_matrix
