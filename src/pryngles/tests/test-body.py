@@ -17,7 +17,11 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
     def test_fun(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         B=Body(BodyDefaults,"Body",None,dict(x=0),dict(mass=2.3),dict())
+        
         print(B)
         print(B.orbit)
         print(B.physics)
@@ -26,17 +30,11 @@ class Test(unittest.TestCase):
         B.update_body(orbit=dict(m=2))
         print(B.orbit)
         
-        
         C=Body(BodyDefaults,"Body",B,dict(),dict(),dict())
         print(C)
         print(B)
-        """
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
-        """
+        
+        Verbose.VERBOSITY=VERB_NONE
         
 
 if __name__=="__main__":

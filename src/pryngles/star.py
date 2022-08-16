@@ -60,7 +60,10 @@ class Star(Body):
         
         primary: Class Body, default = None:
             Object in the center of the orbit of the star for specification purposes.
+
             If None the object is the center of the orbit specification for other objects.
+            
+            Object primary for a star should be another star.
         
         orbit:
 
@@ -92,15 +95,14 @@ class Star(Body):
 
         optics:
 
+            nspangles: int, default = 1000:
+                Number of spangles on which the star will be discretized.
+
             limb_coeffs: list [adimensional], default = []
                 List of limb darkening fit coefficients.  See Science.calc_limbdarkening.
                 
                 Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
                 Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
-
-            nspangles: int, default = 1000:
-
-                Number of spangles on which the star will be discretized.
 
     Derived attributes:
     
@@ -150,11 +152,11 @@ class Star(Body):
         #Rotational angular velocity
         self.physics.wrot=2*np.pi/self.physics.prot
         
-        #Rotation axis:
+        #Rotation axis
         self.physics.n_equ=sci.cartesian([1,self.physics.roll,90*Consts.deg-self.physics.i])
 
 
-def spangle_body(self,seed=0):
+def spangle_body(self,seed=0,preset=False):
     """
     Spangle the surface of the star
     """
@@ -175,7 +177,7 @@ def spangle_body(self,seed=0):
         scale=self.physics.radius,
         seed=seed,
         geometry="sphere",
-        preset=True
+        preset=preset
     )
 
 Star.spangle_body=spangle_body

@@ -17,6 +17,9 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
     def test_star(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         S=Star()
         print(S.physics)
         print(S.hash)
@@ -33,16 +36,18 @@ class Test(unittest.TestCase):
         #Check exception: primary could not be different from None or Body
         self.assertRaises(AssertionError,lambda:Star(primary="Nada"))
         
+        Verbose.VERBOSITY=VERB_NONE
+
     def test_sp(self):
         
-        Verbose.VERBOSITY=1
+        Verbose.VERBOSITY=VERB_ALL
         
         S=Star(optics=dict(nspangles=1270))
-        S.spangle_body()
+        S.spangle_body(preset=True)
         print_df(S.sp.data.tail())
         S.sp.plot3d()
         
-        Verbose.VERBOSITY=0
+        Verbose.VERBOSITY=VERB_NONE
         
 
 if __name__=="__main__":

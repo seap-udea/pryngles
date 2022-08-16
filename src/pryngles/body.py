@@ -134,7 +134,6 @@ class Body(PrynglesCommon):
                 values provided in this new object
                 
         Example:
-        
             B.update_body(orbit=dict(m=2))
                 This only update the attribute m of orbit.
         """
@@ -152,12 +151,14 @@ class Body(PrynglesCommon):
         if 'childs' not in self.__dict__:
             self.childs=[]
         if child is not None:
+            verbose(VERB_VERIFY,f"Add child {child.kind} to body {self.kind} ({self.hash})")
             self.childs+=[child]
             
     def _update_parent(self,parent=None):
         if 'parent' not in self.__dict__:
             self.parent=parent
         elif parent is not None:
+            verbose(VERB_VERIFY,f"Add parent {parent.kind} to body {self.kind} ({self.hash})")
             self.parent=parent
             parent._update_childs(self)
 

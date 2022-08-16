@@ -156,7 +156,7 @@ class Planet(Body):
         self.physics.n_equ=sci.cartesian([1,self.physics.roll,90*Consts.deg-self.physics.i])
 
 
-def spangle_body(self,seed=0):
+def spangle_body(self,seed=0,preset=False):
     """
     Spangle the surface of the planet
     """
@@ -165,7 +165,7 @@ def spangle_body(self,seed=0):
     self.sp=Spangler(
         nspangles=self.optics.nspangles,
         body_hash=self.hash,
-        spangle_type=STAR_SPANGLE,
+        spangle_type=SOLID_SPANGLE,
         n_equ=self.physics.n_equ,
         alpha_equ=self.physics.alpha,
         w_equ=self.physics.wrot,
@@ -176,7 +176,8 @@ def spangle_body(self,seed=0):
     self.sp.populate_spangler(
         scale=self.physics.radius,
         seed=seed,
-        geometry="sphere",        
+        geometry="sphere",
+        preset=preset
     )
 
 Planet.spangle_body=spangle_body

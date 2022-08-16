@@ -19,6 +19,8 @@
 # # Pryngles module: rings
 
 from pryngles import *
+
+#Aliases
 sci=Science
 
 # ## External modules
@@ -120,17 +122,40 @@ class Ring(Body):
         
         #Update properties
         self.update_body(**self.__dict__)
+        
+    def update_body(self,**pars):
+        Body.update_body(self,**pars)
+
+        #Here place the commands to update this kind of body
+        self.physics.ri=self.physics.fi*self.primary.physics.radius
+        self.physics.re=self.physics.fe*self.primary.physics.radius
+        
+        #Rotation axis:
+        self.physics.n_equ=sci.cartesian([1,self.physics.roll,90*Consts.deg-self.physics.i])
 
 
-# ### Update body
+def spangle_body(self,seed=0,preset=False):
+    """
+    Spangle the surface of the planet
+    """
+    
+    #Create spangler
+    self.sp=Spangler(
+        nspangles=self.optics.nspangles,
+        body_hash=self.hash,
+        spangle_type=ATMOSPHERIC_SPANGLE,
+        n_equ=self.physics.n_equ,
+    )
+    
+    #Populate spangler
+    self.sp.populate_spangler(
+        scale=self.physics.re,
+        seed=seed,
+        geometry="ring",
+        preset=preset,
+        ri=self.physics.fi/self.physics.fe
+    )
 
-def update_body(self,**pars):
-    Body.update_body(self,**pars)
-
-    #Here place the commands to update this kind of body
-    self.ri=self.physics.fi*self.primary.physics.radius
-    self.re=self.physics.fe*self.primary.physics.radius
-
-Ring.update_body=update_body
+Ring.spangle_body=spangle_body
 
 

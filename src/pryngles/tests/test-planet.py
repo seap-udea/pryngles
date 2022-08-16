@@ -17,6 +17,9 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
     def test_planet(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         S=Star()
 
         #Check exception: primary is mandatory for planets
@@ -39,12 +42,19 @@ class Test(unittest.TestCase):
         #Check exception: primary could not be different from None or Body
         self.assertRaises(AssertionError,lambda:Planet(primary="Nada"))
         
+        Verbose.VERBOSITY=VERB_NONE
+        
     def test_sp(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         S=Star()
         P=Planet(primary=S)
-        P.spangle_body()
+        P.spangle_body(preset=True)
         print_df(P.sp.data.tail())
         P.sp.plot3d()
+        
+        Verbose.VERBOSITY=VERB_NONE
         
 
 if __name__=="__main__":

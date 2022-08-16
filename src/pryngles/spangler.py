@@ -32,7 +32,6 @@ import random
 #Aliases
 print_df=Misc.print_df
 sci=Science
-verbose=Verbose.print
 
 # ## The Spangler class
 # 
@@ -87,6 +86,9 @@ Spangler_doc="""A Spangler associated to an object or set of objects.
             n_obs: numpy Array (3), default = [0,0,1]:
                 unitary vector normal to {obs} observer direction.
             
+            alpha_obs: float, default = 0:
+                Roll angle of x-axis of observer system (not implemented yet)
+
 Core attributes:
 
     nspangles: int:
@@ -195,7 +197,10 @@ class Spangler(PrynglesCommon):
 
         #Create a spanglers with a list of other spanglers
         if len(spanglers)>0:
-            self._join_spanglers(spanglers,n_obs=n_obs,n_luz=n_luz)
+            verbose(VERB_SIMPLE,f"Joining {len(spanglers)} spanglers")
+            self._join_spanglers(spanglers,
+                                 n_obs=n_obs,alpha_obs=alpha_obs,
+                                 n_luz=n_luz)
             
         #Create a spangler with the desired options
         else:
@@ -207,9 +212,11 @@ class Spangler(PrynglesCommon):
             self._defaults=deepcopy(SPANGLER_COLUMNS)
 
             if not body_hash:
+                verbose(VERB_SIMPLE,f"Generating random hash")
                 self.body_hash=str(random.getrandbits(16))
             else:
                 self.body_hash=body_hash
+                
             self._defaults.update(dict(body_hash=self.body_hash))
             
             if spangle_type:
@@ -228,11 +235,12 @@ class Spangler(PrynglesCommon):
                                    center_equ=center_equ,center_ecl=center_ecl)
         
             else:        
+                verbose(VERB_SIMPLE,f"Creating a blank Spangler")
                 #Creat a blank DataFrame
                 self.data=pd.DataFrame(columns=self._defaults.keys())
                 
     # Prototype
-    def _join_spanglers(self,spanglers,nobs=[0,0,1],n_luz=[0,0,1]):pass
+    def _join_spanglers(self,spanglers,nobs=[0,0,1],alpha_obs=0,n_luz=[0,0,1]):pass
     
 Spangler.__doc__=Spangler_doc
 
@@ -240,6 +248,8 @@ def update_visibility(self):
     """
     Set visibility of spangles
     """
+    verbose(VERB_SIMPLE,f"Updating visibility")
+    
     #Set state
     self.data.unset=0
     
@@ -283,8 +293,10 @@ def set_observer(self,n_obs=[],alpha_obs=0):
 
         Rotation matrices M_ecl2obs, M_obs2ecl, 
     """
+    verbose(VERB_SIMPLE,f"Setting observer")
 
     if len(n_obs)>0:
+        verbose(VERB_VERIFY,f"Generating observer matrices from n_obs = {n_obs}")
         
         #Unitary observer vector
         self.n_obs,one=spy.unorm(n_obs)
@@ -310,6 +322,8 @@ def update_illumination(self):
     """
     Set illumination of spangles
     """
+    verbose(VERB_SIMPLE,f"Updating illumination")
+
     #Set state
     self.data.unset=0
     
@@ -348,8 +362,11 @@ def set_luz(self,n_luz=[]):
 
         Rotation matrices M_ecl2luz, M_luz2ecl, 
     """
+    verbose(VERB_SIMPLE,f"Setting light-source")
 
     if len(n_luz)>0:
+        verbose(VERB_VERIFY,f"Generating light-source matrices from n_luz = {n_luz}")
+        
         #Unitary luzerver vector
         self.n_luz,one=spy.unorm(n_luz)
         self.d_luz=sci.spherical(self.n_luz)
@@ -435,8 +452,11 @@ def set_positions(self,
 
         Rotation matrices M_equ2ecl
     """
-    
+    verbose(VERB_SIMPLE,f"Setting positions")
+
     if len(n_equ)>0:
+        verbose(VERB_VERIFY,f"Generating equatorial transformation matrices from n_equ = {n_equ}")
+        
         #Unitary equatorial vector
         n_equ,one=spy.unorm(n_equ)
         self.data["n_equ"]=[n_equ]*self.nspangles
@@ -452,6 +472,8 @@ def set_positions(self,
      
     #Update equatorial coordinates by rotation
     if t is not None:
+        verbose(VERB_VERIFY,f"Updating rotations at t = {t}")
+
         self.data["q_equ"]=[q+w*(t-t0) for q,w,t0 in zip(self.data.q_equ,self.data.w,self.data.t0)]
         self.data[["x_equ","y_equ","z_equ"]]=            [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
         #Update normal vectors
@@ -460,8 +482,10 @@ def set_positions(self,
                 
     #Update center
     if len(center_equ)>0:
+        verbose(VERB_VERIFY,f"Updating center in {{equ}} to {center_equ}")
         self.data["center_equ"]=[center_equ]*self.nspangles
     if len(center_ecl)>0:
+        verbose(VERB_VERIFY,f"Updating center {{ecl}} to {center_ecl}")
         self.data["center_ecl"]=[center_ecl]*self.nspangles
         
     #Convert from equatorial to ecliptic
@@ -515,7 +539,7 @@ def populate_spangler(self,
     
     #Check if preset
     if preset:
-        verbose(f"Populating spangler from preset for {geometry}")
+        verbose(VERB_SIMPLE,f"Populating spangler from preset for {geometry}")
         preset=(geometry,geometry_args)
         self.sample=Sampler(preset=preset,N=self.nspangles,seed=seed)   
     else:
@@ -526,17 +550,20 @@ def populate_spangler(self,
 
     #Purge sample if it is in 3d
     if self.sample.dim>2:
-        verbose("Purging sample")
+        verbose(VERB_SIMPLE,f"Purging 3d sample")
         self.sample.purge_sample()
                 
     #Check if number of samples is not equal to that of spangles
     if self.sample.N!=self.nspangles:
+        verbose(VERB_SYSTEM,f"Sample size {self.sample.N} is different from spangles {self.nspangles}. Adjusting.")
         dif=self.sample.N-self.nspangles
         if dif>0:
+            verbose(VERB_SYSTEM,f"Adding {dif} entries to DataFrame")
             for i in range(dif):
                 df=pd.DataFrame([self.data.iloc[-1]])
                 self.data=pd.concat([self.data,df],ignore_index=True)
         else:
+            verbose(VERB_SYSTEM,f"Removing {-dif} entries to DataFrame")
             self.data.drop(range(self.nspangles+dif,self.nspangles),inplace=True)
         self.nspangles=self.sample.N
     
@@ -603,7 +630,7 @@ def plot3d(self,spangled=True,factor=1.2,**args):
             center=[self.data.x_ecl[i],self.data.y_ecl[i],self.data.z_ecl[i]]
             radius=self.data.dsp[i]/2
             zDir=self.data.ns_ecl[i]
-            verbose(i,center,radius,zDir)
+            #verbose(VERB_DEEP,i,center,radius,zDir)
             Plot.circle3d(ax,
                           center=center,
                           radius=radius,
@@ -635,6 +662,11 @@ def plot3d(self,spangled=True,factor=1.2,**args):
     ax.set_title(f"Spangler {self.geometry}, N = {self.nspangles}",
                  color='w',fontsize=10)
     Plot.pryngles_mark(ax)
+    
+    #Scale
+    ax.text2D(0,0,f"Axis scale: {maxval*factor:.2g}",
+            fontsize=8,color='w',
+            transform=ax.transAxes)
 
     #Orientation
     ax.view_init(azim=30)
@@ -698,6 +730,11 @@ def plot_obs(self,spangled=dict(),**args):
                  color='w',fontsize=10,position=(0.5,+0.5),ha='center')
     Plot.pryngles_mark(ax)
 
+    #Scale
+    ax.text(0,0,f"Axis scale: {maxval*factor:.2g}",
+              fontsize=8,color='w',
+              transform=ax.transAxes)
+
     #Decoration
     #ax.set_aspect("equal")
 
@@ -708,7 +745,7 @@ def plot_obs(self,spangled=dict(),**args):
 Spangler.plot_obs=plot_obs
 
 
-def _join_spanglers(self,spanglers,n_obs=[0,0,1],n_luz=[0,0,1]):
+def _join_spanglers(self,spanglers,n_obs=[0,0,1],alpha_obs=0,n_luz=[0,0,1]):
     """
     Join spanglers into a single spangler
     
@@ -740,8 +777,8 @@ def _join_spanglers(self,spanglers,n_obs=[0,0,1],n_luz=[0,0,1]):
     self.geometry="Join"
     
     #Set luz and set observer
+    self.set_observer(n_obs,alpha_obs)
     self.set_luz(n_luz)
-    self.set_observer(n_obs)
     
 Spangler._join_spanglers=_join_spanglers
 
@@ -762,7 +799,6 @@ def set_scale(self,scale):
     ]
     self.data[areas]*=scale**2
     
-
 Spangler.set_scale=set_scale
 
 

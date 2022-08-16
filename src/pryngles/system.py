@@ -31,14 +31,6 @@ import rebound as rb
 System_doc=f"""
 Creates a planetary system.
 
-Examples:
-
-    sys=System()
-    sys=System(units=['km','msun','s'])
-    S=Star()
-    P=Planet(primary=S)
-    sys=System(stars=S,planets=P)
-
 Initialization attributes:
 
     units: list of strings, default = ['au','msun','yr']:
@@ -87,6 +79,21 @@ Usefule private attributes:
 
     _sim: rebound Simulation.
         Rebound simulation object.
+        
+Examples:
+
+    S=Star()
+    P=Planet(primary=S)
+
+    sys=System()
+    sys=System(units=['km','msun','s'])
+    sys.add(S)
+    sys.add(P)
+
+    Either:
+    
+    sys=System(stars=S,planets=P)
+    
 """;
 
 class System(PrynglesCommon):
@@ -211,13 +218,13 @@ def add(self,kind=None,primary=None,orbit=None,physics=None,optics=None):
     lkind=kind.lower()
 
     """
-    #This code generalize the procedure:
-    if orbit is None:
-        orbit = StarDefaults.orbit.copy()
-    if physics is None:
-        physics = StarDefaults.physics.copy()
-    if optics is None:
-        optics = StarDefaults.optics.copy()
+    This code generalize the procedure:
+        if orbit is None:
+            orbit = StarDefaults.orbit.copy()
+        if physics is None:
+            physics = StarDefaults.physics.copy()
+        if optics is None:
+            optics = StarDefaults.optics.copy()
     """
     pdict=dict()
     plist=[]
@@ -228,9 +235,9 @@ def add(self,kind=None,primary=None,orbit=None,physics=None,optics=None):
         plist+=[pdict[prop]]
 
     """
-    #This code generalize the procedure
-    S=Star(primary=primary,orbit=orbit,physics=physics,optics=optics)
-    self._list2Objects("stars","Star",S)            
+    This code generalize the procedure
+        S=Star(primary=primary,orbit=orbit,physics=physics,optics=optics)
+        self._list2Objects("stars","Star",S)            
     """
     obj=eval(f"{kind}(primary=primary,orbit=plist[0],physics=plist[1],optics=plist[2])")
     self._update_objects(lkind+"s",kind,obj)
@@ -243,16 +250,18 @@ System.add=add
 def remove(self,body_hash):
     """Remove a body from a system.
 
+    Parameters:
+        body_hash: string
+            Hash of the body to remove
+    
+    Notes: 
+        Remove eliminate body and all the childs and the childs of the childs.
+
     Example:
         sys=System()
         S=sys.add(kind="Star",orbit=dict(m=2))
         sys.remove(body_hash=S.hash)
         
-    Parameters:
-        body_hash: string
-            Hash of the body to remove
-        
-    Remove eliminate body and all the childs and the childs of the childs.
     """
     if body_hash in self.hashes:
         obj=self.hashes[body_hash]

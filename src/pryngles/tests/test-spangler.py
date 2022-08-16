@@ -17,7 +17,9 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
     def test_init(self):
-        Verbose.VERBOSITY=1
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         print("Basic definition:")
         sg=Spangler(nspangles=3,spangle_type=GRANULAR_SPANGLE)
         Misc.print_df(sg.data.head(5))
@@ -35,10 +37,11 @@ class Test(unittest.TestCase):
         Misc.print_df(sg.data.head(5))
         print("Equ->Ecl:\n",sg.M_equ2ecl)
         print("Obs->Ecl:\n",sg.M_obs2ecl)
-        Verbose.VERBOSITY=0
+        
+        Verbose.VERBOSITY=VERB_NONE
 
     def test_pop(self):
-        Verbose.VERBOSITY=1
+        Verbose.VERBOSITY=VERB_ALL
         
         #Using preset
         sg=Spangler(nspangles=850)
@@ -59,28 +62,32 @@ class Test(unittest.TestCase):
         sg.populate_spangler(geometry="sphere",scale=2,seed=1)
         print(sg.nspangles,sg.sample.N,len(sg.data))
         
-        Verbose.VERBOSITY=0
+        Verbose.VERBOSITY=VERB_NONE
         
     def test_plot3d(self):
-        Verbose.VERBOSITY=0
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         plt.close("all")
         sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1])
         sg.populate_spangler(geometry="sphere",scale=2,seed=1)
         sg.set_luz(n_luz=[1,0,0])
-        sg.plot3d(spangled=False,factor=1.3,c='y',s=3)
+        sg.plot3d(spangled=False,factor=1.5,c='y',s=3)
         
         sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1])
         sg.populate_spangler(geometry="ring",scale=2,seed=1,boundary=0)
         sg.set_luz(n_luz=[0,0,-1])
-        sg.plot3d(factor=0.4)
+        sg.plot3d(factor=0.5)
 
-        Verbose.VERBOSITY=0
+        Verbose.VERBOSITY=VERB_NONE
 
     def test_plotobs(self):
-        Verbose.VERBOSITY=0
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
         sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1],center_ecl=[1,1,1])
 
-        sg.populate_spangler(geometry="sphere",scale=2,seed=1)
+        sg.populate_spangler(geometry="sphere",scale=2,seed=1,preset=True)
         sg.set_observer(n_obs=[1,0,0])
         sg.plot_obs()
 
@@ -90,27 +97,28 @@ class Test(unittest.TestCase):
         sg.populate_spangler(geometry="ring",scale=2,seed=1,ri=0.2,boundary=0)
         sg.plot_obs()
         
-        Verbose.VERBOSITY=0
+        Verbose.VERBOSITY=VERB_NONE
 
-        
     def test_join(self):
-        Verbose.VERBOSITY=0
+        
+        Verbose.VERBOSITY=VERB_ALL
 
         sg1=Spangler(nspangles=1000,body_hash="123",n_equ=[1,0,1])
         sg1.populate_spangler(geometry="ring",scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
 
         sg2=Spangler(nspangles=1000,body_hash="345",n_equ=[0,0,1])
-        sg2.populate_spangler(geometry="sphere",scale=1,seed=1)
+        sg2.populate_spangler(geometry="sphere",scale=1,seed=1,preset=True)
 
         sgj=Spangler(spanglers=[sg1,sg2],n_obs=[1,0,0],n_luz=[-1,-1,-1])
 
         sgj.plot3d()
         sgj.plot_obs()
         
-        Verbose.VERBOSITY=0
+        Verbose.VERBOSITY=VERB_NONE
 
     def test_scale(self):
-        Verbose.VERBOSITY=0
+
+        Verbose.VERBOSITY=VERB_SIMPLE
 
         sg=Spangler()
         print_df(sg.data)
@@ -118,7 +126,7 @@ class Test(unittest.TestCase):
         sg.set_scale(5)
         print_df(sg.data)
 
-        Verbose.VERBOSITY=0
+        Verbose.VERBOSITY=VERB_NONE
 
 
 if __name__=="__main__":

@@ -80,16 +80,7 @@ class Test(unittest.TestCase):
         
         S.update_body(orbit=dict(m=3))
         print(sys.stars[0].orbit)
-        
-        """
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        #Check exception: primary could not be different from None or Body
-        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
-        """
-        
+                
     def test_system_remove(self):
         sys=System()
         S=sys.add(kind="Star",orbit=dict(m=2))
