@@ -33,6 +33,9 @@ from mpl_toolkits import mplot3d
 from scipy.spatial.transform import Rotation
 import math
 
+#Verbose
+verbose=Verbose.print
+
 # ## Constants
 
 """ Sampler presets are the values of N 
@@ -128,7 +131,7 @@ Sampler_doc = f"""    Fibonacci sampling of disks and spheres.
 """
 
 class Sampler(PrynglesCommon):
-    def __init__(self,N=1000,seed=0,filename=None,preset=None,ri=0):
+    def __init__(self,filename=None,preset=None,N=1000,seed=0):
         
         #If filename is provided load object from filename
         if filename:
@@ -137,21 +140,25 @@ class Sampler(PrynglesCommon):
         
         #If preset is provided, read preset from file
         if preset:
-            if preset not in SAMPLER_PRESETS:
-                raise ValueError(f"No presets for {preset} available.  This are the available presets: {SAMPLER_PRESETS}.")
+            geometry = preset[0]
+            geometry_args = preset[1]
+            if geometry not in SAMPLER_PRESETS:
+                raise ValueError(f"No presets for {geometry} available.  This are the available presets: {SAMPLER_PRESETS}.")
             
             #Modify N if it is a ring
             qring = False
-            if preset is "ring":
+            if geometry is "ring":
+                ri = geometry_args["ri"]
                 N = N / (1-ri**2)
-                preset = "circle"
+                geometry = "circle"
                 qring = True
             
             #Calculate the closest Npreset
-            exec(f"self.Npreset=SAMPLER_{preset.upper()}_PRESETS[abs({N}-SAMPLER_{preset.upper()}_PRESETS).argmin()]")
+            exec(f"self.Npreset=SAMPLER_{geometry.upper()}_PRESETS[abs({N}-SAMPLER_{geometry.upper()}_PRESETS).argmin()]")
             
             Npreset = self.Npreset
-            filename = Misc.get_data(f"sampler_presets/sample_{preset}_N_{Npreset}.pkl")
+            filename = Misc.get_data(f"sampler_presets/sample_{geometry}_N_{Npreset}.pkl")
+            verbose(f"Reading preset data from {filename}")
             self.load_from(filename)
             self.Npreset = Npreset
             self.filename = filename
@@ -422,10 +429,10 @@ def purge_sample(self, tol=0.5):
         ss, pp, N, _purge
     """
     if self.purged:
-        print("Already purged.")
+        verbose("Already purged.")
         return 0
 
-    self.purged = False
+    self.purged = True
     purge = True
     while purge:
         self._calc_distances()

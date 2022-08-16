@@ -21,7 +21,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # PlanetaRY spanGLES: the bright-side of the light-curve
+# # PlanetaRY spanGLES
 
 # This is the initialization file of the `Pryngles` package.
 
@@ -45,7 +45,7 @@ For instance, the magic "%matplotlib nbagg" is converted into:
 
     get_ipython().magic('matplotlib nbagg',globals())
 
-So, the routinge "magic" should be add to the get_ipython() class.        
+So, the method "magic" should be add to the get_ipython() class.        
 """
 from IPython.display import HTML, Image, display
 import IPython.core.autocall as autocall
@@ -59,15 +59,11 @@ except AttributeError:
         pass
     class get_ipython(object):
         def run_line_magic(self,*args):
-            if "timeit" in args[0]:
-                command=" ".join(args)
-                replaceTimeIt(command)
+            pass
         def run_cell_magic(self,x,y,z):
             pass
         def magic(self,command,scope=globals()):
-            import re
-            if "timeit" in command:
-                replaceTimeIt(command)
+            pass
 
 #Magics can only be located from here
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -76,6 +72,39 @@ get_ipython().run_line_magic('autoreload', '2')
 # ## PrynglesCommon
 # 
 # Many of the classes in Pryngles inherite methods of this common class
+
+class Verbose(object):
+    """Verbose print in the package
+    
+    Attributes:
+        VERBOSITY: int, default = 0:
+            Level of verbosity.
+            
+    Methods:
+        print(level,msg):
+            Print a message if level<=VERBOSITY.
+    
+    Example:
+    
+        Verbose.print(1,"Hello world") #No print
+        
+        Verbose.print(0,"Hello world") #Print
+
+        Verbose.VERBOSITY=1
+        Verbose.print(1,"Hello world") #Print
+        
+        Verbose.VERBOSITY=2
+        Verbose.print(1,"Hello world") #Print
+        
+        Verbose.VERBOSITY=2
+        Verbose.print(4,"Hello world") #No print
+    """
+    VERBOSITY=0
+    def print(level,*args):
+        if level<=Verbose.VERBOSITY:
+            print(">"*level+f"VERB{level}::",*args)
+
+verbose=Verbose.print
 
 class PrynglesCommon(object):
     
@@ -92,14 +121,17 @@ class PrynglesCommon(object):
         Notes:
             Based on https://betterprogramming.pub/load-fast-load-big-with-compressed-pickles-5f311584507e.
         """
+        verbose(2,f"Saving object to {filename}")
         pikd = open(filename,"wb")
         dill.dump(self, pikd)
         pikd.close()
             
     def load_from(self,filename,compressed=False):
+        verbose(2,f"Loading object from {filename}")
         pikd = open(filename,"rb")
         data = dill.load(pikd)
         pikd.close()
+        verbose(2,f"Transferring data to new object")
         self.__dict__=data.__dict__
         return data
     
@@ -147,21 +179,6 @@ class Misc(object):
         pass
         
 Misc.__doc__=Misc_doc
-
-class Verbose(object):
-    """Verbose print in the package
-    
-    Example:
-    
-        Verbose.print("Hello world") #No output
-        
-        Verbose.VERBOSITY=1
-        Verbose.print("Hello world") #Output
-    """
-    VERBOSITY=0
-    def print(*args):
-        if Verbose.VERBOSITY:
-            print(*args)
 
 # ## Pryngles modules
 

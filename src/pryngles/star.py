@@ -174,7 +174,8 @@ def spangle_body(self,seed=0):
     self.sp.populate_spangler(
         scale=self.physics.radius,
         seed=seed,
-        geometry="sphere",        
+        geometry="sphere",
+        preset=True
     )
 
 Star.spangle_body=spangle_body

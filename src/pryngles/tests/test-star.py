@@ -34,10 +34,15 @@ class Test(unittest.TestCase):
         self.assertRaises(AssertionError,lambda:Star(primary="Nada"))
         
     def test_sp(self):
-        S=Star()
+        
+        Verbose.VERBOSITY=1
+        
+        S=Star(optics=dict(nspangles=1270))
         S.spangle_body()
         print_df(S.sp.data.tail())
         S.sp.plot3d()
+        
+        Verbose.VERBOSITY=0
         
 
 if __name__=="__main__":

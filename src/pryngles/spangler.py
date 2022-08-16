@@ -248,6 +248,7 @@ def update_visibility(self):
     
     #Conditions:
     """
+    | Dimension = 2 (ring)
     & Dimension = 3 (sphere) 
     & z_obs > 0: it is towards the observer
     """
@@ -317,6 +318,7 @@ def update_illumination(self):
     
     #Conditions:
     """
+    | Dimension = 2 (ring)
     & Dimension = 3 (sphere) 
     & z_obs > 0: it is towards the observer
     """
@@ -484,27 +486,42 @@ def set_positions(self,
 Spangler.set_positions=set_positions
 
 
-def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
+def populate_spangler(self,
+                      scale=1,seed=0,geometry="circle",preset=False,
+                      **geometry_args):
     """Populate data of a Spangler using points generated with a given geometry.
     
     Parameters:
     
-        geometry: string, default = "circle":
-            Geometry of the Sampler.  Available: "circle", "ring", "sphere"
+        scale: float. default = 1:
+            Scale size of the object.
             
         seed: integer. default = 0:
             Value of the integer seed of random number generation (if 0 no random seed is set).
             If a non-zero seed is used the position of the spangle will be always the same.
             
+        geometry: string, default = "circle":
+            Geometry of the Sampler.  Available: "circle", "ring", "sphere"
+            
+        preset: boolean, default = False:
+            If true the spangler is populated with preset data.
+            
         geometry_args: dictionary:
             See Sampler methods documentation.
+            
+        
     """
-    #Create sampler
-    self.sample=Sampler(N=self.nspangles,seed=seed)
     self.geometry=geometry
     
-    #Generate sampling points
-    exec(f"self.sample.gen_{geometry}(**geometry_args)")
+    #Check if preset
+    if preset:
+        verbose(f"Populating spangler from preset for {geometry}")
+        preset=(geometry,geometry_args)
+        self.sample=Sampler(preset=preset,N=self.nspangles,seed=seed)   
+    else:
+        self.sample=Sampler(N=self.nspangles,seed=seed)
+        exec(f"self.sample.gen_{geometry}(**geometry_args)")
+        
     self.data["dim"]=self.sample.dim
 
     #Purge sample if it is in 3d

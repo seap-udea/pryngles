@@ -19,7 +19,7 @@ class Test(unittest.TestCase):
     def test_circle(self):
 
         #Generate circle
-        S = Sampler(1000, seed=10)
+        S = Sampler(N=1000, seed=10)
         S.gen_circle()
         S.plot()
         S.plot(c='b', spangled=dict(color='r'))
@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
     def test_cut(self):
 
         #Generate circle
-        S = Sampler(1000, seed=10)
+        S = Sampler(N=1000, seed=10)
         S.gen_circle()
         S._cut_hole(0.5)
         S.plot()
@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
     def test_ring(self):
 
         #Generate rings
-        S = Sampler(500,seed=10)
+        S = Sampler(N=500,seed=10)
         fi = 0.6
         S.gen_ring(fi)
         print(S.aes)
@@ -58,7 +58,7 @@ class Test(unittest.TestCase):
     def test_sphere(self):
         
         #Generate sphere
-        S = Sampler(100, seed=10)
+        S = Sampler(N=100, seed=10)
         S.gen_sphere()
         S.plot()
         S.plot(spangled=dict(color='r'))
@@ -68,7 +68,7 @@ class Test(unittest.TestCase):
     def test_purge(self):
         
         #Generate sphere
-        S=Sampler(1000, seed=10)
+        S=Sampler(N=1000, seed=10)
         S.gen_sphere()
         S.purge_sample()
         S.plot()
@@ -76,15 +76,15 @@ class Test(unittest.TestCase):
         S.fig.tight_layout()
         
     def test_pre(self):
-        sp=Sampler(preset="sphere", N=2750)
+        sp=Sampler(preset=("sphere",dict()), N=2750)
         print(sp.Npreset,sp.N)
         sp.plot(spangled=dict(color='b', alpha=0.1))
         
-        sp=Sampler(preset="circle", N=850)
+        sp=Sampler(preset=("circle",dict()), N=850)
         print(sp.Npreset, sp.N)
         sp.plot(spangled=dict(color='b', alpha=0.1))
         
-        sp=Sampler(preset="ring", N=1150, ri=0.5)
+        sp=Sampler(preset=("ring",dict(ri=0.7)), N=1150)
         print(sp.Npreset, sp.N)
         sp.plot(spangled=dict(color='b', alpha=0.1))
     

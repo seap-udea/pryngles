@@ -39,14 +39,26 @@ class Test(unittest.TestCase):
 
     def test_pop(self):
         Verbose.VERBOSITY=1
+        
+        #Using preset
+        sg=Spangler(nspangles=850)
+        sg.populate_spangler(geometry="ring",preset=True,ri=0.5)
+        sg.sample.plot()
+        print(sg.sample.N)
+        print(sg.nspangles)
+    
+        #Ring
         sg=Spangler(nspangles=100)
         sg.populate_spangler(geometry="ring",scale=1,seed=1,boundary=0)
         print_df(sg.data.head(5))
         sg.set_observer(n_obs=[1,1,1])
         print_df(sg.data.head(5))
+        
+        #Sphere
         sg=Spangler(nspangles=1000,body_hash="123",n_equ=[1,0,1])
         sg.populate_spangler(geometry="sphere",scale=2,seed=1)
         print(sg.nspangles,sg.sample.N,len(sg.data))
+        
         Verbose.VERBOSITY=0
         
     def test_plot3d(self):
