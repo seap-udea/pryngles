@@ -26,8 +26,7 @@ from pryngles import *
 # 
 # The Body class is one of the most important classes in the package. 
 
-Body_doc=\
-"""A general body.  This calss is not intended to be used independently, just for inheritance purposes.
+Body_doc="""A general body.  This calss is not intended to be used independently, just for inheritance purposes.
     
 Initialization attributes:
 
@@ -166,30 +165,4 @@ Body.__doc__=Body_doc
 
 # ## Testing
 
-if IN_JUPYTER:
-    def test_fun(self):
-        B=Body(BodyDefaults,"Body",None,dict(x=0),dict(mass=2.3),dict())
-        print(B)
-        print(B.orbit)
-        print(B.physics)
-        print(B.optics)
-        
-        B.update_body(orbit=dict(m=2))
-        print(B.orbit)
-        
-        
-        C=Body(BodyDefaults,"Body",B,dict(),dict(),dict())
-        print(C)
-        print(B)
-        """
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
-        """
-        
-    class Test(unittest.TestCase):pass
-    Test.test_fun=test_fun
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 

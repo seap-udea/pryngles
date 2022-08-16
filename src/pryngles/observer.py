@@ -113,26 +113,4 @@ class Observer(Body):
         #Here place the commands to update this kind of body
         self.optics.inclination = 90*Consts.deg - self.optics.beta
 
-if IN_JUPYTER:
-    def test_observer(self):
-        O=Observer()
-        print(O.optics)
-        
-        #Check derived properties
-        """
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        """
-        
-        O.update_body(optics=dict(beta=90*Consts.deg))
-        print(O.optics)
-        
-        #Check exception: primary could not be different from None or Body
-        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
-        
-    class Test(unittest.TestCase):pass    
-    Test.test_observer=test_observer
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 

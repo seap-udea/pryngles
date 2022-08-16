@@ -121,23 +121,6 @@ class Ring(Body):
         #Update properties
         self.update_body(**self.__dict__)
 
-if IN_JUPYTER:
-    def test_init(self):
-        
-        #Define first star and planet
-        S=Star()
-        P=Planet(primary=S)
-
-        self.assertRaises(ValueError,lambda:Ring())
-        R=Ring(primary=P)
-        
-        print(R.physics)
-        print(R.optics)
-        print(R.hash)
-        
-    class Test(unittest.TestCase):pass    
-    Test.test_init=test_init
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 # ### Update body
 
@@ -150,18 +133,4 @@ def update_body(self,**pars):
 
 Ring.update_body=update_body
 
-if IN_JUPYTER:
-    def test_update(self):
-
-        #Define first star and planet
-        S=Star()
-        P=Planet(primary=S)
-        R=Ring(primary=P)
-        
-        R.update_body(physics=dict(fe=3))
-        print(R.physics)
-        
-    class Test(unittest.TestCase):pass    
-    Test.test_update=test_update
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 

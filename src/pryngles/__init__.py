@@ -108,8 +108,7 @@ class PrynglesCommon(object):
 
 # ## Miscelaneous Class
 
-Misc_doc=\
-"""
+Misc_doc="""
 Miscelaneous routines.
 
 This is a set of util routines intended for a diversity of purposes.
@@ -183,40 +182,5 @@ from pryngles.legacy import *
 
 # ## Tests
 
-if IN_JUPYTER:
-    def test_common(self):
-        
-        import numpy as np
-        import pandas as pd
-        import os
-        
-        p=PrynglesCommon()
-        p.casa=dict(perro=0,gato=3)
-        p.data=pd.DataFrame(np.random.rand(4000,100))
-        p.save_to("/tmp/save.pck")
-        print("File size:",os.path.getsize("/tmp/save.pck")/1e6," Mb")
-        g=PrynglesCommon()
-        g.load_from("/tmp/save.pck")
-        print(g.casa,np.array(g.data).shape)
-        
-    class Test(unittest.TestCase):pass    
-    Test.test_common=test_common
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
-if IN_JUPYTER:
-    def test_fun(self):
-        
-        #Get path
-        filepath=Misc.get_data("diffuse_reflection_function.data")
-        print(filepath)
-        
-        #print_df dataframe
-        import pandas as pd
-        import numpy as np
-        df=pd.DataFrame(np.zeros((5,3)),columns=["a","b","c"])
-        Misc.print_df(df)
-        
-    class Test(unittest.TestCase):pass    
-    Test.test_fun=test_fun
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 

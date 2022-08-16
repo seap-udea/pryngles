@@ -136,8 +136,8 @@ class Star(Body):
 
         #Check primary
         if self.primary is not None:
-            if self.primary.kind=="Planet":
-                raise ValueError(f"Planet cannot be the primary of a Star")
+            if self.primary.kind!="Star":
+                raise ValueError(f"Only another Star can be the primary of a Star")
                 
         #Update properties
         self.update_body(**self.__dict__)
@@ -153,27 +153,6 @@ class Star(Body):
         #Rotation axis:
         self.physics.n_equ=sci.cartesian([1,self.physics.roll,90*Consts.deg-self.physics.i])
 
-if IN_JUPYTER:
-    def test_star(self):
-        S=Star()
-        print(S.physics)
-        print(S.hash)
-        
-        #Check derived properties
-        self.assertEqual(np.isclose([S.physics.wrot],
-                                    [2*np.pi/StarDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        
-        S.update_body(physics=dict(m=2))
-        print(S.physics)
-        
-        #Check exception: primary could not be different from None or Body
-        self.assertRaises(AssertionError,lambda:Star(primary="Nada"))
-        
-    class Test(unittest.TestCase):pass    
-    Test.test_star=test_star
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 def spangle_body(self,seed=0):
     """
@@ -200,14 +179,4 @@ def spangle_body(self,seed=0):
 
 Star.spangle_body=spangle_body
 
-if IN_JUPYTER:
-    def test_sp(self):
-        S=Star()
-        S.spangle_body()
-        print_df(S.sp.data.tail())
-        S.sp.plot3d()
-        
-    class Test(unittest.TestCase):pass    
-    Test.test_sp=test_sp
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
