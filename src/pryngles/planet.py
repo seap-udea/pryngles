@@ -155,6 +155,33 @@ class Planet(Body):
         #Rotation axis:
         self.physics.n_equ=sci.cartesian([1,self.physics.roll,90*Consts.deg-self.physics.i])
 
+if IN_JUPYTER:
+    def test_planet(self):
+        S=Star()
+
+        #Check exception: primary is mandatory for planets
+        self.assertRaises(ValueError,lambda:Planet())
+
+        P=Planet(primary=S)
+        
+        print(P.physics)
+        print(P.hash)
+        
+        #Check derived properties
+        self.assertEqual(np.isclose([P.physics.wrot],
+                                    [2*np.pi/PlanetDefaults.physics["prot"]],
+                                    rtol=1e-7),
+                         [True]*1)
+        
+        P.update_body(orbit=dict(a=5),physics=dict(rho=0.2))
+        print(P.orbit,P.physics)
+        
+        #Check exception: primary could not be different from None or Body
+        self.assertRaises(AssertionError,lambda:Planet(primary="Nada"))
+        
+    class Test(unittest.TestCase):pass    
+    Test.test_planet=test_planet
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 def spangle_body(self,seed=0):
     """
@@ -181,4 +208,15 @@ def spangle_body(self,seed=0):
 
 Planet.spangle_body=spangle_body
 
+if IN_JUPYTER:
+    def test_sp(self):
+        S=Star()
+        P=Planet(primary=S)
+        P.spangle_body()
+        print_df(P.sp.data.tail())
+        P.sp.plot3d()
+        
+    class Test(unittest.TestCase):pass    
+    Test.test_sp=test_sp
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 

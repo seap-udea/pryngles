@@ -38,7 +38,8 @@ verbose=Verbose.print
 # 
 # This class contains a family of routines useful for spangling different kind of objects.
 
-Spangler_doc="""A Spangler associated to an object or set of objects.
+Spangler_doc=\
+"""A Spangler associated to an object or set of objects.
     
    There are two ways to initialize a Spangler:
     
@@ -294,8 +295,10 @@ def set_observer(self,n_obs=[],alpha_obs=0):
         self.M_obs2ecl,self.M_ecl2obs=Science.rotation_matrix(self.n_obs,self.alpha_obs)
         
     #Update positions
-    self.data[["x_obs","y_obs","z_obs"]]=        [np.matmul(self.M_ecl2obs,r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
-    self.data[["r_obs","q_obs","f_obs"]]=        [sci.spherical(r) for r in np.array(self.data[["x_obs","y_obs","z_obs"]])]
+    self.data[["x_obs","y_obs","z_obs"]]=\
+        [np.matmul(self.M_ecl2obs,r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
+    self.data[["r_obs","q_obs","f_obs"]]=\
+        [sci.spherical(r) for r in np.array(self.data[["x_obs","y_obs","z_obs"]])]
     
     #Update spangles orientations
     self.data["ns_obs"]=[np.matmul(self.M_ecl2obs,n) for n in self.data["ns_ecl"]]
@@ -356,8 +359,10 @@ def set_luz(self,n_luz=[]):
         self.M_luz2ecl,self.M_ecl2luz=Science.rotation_matrix(self.n_luz,0)
         
     #Update positions
-    self.data[["x_luz","y_luz","z_luz"]]=        [np.matmul(self.M_ecl2luz,r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
-    self.data[["r_luz","q_luz","f_luz"]]=        [sci.spherical(r) for r in np.array(self.data[["x_luz","y_luz","z_luz"]])]
+    self.data[["x_luz","y_luz","z_luz"]]=\
+        [np.matmul(self.M_ecl2luz,r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
+    self.data[["r_luz","q_luz","f_luz"]]=\
+        [sci.spherical(r) for r in np.array(self.data[["x_luz","y_luz","z_luz"]])]
     
     #Update spangles orientations
     self.data["ns_luz"]=[np.matmul(self.M_ecl2luz,n) for n in self.data.ns_ecl]
@@ -451,7 +456,8 @@ def set_positions(self,
     #Update equatorial coordinates by rotation
     if t is not None:
         self.data["q_equ"]=[q+w*(t-t0) for q,w,t0 in zip(self.data.q_equ,self.data.w,self.data.t0)]
-        self.data[["x_equ","y_equ","z_equ"]]=            [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
+        self.data[["x_equ","y_equ","z_equ"]]=\
+            [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
         #Update normal vectors
         if self.sample.dim>2:
             self.data["ns_equ"]=[spy.unorm(list(r))[0] for r in np.array(self.data[["x_equ","y_equ","z_equ"]])]
@@ -463,11 +469,14 @@ def set_positions(self,
         self.data["center_ecl"]=[center_ecl]*self.nspangles
         
     #Convert from equatorial to ecliptic
-    self.data[["x_ecl","y_ecl","z_ecl"]]=        [np.matmul(self.M_equ2ecl,r+cequ)+cecl         for r,cequ,cecl in zip(np.array(self.data[["x_equ","y_equ","z_equ"]]),
+    self.data[["x_ecl","y_ecl","z_ecl"]]=\
+        [np.matmul(self.M_equ2ecl,r+cequ)+cecl\
+         for r,cequ,cecl in zip(np.array(self.data[["x_equ","y_equ","z_equ"]]),
                       self.data.center_equ,
                       self.data.center_ecl)]
     
-    self.data[["r_ecl","q_ecl","f_ecl"]]=        [sci.spherical(r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
+    self.data[["r_ecl","q_ecl","f_ecl"]]=\
+        [sci.spherical(r) for r in np.array(self.data[["x_ecl","y_ecl","z_ecl"]])]
 
     #Update spangles orientations
     self.data["ns_ecl"]=[np.matmul(self.M_equ2ecl,n) for n in self.data.ns_equ]
@@ -483,6 +492,31 @@ def set_positions(self,
     
 Spangler.set_positions=set_positions
 
+if IN_JUPYTER:
+    def test_init(self):
+        Verbose.VERBOSITY=1
+        print("Basic definition:")
+        sg=Spangler(nspangles=3,spangle_type=GRANULAR_SPANGLE)
+        Misc.print_df(sg.data.head(5))
+        print("Equ->Ecl:\n",sg.M_equ2ecl)
+        print("Equ->Obs:\n",sg.M_obs2ecl)
+
+        print("\nAnother definition:")
+        sg=Spangler(nspangles=3,n_equ=[1,0,0])
+        Misc.print_df(sg.data.head(5))
+        print("Equ->Ecl:\n",sg.M_equ2ecl)
+        print("Obs->Ecl:\n",sg.M_obs2ecl)
+
+        print("\nDefinition observer:")
+        sg=Spangler(nspangles=3,body_hash="123",n_equ=[0,1,0],n_obs=[1,0,0])
+        Misc.print_df(sg.data.head(5))
+        print("Equ->Ecl:\n",sg.M_equ2ecl)
+        print("Obs->Ecl:\n",sg.M_obs2ecl)
+        Verbose.VERBOSITY=0
+
+    class Test(unittest.TestCase):pass
+    Test.test_init=test_init
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
     """Populate data of a Spangler using points generated with a given geometry.
@@ -546,6 +580,22 @@ def populate_spangler(self,scale=1,seed=0,geometry="circle",**geometry_args):
     
 Spangler.populate_spangler=populate_spangler
 
+if IN_JUPYTER:
+    def test_pop(self):
+        Verbose.VERBOSITY=1
+        sg=Spangler(nspangles=100)
+        sg.populate_spangler(geometry="ring",scale=1,seed=1,boundary=0)
+        print_df(sg.data.head(5))
+        sg.set_observer(n_obs=[1,1,1])
+        print_df(sg.data.head(5))
+        sg=Spangler(nspangles=1000,body_hash="123",n_equ=[1,0,1])
+        sg.populate_spangler(geometry="sphere",scale=2,seed=1)
+        print(sg.nspangles,sg.sample.N,len(sg.data))
+        Verbose.VERBOSITY=0
+        
+    class Test(unittest.TestCase):pass
+    Test.test_pop=test_pop
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 def plot3d(self,spangled=True,factor=1.2,**args):
     """
@@ -628,6 +678,25 @@ def plot3d(self,spangled=True,factor=1.2,**args):
 
 Spangler.plot3d=plot3d
 
+if IN_JUPYTER:
+    def test_plot3d(self):
+        Verbose.VERBOSITY=0
+        plt.close("all")
+        sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1])
+        sg.populate_spangler(geometry="sphere",scale=2,seed=1)
+        sg.set_luz(n_luz=[1,0,0])
+        sg.plot3d(spangled=False,factor=1.3,c='y',s=3)
+        
+        sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1])
+        sg.populate_spangler(geometry="ring",scale=2,seed=1,boundary=0)
+        sg.set_luz(n_luz=[0,0,-1])
+        sg.plot3d(factor=0.4)
+
+        Verbose.VERBOSITY=0
+
+    class Test(unittest.TestCase):pass
+    Test.test_plot3d=test_plot3d
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 def plot_obs(self,spangled=dict(),**args):
     """
@@ -690,6 +759,27 @@ def plot_obs(self,spangled=dict(),**args):
 
 Spangler.plot_obs=plot_obs
 
+if IN_JUPYTER:
+    def test_plotobs(self):
+        Verbose.VERBOSITY=0
+        sg=Spangler(nspangles=500,body_hash="123",n_equ=[1,1,1],center_ecl=[1,1,1])
+
+        sg.populate_spangler(geometry="sphere",scale=2,seed=1)
+        sg.set_observer(n_obs=[1,0,0])
+        sg.plot_obs()
+
+        sg.populate_spangler(geometry="circle",scale=2,seed=1,boundary=0)
+        sg.plot_obs()
+
+        sg.populate_spangler(geometry="ring",scale=2,seed=1,ri=0.2,boundary=0)
+        sg.plot_obs()
+        
+        Verbose.VERBOSITY=0
+
+        
+    class Test(unittest.TestCase):pass
+    Test.test_plotobs=test_plotobs
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 def _join_spanglers(self,spanglers,n_obs=[0,0,1],n_luz=[0,0,1]):
     """
@@ -728,6 +818,26 @@ def _join_spanglers(self,spanglers,n_obs=[0,0,1],n_luz=[0,0,1]):
     
 Spangler._join_spanglers=_join_spanglers
 
+if IN_JUPYTER:
+    def test_join(self):
+        Verbose.VERBOSITY=0
+
+        sg1=Spangler(nspangles=1000,body_hash="123",n_equ=[1,0,1])
+        sg1.populate_spangler(geometry="ring",scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+
+        sg2=Spangler(nspangles=1000,body_hash="345",n_equ=[0,0,1])
+        sg2.populate_spangler(geometry="sphere",scale=1,seed=1)
+
+        sgj=Spangler(spanglers=[sg1,sg2],n_obs=[1,0,0],n_luz=[-1,-1,-1])
+
+        sgj.plot3d()
+        sgj.plot_obs()
+        
+        Verbose.VERBOSITY=0
+
+    class Test(unittest.TestCase):pass
+    Test.test_join=test_join
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
 # Set scale
 def set_scale(self,scale):
@@ -748,4 +858,19 @@ def set_scale(self,scale):
 
 Spangler.set_scale=set_scale
 
+if IN_JUPYTER:
+    def test_scale(self):
+        Verbose.VERBOSITY=0
+
+        sg=Spangler()
+        print_df(sg.data)
+
+        sg.set_scale(5)
+        print_df(sg.data)
+
+        Verbose.VERBOSITY=0
+
+    class Test(unittest.TestCase):pass
+    Test.test_scale=test_scale
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 

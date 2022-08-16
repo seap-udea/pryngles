@@ -89,4 +89,14 @@ Consts.rsaturn=60268e3 #m, equatorial radius, source:
 RAD=Consts.rad
 DEG=Consts.deg
 
+if IN_JUPYTER:
+    print(Consts.__dict__)
+    
+    def test_fun(self):
+        p=Consts.ppm
+        self.assertEqual([p],[1e6],[True]*1)
+
+    class Test(unittest.TestCase):pass
+    Test.test_fun=test_fun
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 

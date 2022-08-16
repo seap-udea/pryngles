@@ -36,4 +36,12 @@ class Props():
     def __str__(self):
         return str(self.__dict__)
 
+if IN_JUPYTER:
+    def test_props(self):
+        p=Props(m=1,a=2,b=3)
+        self.assertEqual([p.m,p.a,p.b],[1,2,3],[True]*3)
+
+    class Test(unittest.TestCase):pass
+    Test.test_props=test_props
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 
