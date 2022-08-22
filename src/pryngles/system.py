@@ -28,6 +28,41 @@ import rebound as rb
 # 
 # This is the most important class in the whole package.  This class allows to create the planetary system and manipulate it.
 
+"""
+#Create a simple system
+#Once you create a system, a null spangler is created 
+
+sys.set_observer(n_obs=[1,1,0],alpha_obs=0)
+
+#Add star (by default, m = 1)
+S=sys.add()
+
+#Add planet, when an object is added, it is automatically spangled
+P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
+
+#Add moon: orbital elements are respect to equatorial plane of the primary
+M=sys.add("Planet",primary=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
+
+#Add ring system
+R=sys.add("Ring",primary=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)
+
+#If you change the number of spangles of an object the spanglers are reset
+sys.update_body(R,nspangles=800)
+
+#Each time an object is updated, the spangler should be rejoined and the simulation reset.
+
+#Spangle 
+#sys.spangle_system()
+
+#You may check separately the properties of each object
+R.spangler.plot3d()
+R.spangler.plot_obs()
+
+#Plot
+sys.spangler.plot3d()
+sys.spangler.plot_obs()
+""";
+
 System_doc=f"""
 Creates a planetary system.
 
@@ -35,39 +70,12 @@ Initialization attributes:
 
     units: list of strings, default = ['au','msun','yr']:
         Units used in calculations following the conventions and signs of rebound.
-        The order SHOULD always be: length, mass, time.
-        
-    stars: list or single Body.  default = None: 
-        Star(s) in the system.
-        
-    planets: list or single Body.  default = None: 
-        Planet(s) in the system.
-        
-    rings: list or single Body.  default = None: 
-        Ring(s) in the system.
+        The order SHOULD always be MKS: length, mass, time (in that order)
 
-    observers: list or single Body.  default = None: 
-        Observer(s) in the system.
-    
-    rebound: bool, default = True:
-        Set True if you want to simulte the orbit of objects (for instance if you want to calculate
-        TTVs or TDVs) or False if you want to calculate orbits using Keplerian dynamics (no TTVs or TDVs).
-        
-        NOTE: Current version ({version}) does not implement yet rebound simulations
+Derived attributes:
 
-Secondary attributes:
-
-    hashes: list
-        List of hashes of bodies in the system.
-        
-    stars, planets, rings, observers: list
-        List of the corresponding kind of object in the system.
-        
-    nstars, nplanets, nrings, nobservers: int
-        Number of each kind of body in the system.
-    
-    nbodies: int
-        Number of bodies in the system.
+    sim: Simulation:
+        REBOUND Simulation object.
         
     ul, um, ut: float [SI units]
         Value of the conversion factors for each unit.
@@ -75,132 +83,102 @@ Secondary attributes:
     G: float [ul^3/ut^2/um]
         Value of the gravitational constant.
 
-Usefule private attributes:
-
-    _sim: rebound Simulation.
-        Rebound simulation object.
+    hashes: list:
+        List of hashes of bodies in the system.
         
+    stars, planets, rings: lists:
+        List of the corresponding kind of object in the system.
+        
+    nstars, nplanets, nrings, nobservers, nbodies: int
+        Number of each kind of body in the system and of all bodies in the system.
+
 Examples:
 
-    S=Star()
-    P=Planet(primary=S)
-
-    sys=System()
-    sys=System(units=['km','msun','s'])
-    sys.add(S)
-    sys.add(P)
-
-    Either:
+    #Create a system
+    sys=System(units=["au","msun","yr"])
+    sys.sim.integrator='wahfast'
+    sys.sim.dt=0.01
     
-    sys=System(stars=S,planets=P)
-    
+    #Add star (by default, m = 1)
+    S=sys.add()
+
+    #Add planet, when an object is added, it is automatically spangled
+    P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
+
+    #Add moon: orbital elements are respect to equatorial plane of the primary
+    M=sys.add("Planet",primary=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
+
+    #Add ring system
+    R=sys.add("Ring",primary=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)
+
 """;
 
 class System(PrynglesCommon):
     
     def __init__(self,
                  units=['au','msun','yr'],
-                 stars=None,planets=None,
-                 rings=None,observers=None,
-                 rebound=False
                 ):
         
-        #Behavior
-        self.rebound=rebound
-        self.rebound=False # Rebound not implemented yet
-        self._update_rebound(units)
-
-        #Initialize rebound
+        #Rebound simulation
+        self.sim=rb.Simulation()
+        
+        #Update rebound units
         self.update_units(units)
         
-        #Initialize list of components
-        self.hashes=dict()
-        for kind in BODY_KINDS:
-            lkind=kind.lower()
-            exec(f"self.{lkind}s=[]")
-            exec(f"self._update_objects('{lkind}s','{kind}',{lkind}s)")
-
+        #Bodies
+        self.bodies=dict()
+        self.nbodies=0
+        
         #Update system
         self._update_system()
-    
-    def _update_objects(self,attr,kind,comps):
-        """Update the list of objects
-        """
-
-        if comps is not None:
-            #Check if comps is a a list
-            try:
-                comps[0]
-            except:
-                comps=[comps]
-            
-            for comp in comps:
-                #Check if primary bodies are already in lists
-                if (comp.primary is not None) and (comp.primary.hash not in self.hashes):
-                    raise AssertionError(f"Primary of {kind} body is not yet in the system.")
-                else:
-                    exec(f"self.{attr}+=[comp]")
-                    if comp.kind!=kind:
-                        raise AssertionError(f"You are attempting to add {kind} with a {comp.kind}")
-                    self.hashes[comp.hash]=comp
-
-    def _update_system(self):
-        """Update the global properties of the system.
-        """
-        for kind in BODY_KINDS:
-            exec(f"self.{kind}s=0")
-        
-        pdict=dict()
-        for obj in BODY_KINDS:
-            lobj=obj.lower()
-            exec(f"{obj}=len(self.{lobj}s)",locals(),pdict)
-            self.__dict__[f"n{lobj}s"]=pdict[obj]
-        self.nbodies=self.nstars+self.nplanets+self.nrings
         
     def update_units(self,units):
         """Update units of the system
         """
         self.units=units
+        
+        #Units
         self._ul,self._um,self._ut=self.units
-        self._sim.units=self.units
+        self.sim.units=self.units
+        
+        #Canonical units of the system
         self.ul=rb.units.convert_length(1,self._ul,"m")
         self.um=rb.units.convert_mass(1,self._um,"kg")
-        self.ut=np.sqrt(self._sim.G*self.ul**3/(self.um*GSI))
-
-    def _update_rebound(self,units):
-        """Crteate and update rebound simulation object
+        self.ut=np.sqrt(self.sim.G*self.ul**3/(self.um*GSI))
+        
+    def _update_system(self):
+        """Update system properties
         """
-        #Units initialization
-        self._sim=rb.Simulation()
-        self._sim.units=units
+        self.nbodies=len(self.bodies)
+        self.nparticles=len(self.sim.particles)
 
 System.__doc__=System_doc
 
 
-def add(self,kind=None,primary=None,orbit=None,physics=None,optics=None):
+def add(self,kind="Star",primary=None,center="primary",**props):
     """Add an object to the system
     
     Examples:
     
         sys=System()
-        S=sys.add(kind="Star",orbit=dict(m=2))
+        S=sys.add("Star",m=2)
     
     Parameters:
     
-        kind: string
-            Kind of object: Star, Planet, Ring, Observer.
+        kind: string, default = "Star":
+            Kind of object: Star, Planet, Ring (see BODY_KINDS).
     
-        primary: Body
-            Primary object.
-    
-        orbit: dictionary
-            Set of orbital properties (see corresponding body documentation).
+        primary: Body, default = None:
+            Primary object of the body.
             
-        physics: dictionary
-            Set of physical properties (see corresponding body documentation).
-        
-        optics: dictionary
-            Set of optical properties (see corresponding body documentation).
+        center: string, default = "primary":
+            Center with respect to the positions are indicated.  
+            Possible values: "primary", "inertial".
+            When "inertial" you can provide positions of the objects using cartesian
+            coordinates.
+
+        props: dictionary:
+            List of properties of the body.
             
     Returns:
         
@@ -208,46 +186,38 @@ def add(self,kind=None,primary=None,orbit=None,physics=None,optics=None):
             Body added to the system.
     """
     if kind is None:
-        raise AssertionError("You must provide a valid object kind (Star, Planet, Ring, Observer).")
+        raise AssertionError("You must provide a valid object kind (Star, Planet, Ring).")
 
     if kind not in BODY_KINDS:
         raise ValueError(f"Object kind '{kind}' is not recognized.")
 
-    #p.e. kind = 'Star', lkind = 'star'
-    kind=kind.capitalize()
-    lkind=kind.lower()
+    exec(f"self.__body={kind}(primary=primary,**props)")
+    self.bodies[self.__body.hash]=self.__body
+    self.nbodies=len(self.bodies)
+    
+    if kind != "Ring":
+        #Add body to simulation
+        rb_add_options={k:v for k,v in self.__body.__dict__.items() if k in REBOUND_ORBITAL_PROPERTIES}
+        rb_add_options.update(hash=self.__body.hash)
+        
+        if primary and center=="primary":
+            rb_add_options.update(primary=self.sim.particles[primary.hash])
 
-    """
-    This code generalize the procedure:
-        if orbit is None:
-            orbit = StarDefaults.orbit.copy()
-        if physics is None:
-            physics = StarDefaults.physics.copy()
-        if optics is None:
-            optics = StarDefaults.optics.copy()
-    """
-    pdict=dict()
-    plist=[]
-    for prop in PROP_TYPES:
-        exec(f"{prop}={prop}",locals(),pdict)
-        if pdict[prop] is None:
-            exec(f"{prop}={kind}Defaults.{prop}.copy()",globals(),pdict)
-        plist+=[pdict[prop]]
-
-    """
-    This code generalize the procedure
-        S=Star(primary=primary,orbit=orbit,physics=physics,optics=optics)
-        self._list2Objects("stars","Star",S)            
-    """
-    obj=eval(f"{kind}(primary=primary,orbit=plist[0],physics=plist[1],optics=plist[2])")
-    self._update_objects(lkind+"s",kind,obj)
+        verbose(VERB_VERIFY,f"Adding rebound object with hash {self.__body.hash} with center {center}")
+        verbose(VERB_DEEP,f"Rebound add options {rb_add_options}")
+        
+        self.sim.add(**rb_add_options)
+        self.__body.particle=self.sim.particles[self.__body.hash]
+    else:
+        self.__body.particle=self.sim.particles[self.__body.primary.hash]
+    
     self._update_system()
-    return obj
+    return self.__body
     
 System.add=add
 
 
-def remove(self,body_hash):
+def remove(self,hash):
     """Remove a body from a system.
 
     Parameters:
@@ -259,24 +229,34 @@ def remove(self,body_hash):
 
     Example:
         sys=System()
-        S=sys.add(kind="Star",orbit=dict(m=2))
-        sys.remove(body_hash=S.hash)
-        
+        S=sys.add(m=2)
+        sys.remove(hash=S.hash)
     """
-    if body_hash in self.hashes:
-        obj=self.hashes[body_hash]
-        lkind=obj.kind.lower()
+    
+    if hash in self.bodies:
+        verbose(VERB_SIMPLE,f"Removing object {hash} from system")
 
+        obj=self.bodies[hash]
+
+        #Get the list of child hashes before removing (it changes during for)
+        child_hashes=list(obj.childs.keys())
+        
         #Remove child objects
-        for child in obj.childs:
-            if child.hash in self.hashes:
-                self.remove(child.hash)
-
-        #Remove object
-        exec(f"self.{lkind}s.remove(obj)")
-
-        #Remove hash from list
-        self.hashes.pop(body_hash)
+        for child_hash in child_hashes:
+            if child_hash in self.bodies:
+                self.remove(child_hash)
+                
+        #Remove object from simulation
+        if obj.kind != "Ring":
+            verbose(VERB_SIMPLE,f"Removing particle {hash} from simulation")
+            self.sim.remove(hash=hash)
+        
+        #Remove object from childs of its primary
+        if obj.primary:
+            del obj.primary.childs[hash]
+        
+        #Remove object from bodies
+        del self.bodies[hash]
 
         #Update system
         self._update_system()
@@ -284,4 +264,22 @@ def remove(self,body_hash):
         raise ValueError("No object with hash 'body_hash' in the system")
 System.remove=remove
 
+
+def spangle_system(self,n_obs=[0,0,1],alpha_obs=0):
+    
+    self.spanglers=[]
+    for hash,body in self.bodies.items():
+        print(f"Spangling body '{hash}' (kind '{body.kind}')")
+        body.spangle_body()
+        body.sp.set_observer(n_obs=n_obs,alpha_obs=alpha_obs)
+        body.sp.set_positions(center_ecl=body.particle.xyz)
+        self.spanglers+=[body.sp]
+    
+    #Join spanglers
+    self.sp=Spangler(spanglers=self.spanglers)
+    
+    #Set observer
+    self.sp.set_observer(n_obs=n_obs,alpha_obs=alpha_obs)
+        
+System.spangle_system=spangle_system
 

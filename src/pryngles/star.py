@@ -27,30 +27,31 @@ print_df=Misc.print_df
 
 # ## Star Class
 
-class StarDefaults(object):
-    """
-    These are the default attributes for bodies of the kind 'Star'.
-    
-    DEVELOPER:
-        You may add new attributes as the model gets more complex.
-        Please document properly each attribute.
+"""
+These are the default attributes for bodies of the kind 'Star'.
 
-    """
-    orbit=dict(
-        m=1,
-    )
-    physics=dict(
-        radius=1,
-        prot=1,
-        i=0,#Inclination of the rotational axis
-        roll=0,
-        alpha=0,#Zero meridian
-        t0=0,
-    )
-    optics=dict(
-        nspangles=1000,
-        limb_coeffs=[],
-    )
+DEVELOPER:
+    You may add new attributes as the model gets more complex.
+    Please document properly each attribute.
+
+"""
+STAR_DEFAULTS=odict(
+
+    #Orbit
+    m=1,
+    
+    #Physics
+    radius=1,
+    prot=1,
+    i=0, #Inclination of the rotational axis
+    roll=0,
+    alpha=0, #Zero meridian
+    t0=0,
+    
+    #Optical properties
+    nspangles=1000,
+    limb_coeffs=[],
+)
 
 BODY_KINDS+=["Star"]
 class Star(Body):
@@ -106,8 +107,6 @@ class Star(Body):
 
     Derived attributes:
     
-        physics:
-            
             wrot: float [rad/ut]:
                 Rotational angular velocity.
                 
@@ -127,14 +126,12 @@ class Star(Body):
     """
     def __init__(self,
                  primary=None,
-                 orbit=StarDefaults.orbit,
-                 physics=StarDefaults.physics,
-                 optics=StarDefaults.optics
+                 **props
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,StarDefaults,"Star",primary,orbit,physics,optics)
+        Body.__init__(self,"Star",STAR_DEFAULTS,primary)
 
         #Check primary
         if self.primary is not None:
@@ -142,18 +139,18 @@ class Star(Body):
                 raise ValueError(f"Only another Star can be the primary of a Star")
                 
         #Update properties
-        self.update_body(**self.__dict__)
+        self.update_body(**props)
         
-    def update_body(self,**pars):
-        Body.update_body(self,**pars)
+    def update_body(self,**props):
+        Body.update_body(self,**props)
         
         #Update physics
         
         #Rotational angular velocity
-        self.physics.wrot=2*np.pi/self.physics.prot
+        self.wrot=2*np.pi/self.prot
         
         #Rotation axis
-        self.physics.n_equ=sci.cartesian([1,self.physics.roll,90*Consts.deg-self.physics.i])
+        self.n_equ=sci.cartesian([1,self.roll,90*Consts.deg-self.i])
 
 
 def spangle_body(self,seed=0,preset=False):

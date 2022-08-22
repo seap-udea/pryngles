@@ -20,19 +20,106 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_ALL
         
-        B=Body(BodyDefaults,"Body",None,dict(x=0),dict(mass=2.3),dict())
+        B=Body("Body",BODY_DEFAULTS,None,hash='B',m=2,c=2)
         
         print(B)
-        print(B.orbit)
-        print(B.physics)
-        print(B.optics)
+        print(B.m)
         
-        B.update_body(orbit=dict(m=2))
-        print(B.orbit)
+        B.update_body(hash="B")
+        print(B)
         
-        C=Body(BodyDefaults,"Body",B,dict(),dict(),dict())
+        C=Body("Body",BODY_DEFAULTS,B,hash="C")
         print(C)
         print(B)
+        
+        Verbose.VERBOSITY=VERB_NONE
+        
+    def test_spangle(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
+        B=Body("Body",BODY_DEFAULTS,None,hash='B',m=2,c=2)
+        B.spangle_body()
+        
+        print_df(B.sp.data.tail())
+        B.sp.plot3d()
+        
+        Verbose.VERBOSITY=VERB_NONE
+        
+    def test_star(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
+        S=Star()
+        print(S)
+
+        #Check derived properties
+        self.assertEqual(np.isclose([S.wrot],
+                                    [2*np.pi/BODY_DEFAULTS["prot"]],
+                                    rtol=1e-7),
+                         [True]*1)
+        
+        S.update_star(m=2,limb_coeffs=[1,1])
+        print(S)
+        
+        #Check exception: primary could not be different from None or Body
+        self.assertRaises(AssertionError,lambda:Star(primary="Nada"))     
+        
+        S=Star(nspangles=270,i=45*Consts.deg)
+        S.spangle_body()
+        print_df(S.sp.data.tail())
+        S.sp.plot3d()
+        
+        Verbose.VERBOSITY=VERB_NONE
+
+    def test_planet(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
+        S=Star()
+
+        #Check exception: primary is mandatory for planets
+        self.assertRaises(ValueError,lambda:Planet())
+
+        P=Planet(primary=S)
+        print(P.hash)
+        
+        #Check derived properties
+        self.assertEqual(np.isclose([P.wrot],
+                                    [2*np.pi/BODY_DEFAULTS["prot"]],
+                                    rtol=1e-7),
+                         [True]*1)
+        
+        P.update_planet(a=5,rho=0.2)
+        
+        #Check exception: primary could not be different from None or Body
+        self.assertRaises(AssertionError,lambda:Planet(primary="Nada"))
+        
+        P.update_body(nspangles=250)
+        P.spangle_body()
+        print_df(P.sp.data.tail())
+        P.sp.plot3d()
+        
+        Verbose.VERBOSITY=VERB_NONE
+        
+    def test_ring(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
+        #Define first star and planet
+        S=Star()
+        P=Planet(primary=S)
+
+        self.assertRaises(ValueError,lambda:Ring())
+        R=Ring(primary=P)
+        
+        R.update_ring(fe=3)
+        print(R)
+        
+        R.update_body(nspangles=250,i=30*Consts.deg,roll=45*Consts.deg)
+        R.spangle_body()
+        print_df(R.sp.data.tail())
+        R.sp.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
         

@@ -25,6 +25,7 @@ from pryngles import *
 import numpy as np
 import math as mh
 import spiceypy as spy
+from scipy.integrate import quad
 
 # ## The Science class
 # 
@@ -136,5 +137,74 @@ def rotation_matrix(ez,alpha):
     return Msys2uni,Muni2sys
 
 Science.rotation_matrix=rotation_matrix
+
+
+LIMB_NORMALIZATIONS=dict()
+
+def limb_darkening(rho,cs=[0.6562],N=None):
+    """
+    Parameters:
+        rho: float:
+            Distance to center of the star in units of stellar radius.
+            
+        cs: list, default = [0.6562]:
+            List of limb darkening coefficients.
+            
+        N: float, default = 1:
+            Normalization constant.
+            
+    Return:
+        I: float:
+            Normalized intensity of the star at rho.
+    
+    Notes: 
+        Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
+        Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
+
+    Test code:
+    
+        fig=plt.figure()
+        ax=fig.gca()
+        rhos=np.linspace(0,1,100)
+        Rs=1
+        coefs=[0.6550]
+        N=Util.limbDarkeningNormalization(coefs)
+        ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
+        coefs=[0.6022,0.0654]
+        N=Util.limbDarkeningNormalization(coefs)
+        ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
+        coefs=[0.9724,-0.4962,0.2029]
+        N=Util.limbDarkeningNormalization(coefs)
+        ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))        
+    """
+    mu=(1-rho**2)**0.5
+    order=len(cs)
+    
+    #Calculate normalization constant
+    if N is None:
+        chash=hash(tuple(cs))
+        if chash in LIMB_NORMALIZATIONS:
+            N=LIMB_NORMALIZATIONS[chash]
+        else:
+            integrand=lambda rho:Science.limb_darkening(rho,cs,N=1)*2*np.pi*rho
+            N=quad(integrand,0.0,1.0,epsrel=1e-5)[0]
+            verbose(VERB_VERIFY,f"Normalization of limb darkening function for cs = {cs}, N = {N}")
+            LIMB_NORMALIZATIONS[chash]=N
+            
+    if order==0:
+        I=np.ones_like(rho)
+    elif order==1:
+        I=1-cs[0]*(1-mu)
+    elif order==2:
+        I=1-cs[0]*(1-mu)-cs[1]*(1-mu)**2
+    elif order==3:
+        I=1-cs[0]*(1-mu)-cs[1]*(1-mu**1.5)-cs[2]*(1-mu**2)
+    elif order==4:
+        I=1-cs[0]*(1-mu**0.5)-cs[1]*(1-mu)-cs[2]*(1-mu**1.5)-cs[3]*(1-mu**2)
+    else:
+        raise ValueError(f"Limb darkening not implemented for order {order}")
+    return I/N
+
+Science.limb_darkening=limb_darkening
 
 

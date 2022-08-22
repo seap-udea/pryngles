@@ -31,6 +31,8 @@ import unittest
 import warnings
 import dill
 import inspect
+from collections import OrderedDict as odict
+from copy import deepcopy
 warnings.filterwarnings('ignore')
 
 # ## Jupyter compatibilty
@@ -151,7 +153,8 @@ class PrynglesCommon(object):
         return data
     
     def __str__(self):
-        return str(self.__dict__)
+        #Remove private attributes
+        return str({k:v for k,v in self.__dict__.items() if k[0]!='_'})
 
 # ## Miscelaneous Class
 
@@ -197,14 +200,9 @@ from pryngles.version import *
 from pryngles.consts import *
 from pryngles.science import *
 from pryngles.plot import *
-from pryngles.props import *
-from pryngles.body import *
 from pryngles.sampler import *
 from pryngles.spangler import *
-from pryngles.star import *
-from pryngles.planet import *
-from pryngles.ring import *
-from pryngles.observer import *
+from pryngles.body import *
 from pryngles.system import *
 from pryngles.legacy import *
 

@@ -84,6 +84,30 @@ class Test(unittest.TestCase):
 
         Verbose.VERBOSITY=VERB_NONE
 
+    def test_limb(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+
+        cs=[np.random.rand()]
+        I=Science.limb_darkening(0.8,cs)
+        print(I)
+        
+        fig=plt.figure()
+        ax=fig.gca()
+
+        rhos=np.linspace(0,1,100)
+        coefs=[0.6550]
+        ax.plot(rhos,Science.limb_darkening(rhos,coefs))
+        coefs=[0.6022,0.0654]
+        ax.plot(rhos,Science.limb_darkening(rhos,coefs))
+        coefs=[0.9724,-0.4962,0.2029]
+        ax.plot(rhos,Science.limb_darkening(rhos,coefs))    
+        coefs=[-0.2018,2.1000,-2.0247,0.7567]
+        ax.plot(rhos,Science.limb_darkening(rhos,coefs))
+        Plot.pryngles_mark(ax)
+        
+        Verbose.VERBOSITY=VERB_NONE
+
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)
