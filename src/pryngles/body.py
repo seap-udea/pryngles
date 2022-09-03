@@ -95,7 +95,7 @@ Initialization attributes:
                 nspangles: int, default = 1000:
                     Number of spangles on which the object will be discretized.
                     
-                type_spangle: int, default = SOLID_SPANGLE:
+                spangle_type: int, default = SOLID_SPANGLE:
                     Type of spangles of the body.
                     
                 preset: boolean, default = True:
@@ -151,7 +151,7 @@ BODY_DEFAULTS.update(odict(
     
     #Optics
     nspangles=1000,
-    type_spangle=SOLID_SPANGLE,
+    spangle_type=SOLID_SPANGLE,
     geometry="sphere",
     geometry_args=dict(),
     seed=0,
@@ -250,7 +250,7 @@ def spangle_body(self):
     self.sp=Spangler(
         nspangles=self.nspangles,
         body_hash=self.hash,
-        spangle_type=self.type_spangle,
+        spangle_type=self.spangle_type,
         n_equ=self.n_equ,
         alpha_equ=self.alpha,
         w_equ=self.wrot,
@@ -262,6 +262,7 @@ def spangle_body(self):
         scale=self.radius,
         seed=self.seed,
         geometry=self.geometry,
+        spangle_type=self.spangle_type,
         preset=self.preset,
         **self.geometry_args,
     )
@@ -283,7 +284,7 @@ STAR_DEFAULTS.update(odict(
     
     #Optical properties
     limb_coeffs=[],
-    type_spangle=STAR_SPANGLE,
+    spangle_type=STELLAR_SPANGLE,
     geometry="sphere",
 ))
 
@@ -312,7 +313,7 @@ class Star(Body):
                     Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
                     Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
                     
-                type_spangle: int, default = STAR_SPANGLE:
+                spangle_type: int, default = STAR_SPANGLE:
                     Type of spangles
 
     Derived attributes:
@@ -371,7 +372,7 @@ PLANET_DEFAULTS.update(odict(
     #Physics
     
     #Optical
-    type_spangle=SOLID_SPANGLE,
+    spangle_type=SOLID_SPANGLE,
     geometry="sphere",
     
     albedo_gray_spherical=1,
@@ -442,7 +443,7 @@ RING_DEFAULTS.update(odict(
     fe=2.0,
     
     #Optics
-    type_spangle=GRANULAR_SPANGLE,
+    spangle_type=GRANULAR_SPANGLE,
     geometry="ring",
     albedo_gray_normal=1,
     tau_gray_optical=0,

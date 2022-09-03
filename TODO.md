@@ -1,6 +1,9 @@
 To Do List
 ==========
 
+- Use automatic archive of rebound:
+  https://rebound.readthedocs.io/en/latest/ipython_examples/SimulationArchiveRestart/
+
 - Use already store sampling sets for spangling objects.
 
 - For intersections, transit and occult use the shape of the figure

@@ -50,15 +50,12 @@ BODY_KINDS=[]
 
 # ### Spangle related
 
-#ENUMERATOR: Type of spangle
-SOLID_SPANGLE=0
-GRANULAR_SPANGLE=1
-ATMOSPHERIC_SPANGLE=2
-STAR_SPANGLE=3
+# ### Planet related
 
-#ENUMERATOR: Reference system
-EQU=0
-ECL=1
+#Default colors
+PLANET_COLOR="#D3CAAF"
+STAR_COLOR="#FDFE7D"
+RING_COLOR="#DBD5D1"
 
 # ## System related
 

@@ -26,6 +26,7 @@ import numpy as np
 import math as mh
 import spiceypy as spy
 from scipy.integrate import quad
+from scipy.spatial import ConvexHull
 
 # ## The Science class
 # 
@@ -82,6 +83,47 @@ def spherical(xyz):
 
     return np.array([r,theta,phi])
 
+def cospherical(xyz):
+    """Transform cartesian coordinates into cosine/sine of spherical angles
+    
+    Parameters:
+
+        xyz: array (3):
+            Cartesian coordinates
+            
+    Return:
+
+        cqsqcf: array (3):
+            Cosine/sine of spherical angles (cos theta, sin theta, cos phi) where theta is 
+            azimutal angle and phi is elevation (complement of polar angle).         
+    """
+    rho=(xyz[0]**2+xyz[1]**2)**0.5
+    sf=xyz[2]/(rho**2+xyz[2]**2)**0.5
+    cq=xyz[0]/rho if not mh.isclose(rho,0) else 1
+    sq=xyz[1]/rho if not mh.isclose(rho,0) else 0
+    return np.array([cq,sq,sf])
+
+def pcylindrical(xyz):
+    """Transform cartesian coordinates into pseudo cylindrical coordinates
+    
+    Parameters:
+
+        xyz: array (3):
+            Cartesian coordinates
+            
+    Return:
+
+        rhoazcf: array (3):
+            Cylindrical coordinates expresed as rho, phi (azimutal angle) and cos(theta) (cosine
+            of polar angle).    
+    """
+    rho=(xyz[0]**2+xyz[1]**2)**0.5
+    r=(xyz[2]**2+rho**2)**0.5
+    phi=mh.atan2(xyz[1],xyz[0])
+    phi=phi if phi>0 else 2*np.pi+phi
+    cost=xyz[2]/r if not mh.isclose(r,0) else mh.copysign(1,xyz[2])
+    return np.array([rho,phi,cost])
+
 def cartesian(rqf):
     """
     Transform cartesian coordinates into spherical coordinates
@@ -106,6 +148,8 @@ def cartesian(rqf):
 
 Science.spherical=spherical
 Science.cartesian=cartesian
+Science.cospherical=cospherical
+Science.pcylindrical=pcylindrical
 
 
 def rotation_matrix(ez,alpha):
@@ -206,5 +250,52 @@ def limb_darkening(rho,cs=[0.6562],N=None):
     return I/N
 
 Science.limb_darkening=limb_darkening
+
+
+def points_in_hull(p, hull, tol=1e-12):
+    """Determine if a set of points are inside a convex hull.
+    
+    Parameters:
+        
+        p: numpy array (Nx2):
+            Set of coordinates for points to evaluate.
+    
+        hull: ConvexHull:
+            Convex hull to evaluate.
+            
+    Return:
+    
+        inside: boolean array (N):
+            Boolean array telling if points are inside the convex hull.
+            
+    Examples:
+        
+        import numpy as np
+        
+        rng = np.random.default_rng()
+        points = rng.random((30, 2))
+        hull = ConvexHull(points)
+        
+        ps = rng.random((30, 2))-0.5
+        cond=points_in_hull(ps,hull)
+
+        import matplotlib.pyplot as plt
+        
+        for simplex in hull.simplices:
+            plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+
+        for p in ps[cond]:
+            plt.plot(p[0],p[1],'r*')
+
+        for p in ps[~cond]:
+            plt.plot(p[0],p[1],'co')
+            
+            
+    Notes:
+        Taken from https://stackoverflow.com/a/72483841
+    """
+    return np.all(hull.equations[:,:-1] @ p.T + np.repeat(hull.equations[:,-1][None,:], len(p), axis=0).T <= tol, 0)
+
+Science.points_in_hull=points_in_hull
 
 

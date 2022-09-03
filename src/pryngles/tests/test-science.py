@@ -31,45 +31,49 @@ class Test(unittest.TestCase):
         
     def test_coords(self):
         
+        #Test axis
+        axis=[
+            [+1,+0,+0],[-1,+0,+0],
+            [+0,+1,+0],[+0,-1,+0],
+            [+0,+0,+1],[+0,+0,-1],
+        ]
+        for i,xyz in enumerate(axis):
+            rqf=Science.spherical(xyz)
+            cqsqsf=Science.cospherical(xyz)
+            rhofct=Science.pcylindrical(xyz)
+            print(f"Axis {i+1}:")
+            print("\tSpherical:",rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)
+            print("\tCospherical:",cqsqsf)
+            print("\tVerify:",mh.cos(rqf[1]),mh.sin(rqf[1]),mh.sin(rqf[2]))
+            print("\tPseudo cilyndrical:",rhofct)
+            print("\tVerify:",rqf[0]*np.cos(rqf[2]),rqf[1],mh.sin(rqf[2]))
+
         #Test spherical
-        rqf=Science.spherical([1,1,0])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([+1,+1,1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([-1,1,1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([-1,-1,1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([+1,-1,1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([+1,+1,-1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([-1,1,-1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([-1,-1,-1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)   
-        rqf=Science.spherical([+1,-1,-1])
-        print(rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)
-        
+        octants=[
+            [+1,+1,+1],[-1,+1,+1],[-1,-1,+1],[+1,-1,+1],
+            [+1,+1,-1],[-1,+1,-1],[-1,-1,-1],[+1,-1,-1]
+        ]
+        for i,xyz in enumerate(octants):
+            rqf=Science.spherical(xyz)
+            cqsqsf=Science.cospherical(xyz)
+            rhofct=Science.pcylindrical(xyz)
+            print(f"Octant {i+1}:")
+            print("\tSpherical:",rqf[0],rqf[1]*Consts.rad,rqf[2]*Consts.rad)
+            print("\tCospherical:",cqsqsf)
+            print("\tVerify:",mh.cos(rqf[1]),mh.sin(rqf[1]),mh.sin(rqf[2]))
+            print("\tPseudo cilyndrical:",rhofct)
+            print("\tVerify:",rqf[0]*np.cos(rqf[2]),rqf[1],mh.sin(rqf[2]))
+            
         #Test cartesian
-        xyz=Science.cartesian([1,0,0])
-        print(xyz) 
-        xyz=Science.cartesian([1,45*Consts.deg,45*Consts.deg])
-        print(xyz) 
-        xyz=Science.cartesian([1,135*Consts.deg,45*Consts.deg])
-        print(xyz) 
-        xyz=Science.cartesian([1,225*Consts.deg,45*Consts.deg])
-        print(xyz) 
-        xyz=Science.cartesian([1,315*Consts.deg,45*Consts.deg])
-        print(xyz) 
-        xyz=Science.cartesian([1,45*Consts.deg,-45*Consts.deg])
-        print(xyz) 
-        xyz=Science.cartesian([1,135*Consts.deg,-45*Consts.deg])
-        print(xyz) 
-        xyz=Science.cartesian([1,225*Consts.deg,-45*Consts.deg])
-        print(xyz) 
-        xyz=Science.cartesian([1,315*Consts.deg,-45*Consts.deg])
-        print(xyz) 
+        octants=[
+            [1,45*Consts.deg,45*Consts.deg],[1,135*Consts.deg,45*Consts.deg],
+            [1,225*Consts.deg,45*Consts.deg],[1,315*Consts.deg,45*Consts.deg],
+            [1,45*Consts.deg,-45*Consts.deg],[1,135*Consts.deg,-45*Consts.deg],
+            [1,225*Consts.deg,-45*Consts.deg],[1,315*Consts.deg,-45*Consts.deg]
+        ]
+        for i,rqf in enumerate(octants):
+            xyz=Science.cartesian(rqf)
+            print(f"Octant {i+1}:",xyz) 
 
     def test_rot(self):
         
@@ -105,6 +109,31 @@ class Test(unittest.TestCase):
         coefs=[-0.2018,2.1000,-2.0247,0.7567]
         ax.plot(rhos,Science.limb_darkening(rhos,coefs))
         Plot.pryngles_mark(ax)
+        
+        Verbose.VERBOSITY=VERB_NONE
+
+    def test_hull(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+
+        rng = np.random.default_rng()
+        points = rng.random((30, 2))
+        hull = ConvexHull(points)
+
+        ps = rng.random((30, 2))-0.5
+        cond=Science.points_in_hull(ps,hull)
+        print(len(cond),len(ps))
+
+        import matplotlib.pyplot as plt
+        plt.figure()
+        for simplex in hull.simplices:
+            plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+
+        for p in ps[cond]:
+            plt.plot(p[0],p[1],'r*')
+
+        for p in ps[~cond]:
+            plt.plot(p[0],p[1],'co')
         
         Verbose.VERBOSITY=VERB_NONE
 

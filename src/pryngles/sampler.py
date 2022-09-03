@@ -304,6 +304,7 @@ def gen_circle(self, perturbation=1, boundary=2):
     
     #Unitary radius
     self.R = 1
+    self.ri = 0 # For compatibility with ring
 
     #Total area
     self.A = np.pi*self.R**2
@@ -347,6 +348,7 @@ def _cut_hole(self, ri=0):
     
     #Correct area
     self.A = self.A - np.pi*ri**2
+    self.ri = ri
     
     #Distances
     self._calc_distances()

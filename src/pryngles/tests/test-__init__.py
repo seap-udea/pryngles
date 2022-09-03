@@ -47,6 +47,12 @@ class Test(unittest.TestCase):
         df=pd.DataFrame(np.zeros((5,3)),columns=["a","b","c"])
         Misc.print_df(df)
         
+        #rgb
+        print(Misc.rgb([27,0.5,0.5]))
+        
+        #Color sample
+        Misc.rgb_sample(27)
+        
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)
