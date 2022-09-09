@@ -66,7 +66,7 @@ setuptools.setup(
     # ######################################################################
     install_requires=[
         'rebound', 'scipy', 'ipython', 'matplotlib', 'tqdm',
-        'dill', 'spiceypy', 'cmasher','pandas'
+        'dill', 'spiceypy', 'cmasher','pandas','celluloid'
     ],
 
     # ######################################################################
