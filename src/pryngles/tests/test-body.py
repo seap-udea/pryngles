@@ -41,8 +41,9 @@ class Test(unittest.TestCase):
         B=Body("Body",BODY_DEFAULTS,None,hash='B',m=2,c=2)
         B.spangle_body()
         
-        print_df(B.sp.data.tail())
-        B.sp.plot3d()
+        print_df(B.sg.data.tail())
+        B.sg.update_simple_state()
+        B.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
         
@@ -67,8 +68,10 @@ class Test(unittest.TestCase):
         
         S=Star(nspangles=270,i=45*Consts.deg)
         S.spangle_body()
-        print_df(S.sp.data.tail())
-        S.sp.plot3d()
+        print_df(S.sg.data.tail())
+        
+        S.sg.update_simple_state()
+        S.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -82,7 +85,7 @@ class Test(unittest.TestCase):
         self.assertRaises(ValueError,lambda:Planet())
 
         P=Planet(primary=S)
-        print(P.hash)
+        print(P.bhash)
         
         #Check derived properties
         self.assertEqual(np.isclose([P.wrot],
@@ -90,15 +93,19 @@ class Test(unittest.TestCase):
                                     rtol=1e-7),
                          [True]*1)
         
-        P.update_planet(a=5,rho=0.2)
+        #Check a non-existing property
+        P.update_planet(a=5,e=0.5,rho=0.2)
+        print(P)
         
         #Check exception: primary could not be different from None or Body
         self.assertRaises(AssertionError,lambda:Planet(primary="Nada"))
         
         P.update_body(nspangles=250)
         P.spangle_body()
-        print_df(P.sp.data.tail())
-        P.sp.plot3d()
+        print_df(P.sg.data.tail())
+        
+        P.sg.update_simple_state()
+        P.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
         
@@ -116,10 +123,10 @@ class Test(unittest.TestCase):
         R.update_ring(fe=3)
         print(R)
         
-        R.update_body(nspangles=250,i=30*Consts.deg,roll=45*Consts.deg)
+        R.update_body(nspangles=250,i=60*Consts.deg,roll=0*Consts.deg)
         R.spangle_body()
-        print_df(R.sp.data.tail())
-        R.sp.plot3d()
+        print_df(R.sg.data.tail())
+        R.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
         

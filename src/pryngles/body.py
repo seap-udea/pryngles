@@ -20,20 +20,21 @@
 
 from pryngles import *
 
-#Aliases
-sci=Science
-print_df=Misc.print_df
-
 # ## External modules
 
 import spiceypy as spy
 import numpy as np
 
+# ## Aliases
+
+sci=Science
+print_df=Misc.print_df
+
 # ## The body class
 # 
 # The Body class is one of the most important classes in the package. 
 
-Body_doc="""A general body.  This calss is not intended to be used independently, just for inheritance purposes.
+Body_doc="""A general body.  This class is not intended to be used independently, just for inheritance purposes.
     
 Initialization attributes:
 
@@ -44,14 +45,14 @@ Initialization attributes:
     defaults : OrderedDict:
         Dictionary with the properties of the object.
 
-    primary: Body
+    primary: Class Body:
         Object in the center of the orbit of this body.
 
     **properties: dicitionary:
         Specification of the body properties.  All objects of the class Body has the following
         properties by default:
         
-        hash: string, default = None:
+        bhash: string, default = None:
             Hash of the object, ie. a unique string identifying the object 
             (see hash Python function)
 
@@ -75,17 +76,17 @@ Initialization attributes:
                     Period of rotation of the star.
 
                 i: float [rad], default = 0:
-                    Inclination of the ring with respect to the ecliptic plane.
+                    Inclination of the body equator with respect to the ecliptic plane.
 
                 roll: float [rad], default = 0:
                     Roll angle.  This is the angle with respect to ecliptic x-axis in which 
-                    the normal to the ring plane is rotated.
+                    the normal to the object equatorial plane is rotated.
 
                 alpha_equ: float [rad], default = 0:
                     Longitude of the zero meridian of the object.
 
-                t0: float [ut], default = 0:
-                    Initial time for zero meridian.
+                q0: float [ut], default = 0:
+                    Initial longitude for zero meridian.
 
         optical properties:
 
@@ -136,7 +137,7 @@ These are the default attributes for any body.
 BODY_DEFAULTS=dict()
 BODY_DEFAULTS.update(odict(
     
-    hash=None,
+    bhash=None,
     
     #Orbit
     m=1,
@@ -147,7 +148,7 @@ BODY_DEFAULTS.update(odict(
     i=0, #Inclination of the rotational axis
     roll=0,
     alpha=0, #Zero meridian
-    t0=0,
+    q0=0,
     
     #Optics
     nspangles=1000,
@@ -168,10 +169,10 @@ class Body(PrynglesCommon):
         self.__defaults=defaults
 
         #Hash object
-        if 'hash' in props:
-            bhash=self.hash=str(props["hash"])
+        if 'bhash' in props:
+            bhash=self.bhash=str(props["bhash"])
         else:
-            bhash=self.hash=str(hash(self))
+            bhash=self.bhash=str(hash(self))
 
         #Update childs and parent
         if primary is not None:
@@ -187,7 +188,7 @@ class Body(PrynglesCommon):
         #Update default properties
         self.__dict__.update(defaults)
         #Recover hash
-        self.hash=bhash
+        self.bhash=bhash
         #Update body
         self.update_body(**props)
     
@@ -216,16 +217,16 @@ class Body(PrynglesCommon):
         if 'childs' not in self.__dict__:
             self.childs=dict()
         if child is not None:
-            verbose(VERB_VERIFY,f"Add child {child.hash} to body {self.kind} ({self.hash})")
-            self.childs[child.hash]=child
+            verbose(VERB_VERIFY,f"Add child {child.bhash} to body {self.kind} ({self.bhash})")
+            self.childs[child.bhash]=child
             
     def _update_primary(self,primary=None):
         if 'primary' not in self.__dict__:
             if primary:
-                verbose(VERB_VERIFY,f"Add primary {primary.hash} to body {self.kind} ({self.hash})")
+                verbose(VERB_VERIFY,f"Add primary {primary.bhash} to body {self.kind} ({self.bhash})")
             self.primary=primary
         elif primary is not None:
-            verbose(VERB_VERIFY,f"Add parent {primary.hash} to body {self.kind} ({self.hash})")
+            verbose(VERB_VERIFY,f"Add parent {primary.bhash} to body {self.kind} ({self.bhash})")
             self.primary=primary
             parent._update_childs(self)
     
@@ -247,18 +248,17 @@ def spangle_body(self):
     """
     
     #Create spangler
-    self.sp=Spangler(
+    self.sg=Spangler(
         nspangles=self.nspangles,
-        body_hash=self.hash,
-        spangle_type=self.spangle_type,
+        sphash=self.bhash,
         n_equ=self.n_equ,
         alpha_equ=self.alpha,
-        w_equ=self.wrot,
-        t0_equ=self.t0,
+        w=self.wrot,
+        q0=self.q0,
     )
     
     #Populate spangler
-    self.sp.populate_spangler(
+    self.sg.populate_spangler(
         scale=self.radius,
         seed=self.seed,
         geometry=self.geometry,
@@ -278,11 +278,13 @@ These are the default attributes for bodies of the kind 'Star'.
 STAR_DEFAULTS=deepcopy(BODY_DEFAULTS)
 STAR_DEFAULTS.update(odict(
 
-    #Orbit
+    #Orbit: update
+    #Same as Body
     
-    #Physics
+    #Physics: update
+    #Same as Body
     
-    #Optical properties
+    #Optical properties: update
     limb_coeffs=[],
     spangle_type=STELLAR_SPANGLE,
     geometry="sphere",
@@ -341,18 +343,31 @@ class Star(Body):
         #Check primary
         if self.primary is not None:
             if self.primary.kind!="Star":
-                raise ValueError(f"Only another Star can be the primary of a Star")
+                raise ValueError(f"Only another Star can be the primary of a Star (you provided {self.primary.kind})")
 
         self._update_star_properties()
         
     def _update_star_properties(self):
+        """Update specific properties of the star
+        
+        Properties to update:
+        
+            norm_limb_darkening: float:
+                Limb darkening function normalization.
+                Requires: limb_coefs.
+
+        """
         verbose(VERB_VERIFY,"Updating properties of Star")
 
-        #Update limb darkening normalization
+        #Compute limbdarkening at r = 0 to initialize normalization constant
         sci.limb_darkening(0,self.limb_coeffs)
+        
+        #Store limb darkening normalization
         self.norm_limb_darkening=LIMB_NORMALIZATIONS[hash(tuple(self.limb_coeffs))]
         
     def update_star(self,**props):
+        """General update propeties of the Star
+        """
         verbose(VERB_VERIFY,"Updating star")
         
         Body.update_body(self,**props)
@@ -367,11 +382,15 @@ These are the default attributes for bodies of the kind 'Planet'.
 PLANET_DEFAULTS=deepcopy(BODY_DEFAULTS)
 PLANET_DEFAULTS.update(odict(
     
-    #Orbit
+    #Orbit: update
+    #Same as Body
+    a=1,
+    e=0,
     
-    #Physics
+    #Physics: update
+    #Same as Body
     
-    #Optical
+    #Optical: update
     spangle_type=SOLID_SPANGLE,
     geometry="sphere",
     
@@ -426,7 +445,19 @@ class Planet(Body):
         self.update_planet(**props)
 
     def _update_planet_properties(self):
+        """Update specific properties of the star
+        
+        Properties to update:
+        
+            norm_limb_darkening: float:
+                Limb darkening function normalization.
+                Requires: limb_coefs.
+
+        """
         verbose(VERB_VERIFY,"Updating Planet properties")
+        
+        #Semilatus rectum
+        self.p=self.a*(1-self.e**2)
 
     def update_planet(self,**pars):
         verbose(VERB_VERIFY,"Updating Planet")
@@ -438,11 +469,16 @@ class Planet(Body):
 
 RING_DEFAULTS=deepcopy(BODY_DEFAULTS)
 RING_DEFAULTS.update(odict(
-    #Physics
+
+    #Orbit: update
+    #Same as Body altough ring has not orbit properties
+    
+    #Physics: update
+    #Same as Body
     fi=1.0,
     fe=2.0,
     
-    #Optics
+    #Optics: update
     spangle_type=GRANULAR_SPANGLE,
     geometry="ring",
     albedo_gray_normal=1,
@@ -483,11 +519,11 @@ Initialization attributes:
 
     Derived attributes:
     
-        ri: float [rlu]:
-            Radius of the inner border of the ring
+        ri: float:
+            Radius of the inner border of the ring in units of the primary radius.
 
-        re: float [rlu]:
-            Radius of the outer border of the ring
+        re: float:
+            Radius of the outer border of the ring in units of the primary radius.
             
     Notes:
 
@@ -510,6 +546,20 @@ Initialization attributes:
         self.update_ring(**props)
 
     def _update_ring_properties(self):
+        """Update specific properties of the star
+        
+        Properties to update:
+        
+            ri, re: float:
+                Radius of the inner (outer) border of the ring in units of the primary radius.
+                Requires: limb_coefs.
+                
+            radius: float:
+                Object radius.
+                
+            geometry_args: dictionary:
+                
+        """
         verbose(VERB_VERIFY,"Updating Ring properties")
     
         #Update radius

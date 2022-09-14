@@ -35,7 +35,7 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_NONE
         
-    def test_fun(self):
+    def test_misc(self):
         
         #Get path
         filepath=Misc.get_data("diffuse_reflection_function.data")
@@ -52,6 +52,10 @@ class Test(unittest.TestCase):
         
         #Color sample
         Misc.rgb_sample(27)
+        
+        #Flatten
+        print(list(Misc.flatten(["hola"])))
+        print(list(Misc.flatten(["hola",["perro","gato"]])))
         
 
 if __name__=="__main__":

@@ -137,6 +137,42 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_NONE
 
+    def test_plane(self):
+        
+        Verbose.VERBOSITY=VERB_SIMPLE
+        
+        plt.close("all")
+        
+        #Calculate plane
+
+        #Test plane
+        p1=[-1,2,1]
+        p2=[0,-3,2]
+        p3=[1,1,-4]
+        plane=Science.Plane(p1,p2,p3)
+        print(plane)
+        #Debe dar: {'a': 26, 'b': 7, 'c': 9, 'd': 3}
+        
+        plane=Science.Plane(p1,p2,p3)
+        p=[2,2,5]
+        v=plane.get_projection(p)
+        print(v)
+        plane.plot_plane(p=p,alpha=0.1,color='r')
+        return
+
+        #x-y plane
+        p1=[0,0,1]
+        p2=[0,1,1]
+        p3=[1,0,1]
+        plane=Science.Plane(p1,p2,p3)
+        print(plane.c)
+        
+        x=1
+        y=1
+        z=plane.get_z(x,y)
+
+        Verbose.VERBOSITY=VERB_NONE
+
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

@@ -32,8 +32,10 @@ import warnings
 import dill
 import inspect
 from collections import OrderedDict as odict
+from collections.abc import Iterable
 from copy import deepcopy
 from colorsys import hls_to_rgb
+import matplotlib.pyplot as plt
 warnings.filterwarnings('ignore')
 
 # ## Jupyter compatibilty
@@ -218,6 +220,8 @@ class Misc(object):
         return rgb_color
     
     def rgb_sample(H=0):
+        """Create a color table for a given hue
+        """
         fig,ax=plt.subplots(figsize=(9,9))
         dL=0.1
         dS=0.1
@@ -229,8 +233,25 @@ class Misc(object):
         ax.axis("off")
         ax.axis("equal")
         plt.tight_layout()
-        
+            
 Misc.__doc__=Misc_doc
+
+def flatten(collection):
+    """Flatten a list of objects
+
+    Examples:
+        list(Misc.flatten(["cosa"]))
+        list(Misc.flatten([["cosa"]]))
+        list(Misc.flatten([["cosa","perro"]]))
+        list(Misc.flatten([[1,"perro"],object,float]))
+    """
+    for i in collection:
+        if isinstance(i, Iterable) and not isinstance(i, basestring):
+            for subc in Misc.flatten(i):
+                yield subc
+        else:
+            yield i
+Misc.flatten=flatten
 
 # ## Pryngles modules
 

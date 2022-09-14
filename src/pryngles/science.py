@@ -252,6 +252,18 @@ def limb_darkening(rho,cs=[0.6562],N=None):
 Science.limb_darkening=limb_darkening
 
 
+def get_convexhull(data):
+    if len(data)>0:
+        try:
+            qhull=ConvexHull(data)
+        except:
+            qhull=None
+    else:
+        qhull=None
+    return qhull
+    
+Science.get_convexhull=get_convexhull
+
 def points_in_hull(p, hull, tol=1e-12):
     """Determine if a set of points are inside a convex hull.
     
@@ -297,5 +309,158 @@ def points_in_hull(p, hull, tol=1e-12):
     return np.all(hull.equations[:,:-1] @ p.T + np.repeat(hull.equations[:,-1][None,:], len(p), axis=0).T <= tol, 0)
 
 Science.points_in_hull=points_in_hull
+
+
+# ## Plane
+
+class Plane(PrynglesCommon):
+    """Get plane coefficients and coordinates.
+    
+    Initialization parameters:
+        
+        p1,p2,p3: array(3):
+            Points on the plane.
+            
+    Attributes:
+        a,b,c,d: float:
+            Coefficients of the equation of the plane.
+            a x + b y + c z + d = 0
+            
+    Notes:
+        This class has been optimized removing all vectorial
+        operations. This reduce considerably the execution time.
+    """
+    def __init__(self,p1,p2,p3):
+        x1,y1,z1=p1
+        x2,y2,z2=p2
+        x3,y3,z3=p3
+        
+        a1 = x2 - x1
+        b1 = y2 - y1
+        c1 = z2 - z1
+        a2 = x3 - x1
+        b2 = y3 - y1
+        c2 = z3 - z1
+
+        self.a = b1 * c2 - b2 * c1
+        self.b = a2 * c1 - a1 * c2
+        self.c = a1 * b2 - b1 * a2
+        self.d = (- self.a * x1 - self.b * y1 - self.c * z1)
+                
+        #Save components of the defining points
+        self.p1x = p1[0];self.p1y = p1[1];self.p1z = p1[2]
+        self.p2x = p2[0];self.p2y = p2[1];self.p2z = p2[2]
+        self.p3x = p3[0];self.p3y = p3[1];self.p3z = p3[2]
+
+        #Normal vector
+        self.normal=(self.a**2+self.b**2+self.c**2)**0.5
+        self.nx=self.a/self.normal
+        self.ny=self.b/self.normal
+        self.nz=self.c/self.normal
+    
+    def get_projection(self,p):
+        """Find the projected point on the surface of the plane.
+        
+        Parameters:
+            p: list (3):
+                Coordinates of the point.
+        
+        Return:
+            v: list (3):
+                Coordinates of projection point.
+                
+            d: float:
+                Distance.
+        """
+        
+        #Distance
+        d=abs(self.a*p[0]+self.b*p[1]+self.c*p[2]+self.d)/self.normal
+        
+        #Vectorial equivalent np.dot(p-self.p1,self.n)
+        pdn=(p[0]-self.p1x)*self.nx+(p[1]-self.p1y)*self.ny+(p[2]-self.p1z)*self.nz
+
+        #Vectorial equivalent v=p-np.dot(p-self.p1,self.n)*self.n
+        v=[0]*3
+        v[0]=p[0]-pdn*self.nx
+        v[1]=p[1]-pdn*self.ny
+        v[2]=p[2]-pdn*self.nz
+        
+        return v,d
+    
+    def get_z(self,x,y):
+        """Get z value of a plane corresponding to given x, y coordinates.
+        """
+        z = (-self.a*x-self.b*y-self.d)/self.c if not mh.isclose(self.c,0) else np.nan
+        return z
+    
+    def is_above(self,p,axis=2):
+        """Check if a point is above or below a plane in a given axis direction.
+        
+        Parameters:
+            p: list (3):
+                Coordinates of the point.
+                
+            axis: int, default = 2:
+                Axis in the direction of evaluation
+        """
+        v,d=self.get_projection(p)
+        return True if v[axis]<=p[axis] else False
+    
+    def plot_plane(self,ax=None,p=None,**args):
+        
+        if ax is None:
+            fig=plt.figure()
+            ax=fig.add_subplot(111,projection='3d')
+        
+        maxval=max(abs(self.p1x),abs(self.p1y),abs(self.p1z),
+                   abs(self.p2x),abs(self.p2y),abs(self.p2z),
+                   abs(self.p3x),abs(self.p3y),abs(self.p3z))
+        
+        if p is not None:
+            maxval=max(maxval,abs(p[0]),abs(p[1]),abs(p[2]))
+
+        X,Y = np.meshgrid(np.linspace(-maxval,+maxval),np.linspace(-maxval,+maxval))
+        Z=self.get_z(X,Y)
+        
+        ax.plot_surface(X,Y,Z,**args)
+        ax.plot([self.p1x,self.p2x,self.p3x],
+                [self.p1y,self.p2y,self.p3y],
+                [self.p1z,self.p2z,self.p3z],'co')
+        
+        f=2
+        ax.set_xlim(-f*maxval,+f*maxval)
+        ax.set_ylim(-f*maxval,+f*maxval)
+        ax.set_zlim(-f*maxval,+f*maxval)
+        
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        ax.set_title(f"Plane: $a = {self.a}$, $b = {self.b}$, $c = {self.c}$, $d = {self.d}$")
+        
+        self.ax=ax
+        self.maxval=maxval
+        
+        if p is not None:
+            self.plot_point(p)
+        
+    def plot_point(self,p):
+        maxval=max(self.maxval,abs(p[0]),abs(p[1]),abs(p[2]))
+        ax=self.ax
+        
+        ax.plot(p[0],p[1],p[2],'ro')
+        v,d=self.get_projection(p)
+        ax.plot(v[0],v[1],v[2],'b*')
+
+        ax.plot([p[0],v[0]],
+                [p[1],v[1]],
+                [p[2],v[2]],
+                'r--')
+
+        f=2
+        ax.set_xlim(-f*maxval,+f*maxval)
+        ax.set_ylim(-f*maxval,+f*maxval)
+        ax.set_zlim(-f*maxval,+f*maxval)
+
+Science.Plane=Plane
 
 

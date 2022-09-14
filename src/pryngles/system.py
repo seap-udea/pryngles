@@ -24,71 +24,78 @@ from pryngles import *
 
 import rebound as rb
 
+# ## Aliases
+
+sci=Science
+print_df=Misc.print_df
+
 # ## System Class
 # 
 # This is the most important class in the whole package.  This class allows to create the planetary system and manipulate it.
 
-System_doc=f"""
-Creates a planetary system.
+System_doc=f"""Creates a planetary system.
 
-Initialization attributes:
+    Initialization attributes:
 
-    units: list of strings, default = ['au','msun','yr']:
-        Units used in calculations following the conventions and signs of rebound.
-        The order SHOULD always be MKS: length, mass, time (in that order)
-        
-Optional attributes:
-    
-    resetable: boolean, default = False:
-        If True the system is resetable, namely you can reset it to the initial system.
+        units: list of strings, default = ['au','msun','yr']:
+            Units used in calculations following the conventions and signs of rebound.
+            The order SHOULD always be MKS: length, mass, time (in that order)
 
-Derived attributes:
+    Optional attributes:
 
-    sim: Simulation:
-        REBOUND Simulation object.
-        
-    ul, um, ut: float [SI units]
-        Value of the conversion factors for each unit.
-        
-    G: float [ul^3/ut^2/um]
-        Value of the gravitational constant.
+        resetable: boolean, default = False:
+            If True the system is resetable, namely you can reset it to the initial system.
+            
+        filename: string, default = None:
+            File to load system.
 
-    bodies: dictionary:
-        Bodies in the system.
-        
-    sources: dictionary:
-        Bodies in the system which are sources of light.
-        
-    nbodies: int:
-        Number of bodies.
-        
-    nsources: int:
-        Number of sources of light.
-        
-    nparticles: int:
-        Numbre of particles in rebound simulation.
-        
-    spangler: Spangler:
-        Spangler object with all the spangles in the system.
+    Derived attributes:
 
-Examples:
+        sim: Class Simulation:
+            Rebound Simulation object.
 
-    #Create a system
-    sys=System(units=["au","msun","yr"])
-    sys.sim.integrator='whfast'
-    sys.sim.dt=0.01
-    
-    #Add star (by default, m = 1)
-    S=sys.add()
+        ul, um, ut: float [SI units]:
+            Value of the conversion factors for each unit.
 
-    #Add planet, when an object is added, it is automatically spangled
-    P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
+        G: float [ul^3/ut^2/um]
+            Value of the gravitational constant.
 
-    #Add moon: orbital elements are respect to equatorial plane of the primary
-    M=sys.add("Planet",primary=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
+        bodies: dictionary:
+            Bodies in the system.
 
-    #Add ring system
-    R=sys.add("Ring",primary=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)
+        sources: dictionary:
+            Bodies in the system which are sources of light.
+
+        nbodies: int:
+            Number of bodies.
+
+        nsources: int:
+            Number of sources of light.
+
+        nparticles: int:
+            Numbre of particles in rebound simulation.
+
+        spangler: Class Spangler:
+            Spangler object with all the spangles in the system.
+
+    Examples:
+
+        #Create a system
+        sys=System(units=["au","msun","yr"])
+        sys.sim.integrator='whfast'
+        sys.sim.dt=0.01
+
+        #Add star (by default, m = 1)
+        S=sys.add()
+
+        #Add planet, when an object is added, it is automatically spangled
+        P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
+
+        #Add moon: orbital elements are respect to ecliptic system
+        M=sys.add("Planet",primary=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
+
+        #Add ring system
+        R=sys.add("Ring",primary=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)
 
 """;
 
@@ -110,21 +117,22 @@ class System(PrynglesCommon):
         #Attributes by default
         self.bodies=dict()
         self.sources=dict()
+        
         #Observer properties
         self.n_obs=[0,0,1]
-        self.alpha_obs=0        
+        self.alpha_obs=0  
+        
         #Check if spangled
         self._spangled=False
+
         #Initialize spangler object
-        self.sp=None
+        self.sg=None
         
-        #Is the system resetable
+        #Is the system resetable?
         self._resetable=resetable
         if self._resetable:
             #Create temporary file
-            #self._snap_file = NamedTemporaryFile(delete=False)
-            #self._snap_file_name = self._snap_file.name
-            self._snap_file_name = "/tmp/system.pkl"
+            self._snap_file_name = "/tmp/pryngles-system.pkl"
         
         #Update rebound units
         self.update_units(units)
@@ -154,7 +162,7 @@ class System(PrynglesCommon):
         self.nparticles=len(self.sim.particles)
         
     def _is_spangled(self):
-        return True if self.sp else False
+        return True if self.sg else False
         
     def save_to(self,filename):
         """Save system from file
@@ -170,6 +178,7 @@ class System(PrynglesCommon):
         rb_filename=filename+".rbin"
 
         #Save rebound state
+        verbose(VERB_SIMPLE,"Saving rebound simulation")
         self.sim.save(rb_filename)
 
         #Since rebound have ctypes it cannot be pickled
@@ -197,10 +206,26 @@ class System(PrynglesCommon):
         self=PrynglesCommon.load_from(self,filename)
 
         #Load rebound
+        verbose(VERB_SIMPLE,"Loading rebound simulation")
         self.sim=rb.Simulation(rb_filename)
 
 System.__doc__=System_doc
 
+
+REBOUND_ORBITAL_PROPERTIES=dict(
+    #Mass
+    m=0,
+    #Cartesian coordinates
+    x=0,y=0,z=0,vx=0,vy=0,vz=0,
+    #Semi major axis, true anomaly, eccentricity
+    a=0,f=0,e=0,
+    #Periapsis argument, inclination, longitude of the ascending node
+    omega=0,inc=0,Omega=0,
+    #Mean anomaly, eccentric anomaly, time of periapsis passage
+    M=0,E=0,T=0,
+    #true longitude (Omega + omega + f), mean anomaly (Omega + omega + M)
+    theta=0,l=0,
+)
 
 def add(self,kind="Star",primary=None,center="primary",**props):
     """Add an object to the system
@@ -231,6 +256,20 @@ def add(self,kind="Star",primary=None,center="primary",**props):
         
         Body
             Body added to the system.
+            
+    Examples:
+        #Add star (by default, m = 1)
+        S=sys.add()
+
+        #Add planet, when an object is added, it is automatically spangled
+        P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
+
+        #Add moon: orbital elements are respect to ecliptic system
+        M=sys.add("Planet",primary=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
+
+        #Add ring system
+        R=sys.add("Ring",primary=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)        
+        
     """
     if kind is None:
         raise AssertionError("You must provide a valid object kind (Star, Planet, Ring).")
@@ -238,30 +277,38 @@ def add(self,kind="Star",primary=None,center="primary",**props):
     if kind not in BODY_KINDS:
         raise ValueError(f"Object kind '{kind}' is not recognized.")
 
+    #Create body
     exec(f"self.__body={kind}(primary=primary,**props)")
-    self.bodies[self.__body.hash]=self.__body
-    if kind == "Star":
-        self.sources[self.__body.hash]=self.__body
+    self.bodies[self.__body.bhash]=self.__body
     
-    if kind != "Ring":
-        #Add body to simulation
-        rb_add_options={k:v for k,v in self.__body.__dict__.items() if k in REBOUND_ORBITAL_PROPERTIES}
-        rb_add_options.update(hash=self.__body.hash)
+    if kind == "Star":
+        #Add a source
+        self.sources[self.__body.bhash]=self.__body
+    
+    if kind == "Ring":
         
-        if primary and center=="primary":
-            rb_add_options.update(primary=self.sim.particles[primary.hash])
-
-        verbose(VERB_VERIFY,f"Adding rebound object with hash {self.__body.hash} with center {center}")
-        verbose(VERB_DEEP,f"Rebound add options {rb_add_options}")
-        
-        self.sim.add(**rb_add_options)
-        #self.__body.particle=self.sim.particles[self.__body.hash] <- It is not conveniente for pickling
-        self.__body.rbhash=self.__body.hash
-    else:
-        pass
-        #self.__body.particle=self.sim.particles[self.__body.primary.hash] <- It is not conveniente for pickling
+        #If it is a ring it does not need to be add to rebound
         self.__body.rbhash=self.__body.primary.rbhash
     
+    else:
+        
+        #Add body to simulation
+        rb_add_options={k:v for k,v in self.__body.__dict__.items() if k in REBOUND_ORBITAL_PROPERTIES}
+        rb_add_options.update(hash=self.__body.bhash)
+        
+        #Check if positions are given with respect to primary
+        if primary and center=="primary":
+            rb_add_options.update(primary=self.sim.particles[primary.bhash])
+
+        verbose(VERB_VERIFY,f"Adding rebound object with hash {self.__body.bhash} with center {center}")
+        verbose(VERB_DEEP,f"Rebound add options {rb_add_options}")
+        
+        #Add particle to rebound
+        self.sim.add(**rb_add_options)
+        
+        #self.__body.particle=self.sim.particles[self.__body.hash] <- This is not convenient for pickling
+        self.__body.rbhash=self.__body.bhash
+
     #Update system
     self._update_system()
     return self.__body
@@ -269,11 +316,11 @@ def add(self,kind="Star",primary=None,center="primary",**props):
 System.add=add
 
 
-def remove(self,hash):
+def remove(self,bhash):
     """Remove a body from a system.
 
     Parameters:
-        body_hash: string
+        bhash: string
             Hash of the body to remove
     
     Notes: 
@@ -282,13 +329,13 @@ def remove(self,hash):
     Example:
         sys=System()
         S=sys.add(m=2)
-        sys.remove(hash=S.hash)
+        sys.remove(bhash=S.bhash)
     """
     
-    if hash in self.bodies:
-        verbose(VERB_SIMPLE,f"Removing object {hash} from system")
+    if bhash in self.bodies:
+        verbose(VERB_SIMPLE,f"Removing object {bhash} from system")
 
-        obj=self.bodies[hash]
+        obj=self.bodies[bhash]
 
         #Get the list of child hashes before removing (it changes during for)
         child_hashes=list(obj.childs.keys())
@@ -300,34 +347,40 @@ def remove(self,hash):
                 
         #Remove object from simulation
         if obj.kind != "Ring":
-            verbose(VERB_SIMPLE,f"Removing particle {hash} from simulation")
-            self.sim.remove(hash=hash)
+            verbose(VERB_SIMPLE,f"Removing particle {bhash} from simulation")
+            self.sim.remove(hash=bhash)
         
         #Remove object from childs of its primary
         if obj.primary:
-            del obj.primary.childs[hash]
+            del obj.primary.childs[bhash]
         
         #Remove object from bodies
-        del self.bodies[hash]
+        del self.bodies[bhash]
 
         #Update system
         self._update_system()
     else:
-        raise ValueError("No object with hash 'body_hash' in the system")
+        raise ValueError(f"No object with hash '{bhash}' in the system")
+
 System.remove=remove
 
+
+def integrate(self,*args,**kwargs):
+    """Integrate system
+    
+    *args, **kwargs:
+        Mandatory (non-keyword) arguments and optional (keyword) arguments for rebound.integrate.
+    """
+    self.sim.integrate(*args,**kwargs)
+    
+System.integrate=integrate
+
+
+# ## Spangle System
 
 def spangle_system(self):
     """Generate the spangles of the objects in the system
     
-    Optional parameters:
-        
-        n_obs: list/array (3), default = [0,0,1]:
-            Normal vector towards the observer.
-
-        alpha_obs: float, default = 0:
-            Roll angle of x-axis of observer system (not implemented yet)
-            
     Attributes created:
         
         spanglers: dictionary of Spangler objects:
@@ -344,38 +397,27 @@ def spangle_system(self):
     
     self._spanglers=dict()
     source=1
-    for hash,body in self.bodies.items():
+    for bhash,body in self.bodies.items():
         
-        verbose(VERB_SIMPLE,f"Spangling body '{hash}' (kind '{body.kind}')")
+        verbose(VERB_SIMPLE,f"Spangling body '{bhash}' (kind '{body.kind}')")
         body.spangle_body()
 
         if body.kind=="Star":
-            body.sp.data.source=source
+            body.sg.data.source=source
             source+=1
+        
+        #Center object around its position according to rebound
+        body.sg.set_positions(center_ecl=self.sim.particles[body.rbhash].xyz)
             
-        body.sp.set_positions(center_ecl=self.sim.particles[body.rbhash].xyz)
-        self._spanglers[hash]=body.sp
+        self._spanglers[bhash]=body.sg
     
     #Join spanglers
-    self.sp=Spangler(spanglers=list(self._spanglers.values()))
+    self.sg=Spangler(spanglers=list(self._spanglers.values()))
     
-    #Set observer
-    self.sp.set_observer(nvec=self.n_obs,alpha=self.alpha_obs)
-    
-    #Unset all
-    #self.sp.reset_state()
-    
-    #Add column for sources
+    #Add column for controlling information on sources
     for source in range(1,self.nsources+1):
         for source_state in SPANGLER_SOURCE_STATES.keys():
-            #self.sp.data.rename(columns={source_state:source_state+"_1"},inplace=True)
-            self.sp.data[source_state+f"_{source}"]=0
-    
-    """
-    SPANGLER_SOURCE_STATES=odict({"illuminated_1":0,"transit_1":0,"occult_1":0})
-    self.sp.data.rename(columns=dict(illuminated="illuminated_1",transit="transit_1",occult="occult_1"),
-                        inplace=True)
-    """
+            self.sg.data[source_state+f"_{source}"]=0
     
     #Save state of the system
     if self._resetable:
@@ -389,18 +431,19 @@ System.spangle_system=spangle_system
 """
 nspangles=100
 sys=System(resetable=False)
-S2=sys.add(hash="Star2",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
-S1=sys.add(hash="Star1",nspangles=nspangles,m=9,radius=1,x=10,vy=-2)
-P=sys.add("Planet",primary=S1,hash="Planet",nspangles=nspangles,radius=0.2,a=2)
-M=sys.add("Planet",primary=P,hash="Moon",nspangles=nspangles,radius=0.1,a=1,M=120*Consts.deg)
-R=sys.add("Ring",primary=P,hash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
+S2=sys.add(bhash="Star2",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
+S1=sys.add(bhash="Star1",nspangles=nspangles,m=9,radius=1,x=10,vy=-2)
+P=sys.add("Planet",primary=S1,bhash="Planet",nspangles=nspangles,radius=0.2,a=2)
+M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,a=1,M=120*Consts.deg)
+R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
 sys.spangle_system()
 print(sys.nsources)
 print(sys.sources)
-sys.sp.data.columns
-#sys.bodies["Ring"].sp.data
-#print_df(sys.sp.data[sys.sp.data.hidden==1].head(10))
+print(sys.sg.data.columns)
+sys.sg.plot3d()
 #""";
+
+#sys.sg._interact_intersect()
 
 
 # ### Miscelaneous methods
@@ -447,17 +490,6 @@ def set_observer(self,nvec=[0,0,1],alpha=0):
         self.sp.set_observer(nvec=self.n_obs,alpha=self.alpha_obs)
         
 System.set_observer=set_observer
-
-
-def integrate(self,*args,**kwargs):
-    """Integrate system
-    
-    *args, **kwargs:
-        Mandatory (non-keyword) arguments and optional (keyword) arguments for rebound.integrate.
-    """
-    self.sim.integrate(*args,**kwargs)
-    
-System.integrate=integrate
 
 
 def reset(self):
