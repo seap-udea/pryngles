@@ -212,21 +212,6 @@ class System(PrynglesCommon):
 System.__doc__=System_doc
 
 
-REBOUND_ORBITAL_PROPERTIES=dict(
-    #Mass
-    m=0,
-    #Cartesian coordinates
-    x=0,y=0,z=0,vx=0,vy=0,vz=0,
-    #Semi major axis, true anomaly, eccentricity
-    a=0,f=0,e=0,
-    #Periapsis argument, inclination, longitude of the ascending node
-    omega=0,inc=0,Omega=0,
-    #Mean anomaly, eccentric anomaly, time of periapsis passage
-    M=0,E=0,T=0,
-    #true longitude (Omega + omega + f), mean anomaly (Omega + omega + M)
-    theta=0,l=0,
-)
-
 def add(self,kind="Star",primary=None,center="primary",**props):
     """Add an object to the system
     
@@ -429,13 +414,13 @@ def spangle_system(self):
 System.spangle_system=spangle_system
 
 """
-nspangles=100
+nspangles=500
 sys=System(resetable=False)
 S2=sys.add(bhash="Star2",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
 S1=sys.add(bhash="Star1",nspangles=nspangles,m=9,radius=1,x=10,vy=-2)
 P=sys.add("Planet",primary=S1,bhash="Planet",nspangles=nspangles,radius=0.2,a=2)
-M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,a=1,M=120*Consts.deg)
-R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
+M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,spangle_type=LIQUID_SPANGLE,radius=0.1,a=1,M=120*Consts.deg)
+R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=80*Consts.deg)
 sys.spangle_system()
 print(sys.nsources)
 print(sys.sources)
@@ -443,7 +428,11 @@ print(sys.sg.data.columns)
 sys.sg.plot3d()
 #""";
 
+#sys.sg.plot3d(coords="int",center_at="Ring")
+
 #sys.sg._interact_intersect()
+
+#sys.sg._animate_intersect()
 
 
 # ### Miscelaneous methods

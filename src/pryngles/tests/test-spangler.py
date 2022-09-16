@@ -135,10 +135,7 @@ class Test(unittest.TestCase):
         sg.populate_spangler(geometry="ring",preset=True,
                              spangle_type=GASEOUS_SPANGLE,
                              scale=2,ri=0.2)
-        #sg.set_observer([1,1,1])
-        sg.data.loc[:400,"sphash"]="Planet"
-    
-        center=[1,0,-1]
+        center=[1,1,-1]
         cond,n_int,d_int=sg.set_intersect(nvec=[1,0,1],center=center,sphash="Ring")
         
         sg.data.loc[cond,SPANGLER_COL_OBS]=sg.data.loc[cond,SPANGLER_COL_INT].values
@@ -164,6 +161,9 @@ class Test(unittest.TestCase):
         sg.plot3d(coords="int")
         plane=sg.qhulls["Ring"][0]["plane"]
         plane.plot_plane(ax=sg.ax3d,color='r',alpha=0.5)
+        
+        #Hulls
+        print(sg.qhulls)
         
         Verbose.VERBOSITY=VERB_NONE
         
@@ -320,24 +320,10 @@ class Test(unittest.TestCase):
         plt.close("all")
         sg=Spangler(nspangles=2500,sphash="123",n_equ=[1,1,1],center_ecl=[0,0,2])
         sg.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=2,seed=1,preset=True)
-        sg.set_observer(nvec=[1,0,0],center=[0,0,0])
+        sg.set_observer(nvec=[1,0,0])
         sg.set_luz(nvec=[1,1,1])
         sg.update_simple_state()
         sg.plot_obs()
-        return
-        
-        sg=Spangler(nspangles=500,sphash="123",n_equ=[1,1,1],center_ecl=[1,1,1])
-
-        sg.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=2,seed=1,preset=True)
-        sg.set_observer(nvec=[1,0,0])
-        sg.plot_obs()
-
-        sg.populate_spangler(geometry="circle",spangle_type=GRANULAR_SPANGLE,scale=2,seed=1,boundary=0)
-        sg.plot_obs()
-
-        sg.set_luz(nvec=[0,0,-1])
-        sg.populate_spangler(geometry="ring",spangle_type=GRANULAR_SPANGLE,scale=2,seed=1,ri=0.2,boundary=0)
-        sg.plot_obs(center_at="123",show_hidden=0)
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -410,7 +396,7 @@ class Test(unittest.TestCase):
         sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
         sg.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=1,seed=1,preset=True)
         sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[0,0,1])
+        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,0])
         sg.populate_spangler(geometry="ring",spangle_type=GRANULAR_SPANGLE,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
         sps+=[sg]
         sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+3.0,0.0,0.0])

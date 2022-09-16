@@ -243,6 +243,8 @@ class Spangler(PrynglesCommon):
         #Common attributes
         self.n_obs=[0,0,1]
         self.n_luz=[0,0,1]
+        self.n_int=[0,0,1]
+        self.d_int=1
         #Direction of the observer in spherical coordinates
         self.rqf_obs=[0,0,90*Consts.deg]
         #Transformation matrices from equatorial to ecliptic coordinates
@@ -331,6 +333,7 @@ class Spangler(PrynglesCommon):
             "center_ecl",
             "center_equ",
             "center_obs",
+            "center_int",
         ]
         for vector in vectors:
             self.data[vector]=[np.array(v)*scale for v in self.data[vector]]
@@ -793,6 +796,10 @@ def set_intersect(self,
     n_int,d_int=spy.unorm(nvec)
     alpha_int=alpha
     rqf_int=sci.spherical(n_int)
+    
+    #Store n_int and d_int for update state purposes
+    self.n_int=n_int
+    self.d_int=d_int
 
     #Transformation matrices
     M_int2ecl,M_ecl2int=Science.rotation_matrix(n_int,alpha_int)
@@ -806,7 +813,9 @@ def set_intersect(self,
     self.data.loc[cond,["x_int","y_int","z_int"]]=        [np.matmul(M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
     
     #Center of the object in the observer reference system
-    self.data.loc[cond,"center_int"]=        pd.Series([np.matmul(M_ecl2int,r-center) for r in np.array(self.data.center_ecl)])
+    self.data.loc[cond,"center_int"]=        pd.Series([np.matmul(M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)                   for sp,c_ecl,c_equ in zip(self.data.sphash,
+                                             np.array(self.data.center_ecl),
+                                             np.array(self.data.center_equ))])
     
     #Pseudo-cylindrical coordinates in the observer system
     self.data.loc[cond,["rho_int","az_int","cost_int"]]=        [sci.pcylindrical(r) for r in np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
@@ -829,19 +838,24 @@ def set_intersect(self,
 
         self.qhulls[sphash]=[]
         cond_obj=(self.data.sphash==sphash)
+        zcen=self.data[cond_obj].center_int.iloc[0][2]
         
         if (self.data[cond_obj].hidden).sum()==0:
+            
             #Convex hull of whole objects
             cond_hull=(cond_obj)&(~self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (whole object):",sum(cond_hull))
+            
             zmin,zmax=self.data[cond_hull]["z_int"].values.min(),self.data[cond_hull]["z_int"].values.max()
             zmed=0.5*(zmin+zmax)
+            
             self.qhulls[sphash]+=[dict(
                 sphash=sphash,
-                hulltype="med",
-                zmin=zmin,zmax=zmax,zmed=zmed,
+                hulltype="cen",
+                zmin=zmin,zmax=zmax,zmed=zmed,zcen=zcen,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]])
             )]
+            
         else:
             #Convex hull of objects with a hole (eg. rings)
             
@@ -855,33 +869,27 @@ def set_intersect(self,
             #Convex hull of hidden points (the hole)
             cond_hull=(cond_obj)&(self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (hidden):",sum(cond_hull))
-            
             zmin,zmax=self.data[cond_hull]["z_int"].values.min(),self.data[cond_hull]["z_int"].values.max()
             zmed=0.5*(zmin+zmax)
 
             self.qhulls[sphash]+=[dict(
                 sphash=sphash,
                 hulltype="hidden",
-                zmin=zmin,zmax=zmax,zmed=zmed,
+                zmin=zmin,zmax=zmax,zmed=zmed,zcen=zcen,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]]),
                 plane=plane
             )]
         
             #Convex hull of no hidden points
             cond_hull=(cond_obj)&(~self.data[cond_obj].hidden)
-
-            #Normal vector to ring
-            ns_int=self.data[cond_hull]["ns_int"].iloc[0]
-
             verbose(VERB_SIMPLE,"Hull points (visible ring):",sum(cond_hull))
-            
             zmin,zmax=self.data[cond_hull]["z_int"].values.min(),self.data[cond_hull]["z_int"].values.max()
             zmed=0.5*(zmin+zmax)
+            
             self.qhulls[sphash]+=[dict(
                 sphash=sphash,
                 hulltype="plane",
-                zmin=zmin,zmax=zmax,zmed=zmed,
-                ns_int=ns_int,
+                zmin=zmin,zmax=zmax,zmed=zmed,zcen=zcen,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]]),
                 plane=plane
             )]
@@ -968,18 +976,16 @@ def update_simple_state(self):
         & cos_obs . cos_luz < 0: observer and light source are in opposite sides
     )
     """
-    #"""
     cond=    (~self.data.hidden)&    (     (self.data.spangle_type.isin(SEMITRANSPARENT_SPANGLES))&     ((self.data.cos_luz*self.data.cos_obs)<=0)
     )
     self.data.loc[cond,"transmit"]=True
-    #"""
     
 Spangler.update_simple_state=update_simple_state
 
 
 # ### Plot observer
 
-def plot_obs(self,show_hidden=True,center_at=None,not_plot=[],**args):
+def plot_obs(self,show_hidden=False,center_at=None,not_plot=[],**args):
     """
     Plot spangle.
 
@@ -1117,13 +1123,14 @@ Spangler.plot_obs=plot_obs
 
 def update_intersection_state(self):
     """Update state of intersections
-    """
-    self.data.intersect=True
-    
+    """    
     #Check if an intersection has been computed
     if len(self.qhulls) == 0:
         raise AssertionError("You must set an intersection vantage point.")
-    
+        
+    cond=(~self.data.hidden)&((self.data.cos_int>0)|(self.data.spangle_type.isin(SEMITRANSPARENT_SPANGLES)))
+    self.data.loc[cond,"intersect"]=True
+        
     for sphash in Misc.flatten([self.sphash]):
         
         cond=(self.data.sphash==sphash)
@@ -1134,10 +1141,11 @@ def update_intersection_state(self):
             
             qhull=hull["qhull"]
             if qhull is None:
+                verbose(VERB_SIMPLE,f"No hull for '{sphash}'")
                 continue
             
             htype=hull["hulltype"]
-            zmin,zmed,zmax=hull["zmin"],hull["zmed"],hull["zmax"]
+            zmin,zmed,zmax,zcen=hull["zmin"],hull["zmed"],hull["zmax"],hull["zcen"]
             
             verbose(VERB_SIMPLE,f"Hull {i+1} for '{sphash}' of type '{htype}'")
 
@@ -1160,20 +1168,25 @@ def update_intersection_state(self):
                 #Spangles to evaluate
                 cond_int=(~self.data.hidden)&(self.data.sphash!=sphash)&(self.data.intersect)
 
-                if htype=="med":
-                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<zmed)
-                
+                if htype=="min":
+                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zmin)
+                    
+                elif htype=="med":
+                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zmed)
+                    
+                elif htype=="max":
+                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zmax)
+                    
+                elif htype=="cen":
+                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zcen)
+                    
                 elif htype=="plane":
-
-                    #Determine if points are below
+                    #Not in hole, inhull, not hidden, not in object and intersect
                     cond_full=(inhull_not_in_hole)&(inhull)&(cond_int)
                     verbose(VERB_SIMPLE,"Fulfilling all conditions:",sum(cond_full))
                     
                     plane=hull["plane"]
-                    below[cond_full]=[not plane.is_above(r,axis=1) for r in self.data[cond_full][["x_int","y_int","z_int"]].values]
-                    
-                    if hull["ns_int"][2]<0:
-                        below[cond_full]=~below[cond_full]
+                    below[cond_full]=[plane.is_below(r,[0,0,1]) for r in self.data[cond_full][["x_int","y_int","z_int"]].values]
                 else:
                     raise ValueError("Type of hull '{htype}' not recognized")
             
@@ -1198,6 +1211,44 @@ def update_illumination_state(self):
 Spangler.update_intersection_state=update_intersection_state
 Spangler.update_visibility_state=update_visibility_state
 Spangler.update_illumination_state=update_illumination_state
+
+"""
+Verbose.VERBOSITY=VERB_SIMPLE
+#Spanglers
+nspangles=500
+sps=[]
+sg=Spangler(nspangles=nspangles,sphash="Parent",n_equ=[0,0,1],center_equ=[-7,0,0])
+sg.populate_spangler(geometry="sphere",spangle_type=STELLAR_SPANGLE,scale=3,seed=1,preset=True)
+sps+=[sg]
+sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
+sg.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=1,seed=1,preset=True)
+sps+=[sg]
+sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,0])
+sg.populate_spangler(geometry="ring",spangle_type=GRANULAR_SPANGLE,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+sps+=[sg]
+sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+3.0,0.0,0.0])
+sg.populate_spangler(geometry="sphere",spangle_type=ATMOSPHERIC_SPANGLE,scale=0.3,seed=1,preset=True)
+sps+=[sg]
+sg=Spangler(spanglers=sps)
+
+#Direction of observations
+n_obs=sci.cartesian([1,30*Consts.deg,0*Consts.deg])
+sg.set_observer(nvec=n_obs)
+n_luz=sci.cartesian([1,0*Consts.deg,0*Consts.deg])
+sg.set_luz(nvec=n_obs)
+
+#Intersection state
+sg.set_intersect(nvec=n_obs)
+sg.update_intersection_state()
+#print(sg.qhulls)
+
+#Plot intersect
+#fig=sg._plot_intersect()
+#sg._interact_intersect()
+Verbose.VERBOSITY=VERB_NONE
+sg.plot3d(coords="int")
+sg.data[sg.data.sphash=="Parent"].center_int.iloc[0]
+#""";
 
 def _plot_intersect(self,prop="intersect",fig=None):
     """Plot intersect

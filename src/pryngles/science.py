@@ -393,18 +393,23 @@ class Plane(PrynglesCommon):
         z = (-self.a*x-self.b*y-self.d)/self.c if not mh.isclose(self.c,0) else np.nan
         return z
     
-    def is_above(self,p,axis=2):
-        """Check if a point is above or below a plane in a given axis direction.
+    def is_above(self,p,vdir):
+        """Check if a point is above or below a plane with respect to a given direction
         
         Parameters:
             p: list (3):
                 Coordinates of the point.
                 
-            axis: int, default = 2:
-                Axis in the direction of evaluation
+            vidr: list (3):
+                Direction with respect to
         """
-        v,d=self.get_projection(p)
-        return True if v[axis]<=p[axis] else False
+        v,d=self.get_projection(p)        
+        #Sign of (v-p).vdir
+        cdir=(v[0]-p[0])*vdir[0]+(v[1]-p[1])*vdir[1]+(v[2]-p[2])*vdir[2]
+        return cdir<=0
+    
+    def is_below(self,p,vdir):
+        return not self.is_above(p,vdir)
     
     def plot_plane(self,ax=None,p=None,**args):
         
@@ -462,5 +467,25 @@ class Plane(PrynglesCommon):
         ax.set_zlim(-f*maxval,+f*maxval)
 
 Science.Plane=Plane
+
+"""
+#Test plane
+p1=[1,0,0]
+p2=[0,1,0]
+p3=[1,1,0]
+
+p1=[-1,2,1]
+p2=[0,-3,2]
+p3=[1,1,-4]
+
+plane=Science.Plane(p1,p2,p3)
+print(plane)
+
+p=[2,2,5]
+v=plane.get_projection(p)
+plane.plot_plane(p=p,alpha=0.1,color='r')
+plane.is_above(p,[-1,1,0])
+#plane.is_above(p,axis=2),plane.is_below(p,axis=2),plane.is_above(p,axis=0),plane.is_below(p,axis=1)
+#""";
 
 

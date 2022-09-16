@@ -153,23 +153,13 @@ class Test(unittest.TestCase):
         print(plane)
         #Debe dar: {'a': 26, 'b': 7, 'c': 9, 'd': 3}
         
-        plane=Science.Plane(p1,p2,p3)
+                #Check if point is above with respect to a direction
         p=[2,2,5]
-        v=plane.get_projection(p)
-        print(v)
-        plane.plot_plane(p=p,alpha=0.1,color='r')
-        return
-
-        #x-y plane
-        p1=[0,0,1]
-        p2=[0,1,1]
-        p3=[1,0,1]
-        plane=Science.Plane(p1,p2,p3)
-        print(plane.c)
+        print("Is above: ",plane.is_above(p,[0,0,-1]))
         
-        x=1
-        y=1
-        z=plane.get_z(x,y)
+        v=plane.get_projection(p)
+        print("Projection: ",v)
+        plane.plot_plane(p=p,alpha=0.1,color='r')
 
         Verbose.VERBOSITY=VERB_NONE
 
