@@ -440,7 +440,8 @@ class Plane(PrynglesCommon):
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_zlabel("z")
-        ax.set_title(f"Plane: $a = {self.a}$, $b = {self.b}$, $c = {self.c}$, $d = {self.d}$")
+        if ax is None:
+            ax.set_title(f"Plane: $a = {self.a:.2f}$, $b = {self.b:.2f}$, $c = {self.c:.2f}$, $d = {self.d:.2f}$")
         
         self.ax=ax
         self.maxval=maxval

@@ -38,6 +38,7 @@ import math
 """ Sampler presets are the values of N 
     for which there are already stored samples
 """
+SAMPLER_PRESETS = ["sphere", "circle", "ring"]
 
 SAMPLER_SPHERE_PRESETS = np.array(
     list(np.arange(100, 1000, 100))+\
@@ -48,7 +49,14 @@ SAMPLER_SPHERE_PRESETS = np.array(
     [5000]
 )
 SAMPLER_CIRCLE_PRESETS = np.arange(100, 6000, 100)
-SAMPLER_PRESETS = ["sphere", "circle", "ring"]
+
+SAMPLER_MIN_RING = 10
+
+#Geometries
+SAMPLER_GEOMETRY_CIRCLE=0
+SAMPLER_GEOMETRY_SPHERE=1
+
+SAMPLE_SHAPES=[]
 
 # ## Sampler class
 
@@ -184,8 +192,10 @@ class Sampler(PrynglesCommon):
         
         #Derivative
         self.dim = 0
+        self.geometry = -1
         self.ss = None
         self.pp = None
+        self.ns = None
         self.dmin = self.dmed = self.dmax = self.dran = self.dstar = 0
         
         #Purge
@@ -288,6 +298,7 @@ def plot(self, spangled=dict(), **args):
 
 Sampler.plot = plot
 
+SAMPLE_SHAPES+=["circle"]
 def gen_circle(self, perturbation=1, boundary=2):
     """ Sample points in fibonacci spiral on the unit circle
 
@@ -301,6 +312,7 @@ def gen_circle(self, perturbation=1, boundary=2):
         ss, pp
     """
     self._seed_sampler()
+    self.geometry = SAMPLER_GEOMETRY_CIRCLE
     
     #Unitary radius
     self.R = 1
@@ -319,6 +331,7 @@ def gen_circle(self, perturbation=1, boundary=2):
     self.dim = 2
     self.ss = np.zeros((self.N,3))
     self.pp = np.zeros((self.N,3))
+    self.ns = np.zeros((self.N,3))
     j = 0
     for i in range(self.N):
         if i > self.N - (np_boundary+1):
@@ -327,6 +340,7 @@ def gen_circle(self, perturbation=1, boundary=2):
             r = np.sqrt((i+0.5) / (self.N - 0.5 * (np_boundary+1)))
         phi   = ga * (i+shift)
         self.ss[j,:] = np.array([r*np.cos(phi), r*np.sin(phi), 0])
+        self.ns[j,:] = np.array([0,0,1])
         self.pp[j,:] = np.array([r, np.mod(phi, 2*np.pi), 0])
         j += 1
 
@@ -344,6 +358,7 @@ def _cut_hole(self, ri=0):
     cond =~ ((self.pp[:,1]>0) & (self.pp[:,0]<=ri))
     self.pp = self.pp[cond]
     self.ss = self.ss[cond]
+    self.ns = self.ns[cond]
     self.N = len(self.pp)
     
     #Correct area
@@ -356,6 +371,7 @@ def _cut_hole(self, ri=0):
 Sampler._cut_hole = _cut_hole
 
 
+SAMPLE_SHAPES+=["ring"]
 def gen_ring(self, ri=0.5, perturbation=1, boundary=2):
     """ Sample points in fibonacci spiral on the unit circle, but including an inner gap (as in ring)
 
@@ -374,8 +390,8 @@ def gen_ring(self, ri=0.5, perturbation=1, boundary=2):
     Update:
         ss, pp
     """
-    if self.N < 100:
-        raise ValueError(f"The number of points for a ring shouldn't be lower than 100.  You provided {self.N}")
+    if self.N < SAMPLER_MIN_RING:
+        raise ValueError(f"The number of points for a ring shouldn't be lower than {SAMPLER_MIN_RING}.  You provided {self.N}")
 
     #Compute effective number
     self.N = int(self.N / (1-ri**2))
@@ -387,6 +403,7 @@ def gen_ring(self, ri=0.5, perturbation=1, boundary=2):
 Sampler.gen_ring = gen_ring
 
 
+SAMPLE_SHAPES+=["sphere"]
 def gen_sphere(self, perturbation=1):
     """ Sample points in the unit sphere following fibonacci spiral
 
@@ -397,6 +414,7 @@ def gen_sphere(self, perturbation=1):
         ss, pp
     """
     self._seed_sampler()
+    self.geometry = SAMPLER_GEOMETRY_SPHERE
 
     #Unitary radius
     self.R = 1
@@ -412,6 +430,7 @@ def gen_sphere(self, perturbation=1):
     self.dim = 3
     self.ss = np.zeros((self.N,self.dim))
     self.pp = np.zeros((self.N,self.dim))
+    self.ns = np.zeros((self.N,self.dim))
     j = 0
     for i in range(self.N):
         phi   = ga * ((i+shift) % self.N)
@@ -421,6 +440,7 @@ def gen_sphere(self, perturbation=1):
         sin_theta = np.sqrt(1.0 - cos_theta*cos_theta)
         theta = np.arccos(cos_theta)            
         self.ss[j,:] = np.array([cos_phi*sin_theta, sin_phi*sin_theta, cos_theta])
+        self.ns[j,:] = self.ss[j,:].copy()
         self.pp[j,:] = np.array([1, np.mod(phi,2*np.pi), np.pi/2 - theta])
         j += 1
 
@@ -453,6 +473,7 @@ def purge_sample(self, tol=0.5):
         if self.dmin < tol*self.dmed:
             ipurge = np.argsort(self.ds)[0]
             self.ss = np.delete(self.ss,ipurge,0)
+            self.ns = np.delete(self.ns,ipurge,0)
             self.pp = np.delete(self.pp,ipurge,0)
             self.N -= 1
             self.purged = True
@@ -461,6 +482,28 @@ def purge_sample(self, tol=0.5):
             purge = False
 
 Sampler.purge_sample = purge_sample
+
+
+# ## Update normal vectors
+
+def update_normals(self,ss):
+    """Update normal vectors according to geometry
+    
+    Parameters:
+        ss: array (Nx3):
+            Cartesian coordinates of points.
+        
+    Return:
+        ns: array (Nx3):
+            Normals to geometry.
+    """
+    if self.geometry==SAMPLER_GEOMETRY_CIRCLE:
+        ns = np.array([[0,0,1]]*self.N)
+    elif self.geometry==SAMPLER_GEOMETRY_SPHERE:
+        ns = ss / np.linalg.norm(ss, axis=-1)[:, np.newaxis]
+    return ns
+
+Sampler.update_normals=update_normals
 
 
 # ## Test presets

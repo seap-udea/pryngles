@@ -95,6 +95,29 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_NONE
         
+    def test_update(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+
+        S=Sampler(N=100, seed=10)
+
+        #Generate ring
+        fi = 0.6
+        S.gen_ring(fi)
+        ss=S.ss*2
+        S.ns=S.update_normals(S.ss)
+        S.plot(spangled=dict(color='r'))
+        
+        #Generate sphere
+        S.gen_sphere()
+        ss=S.ss*2
+        S.ns=S.update_normals(S.ss)
+        S.plot(spangled=dict(color='r'))
+        S.ax.set_title(f"N = {S.N}, dmed = {S.dmed:.4f}, deff = {S.deff:.4f}", fontsize=10)
+        S.fig.tight_layout()
+        
+        Verbose.VERBOSITY=VERB_NONE
+        
     def test_pre(self):
         
         Verbose.VERBOSITY=VERB_ALL

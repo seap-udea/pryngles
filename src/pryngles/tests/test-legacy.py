@@ -48,23 +48,11 @@ class Test(unittest.TestCase):
     def test_system_ensamble(self):
 
             sys=System()
-            S=sys.add(kind="Star",
-                      physics=dict(radius=Const.Rsun/Const.au))
-            P=sys.add(kind="Planet",primary=S,
-                      orbit=dict(a=0.2,e=0.0),
-                      physics=dict(radius=Const.Rsat/Const.au)
-                     )
-            R=sys.add(kind="Ring",primary=P,
-                      physics=dict(fi=1.5,fe=2.5,i=30*DEG)
-                     )
-            O=sys.add(kind="Observer",
-                      optics=dict(beta=30*DEG,lamb=90*DEG)
-                     )
+            S=sys.add("Star",bhash="Star",radius=Const.Rsun/Const.au)
+            P=sys.add("Planet",bhash="Planet",primary=S,a=0.2,e=0.0,radius=Const.Rsat/Const.au)
+            R=sys.add("Ring",bhash="Ring",primary=P,fi=1.5,fe=2.5,i=30*DEG)
 
-            print(S.physics.radius,P.physics.radius,R.physics.fi,R.physics.fe,P.orbit.a,P.orbit.e)
-            print(O.optics.beta,O.optics.lamb)
-
-            P=sys.ensamble_system()
+            P=sys.ensamble_system(beta=30*DEG,lamb=90*DEG)
             fig1,fig2,fig3=P.plotRingedPlanet(showfig=0)
 
             P.changeObserver([90*DEG,30*DEG])

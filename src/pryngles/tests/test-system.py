@@ -129,9 +129,9 @@ class Test(unittest.TestCase):
         nspangles=100
         sys=System(resetable=True)
         S=sys.add(hash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
-        P=sys.add("Planet",primary=S,hash="Planet",nspangles=nspangles,radius=0.2,a=2)
-        M=sys.add("Planet",primary=P,hash="Moon",nspangles=nspangles,radius=0.1,a=1,M=120*Consts.deg)
-        R=sys.add("Ring",primary=P,hash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
+        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,a=2)
+        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,a=1,M=120*Consts.deg)
+        R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
         print(P.radius)
         sys.update_body(P,radius=0.5)
         print(P.radius)
@@ -148,13 +148,15 @@ class Test(unittest.TestCase):
         
         nspangles=100
         sys=System(resetable=True)
-        S=sys.add(hash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
-        P=sys.add("Planet",primary=S,hash="Planet",nspangles=nspangles,radius=0.2,a=2)
-        sys.set_observer(nvec=[1,0,0])
+        S=sys.add(bhash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
+        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,a=2)
+        self.assertRaises(AssertionError,lambda:sys.set_observer(nvec=[1,0,0]))
         sys.spangle_system()
-        sys.sp.plot3d(center_at="Planet",not_plot=["Star"])
+        sys.sg.plot3d(center_at="Planet",not_plot=["Star"])
         sys.set_observer(nvec=[-1,0,0])
-        sys.sp.plot3d()
+        sys.sg.plot3d()
+        sys.set_observer(nvec=[0,0,1])
+        sys.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -164,16 +166,21 @@ class Test(unittest.TestCase):
         
         nspangles=100
         sys=System(resetable=True)
-        S=sys.add(hash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
-        P=sys.add("Planet",primary=S,hash="Planet",nspangles=nspangles,radius=0.2,a=2)
-        M=sys.add("Planet",primary=P,hash="Moon",nspangles=nspangles,radius=0.1,a=1,M=120*Consts.deg)
-        R=sys.add("Ring",primary=P,hash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
+        S=sys.add(bhash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
+        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,a=2)
+        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,a=1,M=120*Consts.deg)
+        R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
         sys.spangle_system()
-        sys.sp.plot3d()
+
+        #All transformations from here are not stored
+        sys.sg.plot3d()
+        sys.sg.update_simple_state()
         sys.set_observer(nvec=[0,0,-1])
-        sys.sp.plot3d()
+        sys.sg.plot3d()
+
+        #All transformations from here are not stored
         sys.reset()
-        sys.sp.plot3d()
+        sys.sg.plot3d()
 
         Verbose.VERBOSITY=VERB_NONE
 

@@ -674,7 +674,9 @@ def plot3d(self,
 
     #Scatter plot of transmit
     cond=(~self.data.hidden)&(self.data.transmit)
-    ax.scatter(self.data[cond][coords[0]],self.data[cond][coords[1]],self.data[cond][coords[2]],
+    ax.scatter(self.data[cond][coords[0]]-x_cen,
+               self.data[cond][coords[1]]-y_cen,
+               self.data[cond][coords[2]]-z_cen,
                marker='v',s=10,ec='w',fc='None',alpha=0.1)
         
         
@@ -830,9 +832,6 @@ def set_intersect(self,
     lista=[np.matmul(M_ecl2int,n_ecl) for n_ecl in self.data[cond].ns_ecl]
     self.data.loc[cond,"ns_int"]=pd.Series(lista,dtype=object).values
 
-    #Spherical
-    self.rqf_obs=sci.spherical(nvec)
-    
     #Convex hulls
     for sphash in Misc.flatten([self.sphash]):
 
@@ -912,7 +911,8 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=np.array([0,0,0])):
     """
     verbose(VERB_SIMPLE,f"Setting observer")
     cond,self.n_obs,self.d_obs=self.set_intersect(nvec,alpha,center)
-    self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT].values
+    self.rqf_obs=sci.spherical(self.n_obs)
+    self.data.loc[cond,SPANGLER_COL_OBS]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
 
 Spangler.set_observer=set_observer
 
@@ -930,8 +930,9 @@ def set_luz(self,nvec=[0,0,1],center=np.array([0,0,0]),sphash=None):
 
     """
     verbose(VERB_SIMPLE,f"Setting light-source")
-    cond,self.n_luz,self.d_luz=self.set_intersect(nvec=nvec,center=center,sphash=sphash)
-    self.data.loc[cond,SPANGLER_COL_LUZ]=self.data.loc[cond,SPANGLER_COL_INT].values
+    cond,self.n_luz,self.d_luz=self.set_intersect(nvec=nvec,alpha=0,center=center,sphash=sphash)
+    self.rqf_luz=sci.spherical(self.n_luz)
+    self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
 
 Spangler.set_luz=set_luz
 
@@ -1010,7 +1011,7 @@ def plot_obs(self,show_hidden=False,center_at=None,not_plot=[],**args):
     x_cen,y_cen,z_cen=self.data[cond][["x_obs","y_obs","z_obs"]].mean() if sum(cond)>0 else np.array([0,0,0])
 
     #Maxval original
-    maxval_full=1.2*np.abs(self.data[["x_obs","y_obs","z_obs"]].to_numpy()-[x_cen,y_cen,z_cen]).max()
+    maxval_full=1.2*np.abs(self.data[["x_obs","y_obs"]].to_numpy()-[x_cen,y_cen]).max()
 
     #Select plotting bodies
     yes_plot=(~self.data.sphash.isin(not_plot))
@@ -1021,7 +1022,7 @@ def plot_obs(self,show_hidden=False,center_at=None,not_plot=[],**args):
     
     #Select scale for plot
     cond=cond if sum(cond)>0 else [True]*nyes_plot        
-    maxval=1.2*np.abs(data[cond][["x_obs","y_obs","z_obs"]].to_numpy()-[x_cen,y_cen,z_cen]).max()
+    maxval=1.2*np.abs(data[cond][["x_obs","y_obs"]].to_numpy()-[x_cen,y_cen]).max()
     size_factor=maxval_full/maxval
         
     #Figure
@@ -1044,7 +1045,7 @@ def plot_obs(self,show_hidden=False,center_at=None,not_plot=[],**args):
     colors[cond]=[Misc.rgb([SPANGLE_COLORS[stype][0],
                             SPANGLE_COLORS[stype][1]*min((cos_luz*cos_obs+0.3),1),
                             SPANGLE_COLORS[stype][2]],
-                           to_hex=True) for stype,cos_luz,cos_obs in zip(data[cond].spangle_type,
+                            to_hex=True) for stype,cos_luz,cos_obs in zip(data[cond].spangle_type,
                                                                        abs(data[cond].cos_luz),
                                                                        abs(data[cond].cos_obs))
                  ] #Object color
@@ -1127,7 +1128,8 @@ def update_intersection_state(self):
     #Check if an intersection has been computed
     if len(self.qhulls) == 0:
         raise AssertionError("You must set an intersection vantage point.")
-        
+
+    #Under the current circumstances all this spangles are intersecting 
     cond=(~self.data.hidden)&((self.data.cos_int>0)|(self.data.spangle_type.isin(SEMITRANSPARENT_SPANGLES)))
     self.data.loc[cond,"intersect"]=True
         
@@ -1350,8 +1352,8 @@ def _interact_intersect(self):
         
     opciones=dict(continuous_update=False,readout_format=".3f")
     interact(view_intersect,
-             lon=widgets.FloatSlider(min=0,max=360,step=1,value=0,**opciones),
-             lat=widgets.FloatSlider(min=-90,max=90,step=1,value=0,**opciones),
+             lon=widgets.FloatSlider(min=0,max=360,step=0.01,value=0,**opciones),
+             lat=widgets.FloatSlider(min=-90,max=90,step=0.01,value=0,**opciones),
             );
     
     Verbose.VERBOSITY=verbosity

@@ -2582,61 +2582,57 @@ class Extra(object):
 
 # ## Ensamble new and legacy modules
 
-def ensamble_system(self):
+def ensamble_system(self,lamb=0,beta=0):
     #Ensamble system
     #--CONSISTENCY--
-    if self.nstars==1 and self.nplanets==1 and self.nrings==1:
-        self._ringedplanet=dict(
-            #Behavior
-            behavior=dict(shadows=True),
-            
-            #Units
-            CU=CanonicalUnits(UL=self.ul,UM=self.um),
-            
-            #Basic
-            Rstar=self.stars[0].physics.radius,
-            Rplanet=self.planets[0].physics.radius,
-            
-            Rint=self.rings[0].physics.fi,
-            Rext=self.rings[0].physics.fe,
-            i=self.rings[0].physics.i,
-            
-            a=self.planets[0].orbit.a,e=self.planets[0].orbit.e,
-            
-            #Orbit 
-            Mstar=1,x=0,lambq=0,t0=0,kepler=False,
-            
-            #Observer
-            eobs_ecl=np.array([self.observers[0].optics.lamb,
-                               self.observers[0].optics.beta]),
-            
-            #Sampling
-            Np=self.planets[0].optics.nspangles,
-            Nr=self.rings[0].optics.nspangles,
-            
-            Nb=0,Ns=30,
-            
-            #Physical properties
-            physics=dict(
-                #Albedos
-                AS=1,AL=1,
-                #Ring geometrical opacity
-                taug=1.0, #Geometrical opacity
-                diffeff=1.0, #Diffraction efficiency
-                #Law of diffuse reflection on ring surface
-                reflection_rings_law=lambda x,y:x,
-                #Observations wavelength
-                wavelength=550e-9,
-                #Ring particle propeties (see French & Nicholson, 2000)
-                particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
-                #Stellar limb darkening
-                limb_cs=self.stars[0].optics.limb_coeffs,
-            )
+    self._ringedplanet=dict(
+        #Behavior
+        behavior=dict(shadows=True),
+
+        #Units
+        CU=CanonicalUnits(UL=self.ul,UM=self.um),
+
+        #Basic
+        Rstar=self.bodies["Star"].radius,
+        Rplanet=self.bodies["Planet"].radius,
+
+        Rint=self.bodies["Ring"].fi,
+        Rext=self.bodies["Ring"].fe,
+        i=self.bodies["Ring"].i,
+
+        a=self.bodies["Planet"].a,e=self.bodies["Planet"].e,
+
+        #Orbit 
+        Mstar=1,x=0,lambq=0,t0=0,kepler=False,
+
+        #Observer
+        eobs_ecl=np.array([lamb,beta]),
+
+        #Sampling
+        Np=self.bodies["Planet"].nspangles,
+        Nr=self.bodies["Ring"].nspangles,
+
+        Nb=0,Ns=30,
+
+        #Physical properties
+        physics=dict(
+            #Albedos
+            AS=1,AL=1,
+            #Ring geometrical opacity
+            taug=1.0, #Geometrical opacity
+            diffeff=1.0, #Diffraction efficiency
+            #Law of diffuse reflection on ring surface
+            reflection_rings_law=lambda x,y:x,
+            #Observations wavelength
+            wavelength=550e-9,
+            #Ring particle propeties (see French & Nicholson, 2000)
+            particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
+            #Stellar limb darkening
+            limb_cs=self.bodies["Star"].limb_coeffs,
         )
-        self.RP=RingedPlanet(**self._ringedplanet)
-        return self.RP
-    else:
-        raise AssertionError(f"You must have at least one star ({self.nstars}), a planet ({self.nplanets}) and a ring ({self.nrings})")
+    )
+    self.RP=RingedPlanet(**self._ringedplanet)
+    return self.RP
 
 System.ensamble_system=ensamble_system
 
@@ -2729,13 +2725,4 @@ def draw_pryngles(iobs=1,dark=False):
     fig.tight_layout()
 
 Plot.draw_pryngles=draw_pryngles
-
-"""
-if IN_JUPY_TER:
-    def test_logo(self):
-        Plot.draw_pryngles()        
-    class Test(unittest.TestCase):pass
-    Test.test_logo=test_logo
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
-""";
 

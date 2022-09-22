@@ -302,6 +302,10 @@ These are the improvements coming in the next releases of the package.
 Improvements in the 0.6.1.x test versions will be released in the
 0.7.x official versions.
 
+- **0.7.3.x versions**:
+
+  - We have greatly improved the algorithms to compute intersections.
+
 - **0.6.1.x versions**:
 
   - This is branch `refactor`.

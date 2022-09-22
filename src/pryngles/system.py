@@ -208,6 +208,10 @@ class System(PrynglesCommon):
         #Load rebound
         verbose(VERB_SIMPLE,"Loading rebound simulation")
         self.sim=rb.Simulation(rb_filename)
+        
+    def status(self):
+        print(f"System with {self.nbodies} bodies, {self.nsources} sources and {self.nparticles} particles")
+        sys.sim.status()
 
 System.__doc__=System_doc
 
@@ -264,6 +268,10 @@ def add(self,kind="Star",primary=None,center="primary",**props):
 
     #Create body
     exec(f"self.__body={kind}(primary=primary,**props)")
+    
+    if self.__body.bhash in self.bodies:
+        raise ValueError(f"An object with hash '{self.__body.bhash}' has been already added.")
+    
     self.bodies[self.__body.bhash]=self.__body
     
     if kind == "Star":
@@ -294,6 +302,7 @@ def add(self,kind="Star",primary=None,center="primary",**props):
         #self.__body.particle=self.sim.particles[self.__body.hash] <- This is not convenient for pickling
         self.__body.rbhash=self.__body.bhash
 
+    verbose(VERB_SIMPLE,f"Object '{kind}' with hash '{self.__body.bhash}' has been added.")
     #Update system
     self._update_system()
     return self.__body
@@ -426,13 +435,10 @@ print(sys.nsources)
 print(sys.sources)
 print(sys.sg.data.columns)
 sys.sg.plot3d()
+sys.sg.plot3d(coords="int",center_at="Ring")
+sys.sg._interact_intersect()
+sys.sg._animate_intersect()
 #""";
-
-#sys.sg.plot3d(coords="int",center_at="Ring")
-
-#sys.sg._interact_intersect()
-
-#sys.sg._animate_intersect()
 
 
 # ### Miscelaneous methods
@@ -476,7 +482,9 @@ def set_observer(self,nvec=[0,0,1],alpha=0):
     self.alpha_obs=alpha
     if self._is_spangled():
         #Set observer
-        self.sp.set_observer(nvec=self.n_obs,alpha=self.alpha_obs)
+        self.sg.set_observer(nvec=self.n_obs,alpha=self.alpha_obs)
+    else:
+        raise AssertionError("You must first spangle system before setting observer direction.")
         
 System.set_observer=set_observer
 
