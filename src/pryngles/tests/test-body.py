@@ -38,11 +38,9 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_ALL
         
+        #Create body
         B=Body("Body",BODY_DEFAULTS,None,hash='B',m=2,c=2)
         B.spangle_body()
-        
-        print_df(B.sg.data.tail())
-        B.sg.update_simple_state()
         B.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
@@ -68,9 +66,11 @@ class Test(unittest.TestCase):
         
         S=Star(nspangles=270,i=45*Consts.deg)
         S.spangle_body()
+        
         print_df(S.sg.data.tail())
         
-        S.sg.update_simple_state()
+        S.sg.set_observer()
+        S.sg.set_luz()
         S.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
@@ -104,7 +104,6 @@ class Test(unittest.TestCase):
         P.spangle_body()
         print_df(P.sg.data.tail())
         
-        P.sg.update_simple_state()
         P.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE

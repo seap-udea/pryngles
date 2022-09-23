@@ -422,24 +422,6 @@ def spangle_system(self):
 
 System.spangle_system=spangle_system
 
-"""
-nspangles=500
-sys=System(resetable=False)
-S2=sys.add(bhash="Star2",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
-S1=sys.add(bhash="Star1",nspangles=nspangles,m=9,radius=1,x=10,vy=-2)
-P=sys.add("Planet",primary=S1,bhash="Planet",nspangles=nspangles,radius=0.2,a=2)
-M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,spangle_type=LIQUID_SPANGLE,radius=0.1,a=1,M=120*Consts.deg)
-R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=80*Consts.deg)
-sys.spangle_system()
-print(sys.nsources)
-print(sys.sources)
-print(sys.sg.data.columns)
-sys.sg.plot3d()
-sys.sg.plot3d(coords="int",center_at="Ring")
-sys.sg._interact_intersect()
-sys.sg._animate_intersect()
-#""";
-
 
 # ### Miscelaneous methods
 
@@ -500,6 +482,8 @@ def reset(self):
     
 System.reset=reset
 
+
+# ## Illumination
 
 def update_illumination(self):
     """Determine the visibility conditions of the spangles

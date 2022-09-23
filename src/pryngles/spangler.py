@@ -279,7 +279,7 @@ SPANGLER_KEY_FIELDS=["sphash","spangle_type","geometry",
                      list(SPANGLER_VISIBILITY_STATES)+list(SPANGLER_SOURCE_STATES)
 
 #Tolerance in area of the inner border
-SPANGLER_EPS_BORDER=0.05
+SPANGLER_EPS_BORDER=0.01
 
 class Spangler(PrynglesCommon):
     
@@ -813,11 +813,13 @@ def plot3d(self,
                 ax.text(center[0],center[1],center[2],state,fontsize=6,color='w')
 
     #Scatter plot of transmit
+    """
     cond=(~self.data.hidden)&(self.data.transmit)&(~self.data.sphash.isin(not_plot))
     ax.scatter(self.data[cond][coords[0]]-x_cen,
                self.data[cond][coords[1]]-y_cen,
                self.data[cond][coords[2]]-z_cen,
                marker='v',s=10,ec='w',fc='None',alpha=0.5)
+    """
         
         
     #Aspect
@@ -1040,13 +1042,10 @@ def _calc_qhulls(self):
             cond_hull=(cond_obj)&(~self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (whole object):",sum(cond_hull))
 
-            zmin,zmax=self.data[cond_hull]["z_int"].values.min(),self.data[cond_hull]["z_int"].values.max()
-            zmed=0.5*(zmin+zmax)
-
             self.qhulls[sphash]+=[dict(
                 sphash=sphash,
                 hulltype="cen",
-                zmin=zmin,zmax=zmax,zmed=zmed,zcen=zcen,
+                zcen=zcen,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]])
             )]
 
@@ -1063,13 +1062,11 @@ def _calc_qhulls(self):
             #Convex hull of hidden points (the hole)
             cond_hull=(cond_obj)&(self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (hidden):",sum(cond_hull))
-            zmin,zmax=self.data[cond_hull]["z_int"].values.min(),self.data[cond_hull]["z_int"].values.max()
-            zmed=0.5*(zmin+zmax)
 
             self.qhulls[sphash]+=[dict(
                 sphash=sphash,
                 hulltype="hidden",
-                zmin=zmin,zmax=zmax,zmed=zmed,zcen=zcen,
+                zcen=zcen,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]]),
                 plane=plane
             )]
@@ -1077,13 +1074,11 @@ def _calc_qhulls(self):
             #Convex hull of no hidden points
             cond_hull=(cond_obj)&(~self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (visible ring):",sum(cond_hull))
-            zmin,zmax=self.data[cond_hull]["z_int"].values.min(),self.data[cond_hull]["z_int"].values.max()
-            zmed=0.5*(zmin+zmax)
 
             self.qhulls[sphash]+=[dict(
                 sphash=sphash,
                 hulltype="plane",
-                zmin=zmin,zmax=zmax,zmed=zmed,zcen=zcen,
+                zcen=zcen,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]]),
                 plane=plane
             )]
@@ -1110,6 +1105,8 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     verbose(VERB_SIMPLE,f"Setting observer")
     cond,self.n_obs,self.d_obs=self.set_intersect(nvec,alpha,center)
     self.rqf_obs=sci.spherical(self.n_obs)
+    
+    self.data.loc[cond,"visible"]=False
     self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT].values
     
     #Update states
@@ -1149,6 +1146,9 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
     verbose(VERB_SIMPLE,f"Setting light-source")
     cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,sphash)
     self.rqf_luz=sci.spherical(self.n_luz)
+    
+    self.data.loc[cond,"illuminated"]=False
+    self.data.loc[cond,"transmit"]=False
     self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
     
     #Update states
@@ -1288,23 +1288,25 @@ def plot2d(self,
     cond=(data.visible)&(data.transmit)&(data.illuminated)
     verbose(VERB_SIMPLE,f"Visible, illuminated and transmitting: {cond.sum()}")
     colors[cond]=[Misc.rgb([SPANGLE_COLORS[stype][0],
-                            SPANGLE_COLORS[stype][1]*min((cos_luz*cos_obs+0.3),1),
+                            SPANGLE_COLORS[stype][1]*min((cos_luz*cos_obs+0.3),1)/2,
                             SPANGLE_COLORS[stype][2]],
                             to_hex=True) for stype,cos_luz,cos_obs in zip(data[cond].spangle_type,
                                                                        abs(data[cond].cos_luz),
                                                                        abs(data[cond].cos_obs))
                  ] #Object color
-    sizes[cond]=3.5*size_factor*data.scale[cond]
+    sizes[cond]=0.5*size_factor*data.scale[cond]
     
     #Plot spangles
     sargs=dict(c=colors,sizes=sizes,marker=marker)
     ax.scatter(data[f"x_{coords}"]-x_cen,data[f"y_{coords}"]-y_cen,**sargs)
     
     #Plot transmitting marks
+    """
     cond=(data.transmit)&(data.visible)&(data.illuminated)
     ax.scatter(data[cond][f"x_{coords}"]-x_cen,
                data[cond][f"y_{coords}"]-y_cen,
                marker='v',s=10,ec='w',fc='None',alpha=0.1)
+    """
     
     #Ranges
     ax.set_xlim(-maxval,maxval)
@@ -1367,7 +1369,7 @@ Spangler.plot2d=plot2d
 def update_intersection_state(self):
     """Update state of intersections
     """    
-    #Update qhulls
+    #Update qhulls using the latest intersection state
     self._calc_qhulls()
 
     #Check if an intersection has been computed
@@ -1375,7 +1377,7 @@ def update_intersection_state(self):
         raise AssertionError("You must set an intersection vantage point.")
 
     #Under the current circumstances all this spangles are intersecting 
-    cond=(~self.data.hidden)&((self.data.cos_int>0)|(self.data.spangle_type.isin(SEMITRANSPARENT_SPANGLES)))
+    cond=(~self.data.hidden)&((self.data.cos_int>0)|(self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT)))
     self.data.loc[cond,"intersect"]=True
         
     for sphash in Misc.flatten([self.sphash]):
@@ -1392,7 +1394,7 @@ def update_intersection_state(self):
                 continue
             
             htype=hull["hulltype"]
-            zmin,zmed,zmax,zcen=hull["zmin"],hull["zmed"],hull["zmax"],hull["zcen"]
+            zcen=hull["zcen"]
             
             verbose(VERB_SIMPLE,f"Hull {i+1} for '{sphash}' of type '{htype}'")
 
@@ -1415,16 +1417,7 @@ def update_intersection_state(self):
                 #Spangles to evaluate
                 cond_int=(~self.data.hidden)&(self.data.sphash!=sphash)&(self.data.intersect)
 
-                if htype=="min":
-                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zmin)
-                    
-                elif htype=="med":
-                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zmed)
-                    
-                elif htype=="max":
-                    below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zmax)
-                    
-                elif htype=="cen":
+                if htype=="cen":
                     below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zcen)
                     
                 elif htype=="plane":
@@ -1454,14 +1447,16 @@ def update_visibility_state(self):
 def update_illumination_state(self):
     self.update_intersection_state()
     self.data.illuminated=self.data.illuminated&self.data.intersect
+    
     #Stellar spangles are always illuminated
     cond=(self.data.spangle_type==SPANGLE_STELLAR)
     self.data.loc[cond,"illuminated"]=True
+    
+    #In stellar spangles cos_luz = cos_obs for not having strange visual representations
     self.data.loc[cond,"cos_luz"]=self.data.loc[cond,"cos_obs"]
     
 Spangler.update_intersection_state=update_intersection_state
 Spangler.update_visibility_state=update_visibility_state
 Spangler.update_illumination_state=update_illumination_state
-Spangler.update_all_states=update_all_states
 
 

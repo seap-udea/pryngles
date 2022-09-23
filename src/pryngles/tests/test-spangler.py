@@ -74,7 +74,7 @@ class Test(unittest.TestCase):
         #No preset
         sg=Spangler(nspangles=850,n_equ=[1,0,0])
         sg.populate_spangler(shape="ring",
-                             spangle_type=GASEOUS_SPANGLE,
+                             spangle_type=SPANGLE_GASEOUS,
                              scale=2,seed=1,ri=0.2)
         sg.sample.plot()
         sg.sample.ax.set_title(f"N={sg.nspangles}")
@@ -85,7 +85,7 @@ class Test(unittest.TestCase):
         sg=Spangler(nspangles=850)
         sg.populate_spangler(shape="ring",
                              preset=True,
-                             spangle_type=SOLID_SPANGLE,ri=0.2)
+                             spangle_type=SPANGLE_SOLID_ROCK,ri=0.2)
         sg.sample.plot()
         sg.sample.ax.set_title(f"N={sg.nspangles}")
         sg.sample.fig.tight_layout()
@@ -311,9 +311,9 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_SIMPLE
 
         sg1=Spangler(nspangles=1000,sphash="Ring",n_equ=[1,0,5])
-        sg1.populate_spangler(shape="ring",spangle_type=GRANULAR_SPANGLE,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+        sg1.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
         sg2=Spangler(nspangles=1000,sphash="Planet",n_equ=[0,0,1])
-        sg2.populate_spangler(shape="sphere",spangle_type=SOLID_SPANGLE,scale=1,seed=1,preset=True)
+        sg2.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
         sgj=Spangler(spanglers=[sg1,sg2])
         
         #Hulls of obsever
@@ -373,7 +373,7 @@ class Test(unittest.TestCase):
         sg.set_observer(nvec=sci.direction([30,20]))
         sg.update_visibility_state()
 
-        sg.plot2d()        
+        sg.plot2d(center_at="Ring")
         
         #Interact
         def visuals_interact(lon_luz=0,lat_luz=0,lon_obs=0,lat_obs=0):
@@ -391,7 +391,7 @@ class Test(unittest.TestCase):
             sg.set_observer(nvec=sci.direction([lon_obs,lat_obs]))
             sg.update_visibility_state()
 
-            sg.plot2d()
+            sg.plot2d(center_at="Ring")
 
         opciones=dict(continuous_update=False,readout_format=".3f")
         interact(visuals_interact,

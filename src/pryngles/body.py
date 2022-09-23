@@ -152,8 +152,8 @@ BODY_DEFAULTS.update(odict(
     
     #Optics
     nspangles=1000,
-    spangle_type=SOLID_SPANGLE,
-    geometry="sphere",
+    spangle_type=SPANGLE_SOLID_ROCK,
+    shape="sphere",
     geometry_args=dict(),
     seed=0,
     preset=True,
@@ -259,13 +259,16 @@ def spangle_body(self):
     
     #Populate spangler
     self.sg.populate_spangler(
+        shape=self.shape,
+        spangle_type=self.spangle_type,
         scale=self.radius,
         seed=self.seed,
-        geometry=self.geometry,
-        spangle_type=self.spangle_type,
         preset=self.preset,
         **self.geometry_args,
     )
+
+    self.sg.set_observer()
+    self.sg.set_luz()
 
 Body.spangle_body=spangle_body
 
@@ -286,8 +289,8 @@ STAR_DEFAULTS.update(odict(
     
     #Optical properties: update
     limb_coeffs=[],
-    spangle_type=STELLAR_SPANGLE,
-    geometry="sphere",
+    spangle_type=SPANGLE_STELLAR,
+    shape="sphere",
 ))
 
 BODY_KINDS+=["Star"]
@@ -391,7 +394,7 @@ PLANET_DEFAULTS.update(odict(
     #Same as Body
     
     #Optical: update
-    spangle_type=SOLID_SPANGLE,
+    spangle_type=SPANGLE_SOLID_ROCK,
     geometry="sphere",
     
     albedo_gray_spherical=1,
@@ -479,8 +482,8 @@ RING_DEFAULTS.update(odict(
     fe=2.0,
     
     #Optics: update
-    spangle_type=GRANULAR_SPANGLE,
-    geometry="ring",
+    spangle_type=SPANGLE_GRANULAR,
+    shape="ring",
     albedo_gray_normal=1,
     tau_gray_optical=0,
 ))
