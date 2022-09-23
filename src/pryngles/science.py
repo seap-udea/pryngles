@@ -146,10 +146,43 @@ def cartesian(rqf):
     """
     return spy.latrec(rqf[0],rqf[1],rqf[2])
 
+def direction(n):
+    """Calculate the direction on which a vector is pointing
+    
+    Parameters:
+        n: array:
+            If len(n)==2, components are longitude and latitude of the direction (in degrees).
+            If len(n)==3, components are cartisian coordinates of the vector n.
+            
+    Return:
+
+        If len(n)==2:
+        
+            nvec: array(3):
+                Cartesian components of the vector.
+
+        If len(n)==3:
+    
+            lamb: float [degrees]:
+                Longitude (angle with respect to x-axis).
+
+            beta: float [degrees]:
+                Latitude (elevation angle with respect to xy-plane).
+    """
+    if len(n)==3:
+        rqf=spherical(n)
+        return rqf[1]*Consts.rad,rqf[2]*Consts.rad
+    elif len(n)==2:
+        if abs(n[1])>90:
+            raise ValueError("Elevation angle should be in the interval [-90,90]")
+        nvec=cartesian([1,n[0]*Consts.deg,n[1]*Consts.deg])
+        return nvec
+
 Science.spherical=spherical
-Science.cartesian=cartesian
 Science.cospherical=cospherical
 Science.pcylindrical=pcylindrical
+Science.cartesian=cartesian
+Science.direction=direction
 
 
 def rotation_matrix(ez,alpha):

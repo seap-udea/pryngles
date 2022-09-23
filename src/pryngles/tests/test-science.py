@@ -74,6 +74,11 @@ class Test(unittest.TestCase):
         for i,rqf in enumerate(octants):
             xyz=Science.cartesian(rqf)
             print(f"Octant {i+1}:",xyz) 
+            
+        #Test direction
+        n=[120,45]
+        nvec=direction(n)
+        print(n,nvec,direction(nvec))
 
     def test_rot(self):
         

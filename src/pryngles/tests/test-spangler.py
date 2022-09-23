@@ -18,12 +18,11 @@ from pryngles import *
 class Test(unittest.TestCase):
     def test_init(self):
         
-        Verbose.VERBOSITY=VERB_SIMPLE
+        Verbose.VERBOSITY=VERB_ALL
         
         print("Basic definition:")
         sg=Spangler(nspangles=1,center_equ=[0,0,0],n_equ=[1,0,0])
         Misc.print_df(sg.data.head(1))
-        return 
 
         print("\nCenter equ:")
         sg=Spangler(nspangles=3,center_equ=[0,0,1])
@@ -53,7 +52,7 @@ class Test(unittest.TestCase):
 
         sg=Spangler(nspangles=100)
         sg.reset_state()
-        print_df(sg.data.head())
+        print_df(sg.data[["unset"]+list(SPANGLER_VISIBILITY_STATES)+list(SPANGLER_SOURCE_STATES)].head())
 
         Verbose.VERBOSITY=VERB_NONE
 
@@ -70,11 +69,11 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_NONE
 
     def test_pop(self):
-        Verbose.VERBOSITY=VERB_SIMPLE
+        Verbose.VERBOSITY=VERB_ALL
 
         #No preset
         sg=Spangler(nspangles=850,n_equ=[1,0,0])
-        sg.populate_spangler(geometry="ring",
+        sg.populate_spangler(shape="ring",
                              spangle_type=GASEOUS_SPANGLE,
                              scale=2,seed=1,ri=0.2)
         sg.sample.plot()
@@ -84,7 +83,7 @@ class Test(unittest.TestCase):
 
         #Using preset
         sg=Spangler(nspangles=850)
-        sg.populate_spangler(geometry="ring",
+        sg.populate_spangler(shape="ring",
                              preset=True,
                              spangle_type=SOLID_SPANGLE,ri=0.2)
         sg.sample.plot()
@@ -94,7 +93,7 @@ class Test(unittest.TestCase):
     
         #Sphere
         sg=Spangler(nspangles=100)
-        sg.populate_spangler(geometry="sphere",scale=3,seed=1)
+        sg.populate_spangler(shape="sphere",scale=3,seed=1,preset=True)
         sg.sample.plot(spangled=dict(color='r',alpha=0.1))
         sg.sample.ax.set_title(f"N={sg.nspangles}")
         sg.sample.fig.tight_layout()
@@ -103,46 +102,57 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_NONE
         
     def test_plot3d(self):
+        global sg
         Verbose.VERBOSITY=VERB_SIMPLE
 
-        #No preset
-        sg=Spangler(nspangles=850,n_equ=[1,1,1])
-        sg.populate_spangler(geometry="ring",preset=True,
-                             spangle_type=GASEOUS_SPANGLE,
-                             scale=2,ri=0.2)
-        sg.data.illuminated=True
-        cond=sg.data.x_ecl>0
-        sg.data.loc[cond,"visible"]=True
-        sg.data.loc[cond,"transmit"]=True
-        sg.plot3d()
-    
         #Sphere
         sg=Spangler(nspangles=100)
-        sg.populate_spangler(geometry="sphere",preset=True,scale=3)
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ICE,preset=0,scale=3)
+        sg.reset_state()
+        
+        cond=sg.data.z_ecl>0
+        sg.data.loc[cond,"illuminated"]=True
+        cond=sg.data.x_ecl>0
+        sg.data.loc[cond,"visible"]=True
+        cond=sg.data.y_ecl>0
+        sg.data.loc[cond,"shadow"]=True
+        cond=sg.data.f_equ>45*Consts.deg
+        sg.data.loc[cond,"transmit"]=True
+
+        sg.plot3d(statemark=0.5)
+    
+        #No preset
+        sg=Spangler(nspangles=850,n_equ=[1,1,1])
+        sg.populate_spangler(shape="ring",preset=True,
+                             spangle_type=SPANGLE_GRANULAR,
+                             scale=2,ri=0.2)
+        sg.data.illuminated=True
         sg.data.illuminated=True
         cond=sg.data.x_ecl>0
         sg.data.loc[cond,"visible"]=True
         sg.data.loc[cond,"transmit"]=True
-        sg.plot3d()
-        
+        sg.plot3d(statemark=0.1)
+    
         Verbose.VERBOSITY=VERB_NONE
         
     def test_setint(self):
+        global sg
+        
         Verbose.VERBOSITY=VERB_SIMPLE
 
         #No preset
-        sg=Spangler(nspangles=850,sphash="Ring")
-        sg.populate_spangler(geometry="ring",preset=True,
-                             spangle_type=GASEOUS_SPANGLE,
+        sg=Spangler(nspangles=50,sphash="Ring")
+        sg.populate_spangler(shape="ring",seed=1,
+                             spangle_type=SPANGLE_GRANULAR,
                              scale=2,ri=0.2)
-        center=[1,1,-1]
-        cond,n_int,d_int=sg.set_intersect(nvec=[1,0,1],center=center,sphash="Ring")
+        sg.data.illuminated=True
+        sg.data.visible=True
         
-        sg.data.loc[cond,SPANGLER_COL_OBS]=sg.data.loc[cond,SPANGLER_COL_INT].values
+        cond,n_int,d_int=sg.set_intersect(nvec=[1,0,1],center=[0,0,-1],
+                                          sphash="Ring")
+        sg._calc_qhulls()
         
-        print_df(sg.data.head(1))
-        print_df(sg.data.tail(1))
-
+        #Plot convexhull
         from scipy.spatial import convex_hull_plot_2d
         fig,ax=plt.subplots()
 
@@ -154,176 +164,125 @@ class Test(unittest.TestCase):
             if type(l) is Line2D:
                 plt.setp(l,ms=0,zorder=100)
     
-        ax.scatter(sg.data.x_int,sg.data.y_int,color='c',s=65,fc="None",alpha=0.2,zorder=100)        
+        ax.scatter(sg.data.x_int,sg.data.y_int,color='r',s=65,fc="None",alpha=0.5,zorder=100)        
         ax.axis("equal")
-
+            
         #Plot 3d
         sg.plot3d(coords="int")
         plane=sg.qhulls["Ring"][0]["plane"]
-        plane.plot_plane(ax=sg.ax3d,color='r',alpha=0.5)
-        
+        plane.plot_plane(ax=sg.ax3d,color='c',alpha=0.5)
+
         #Hulls
         print(sg.qhulls)
         
         Verbose.VERBOSITY=VERB_NONE
         
-    def test_setobs(self):
-        Verbose.VERBOSITY=VERB_SIMPLE
-
-        #No preset
-        sg=Spangler(nspangles=850,n_equ=[1,1,2])
-        sg.populate_spangler(geometry="ring",preset=True,
-                             spangle_type=GRANULAR_SPANGLE,
-                             scale=2,ri=0.2)
-        sg.set_observer(nvec=[1,1,1],center=[0,0,1])
-        sg.data.illuminated=True
-        sg.data.loc[sg.data.cos_obs>0,"visible"]=True
-        sg.plot3d()
-    
-        #Sphere
-        sg=Spangler(nspangles=100)
-        sg.populate_spangler(geometry="sphere",spangle_type=GASEOUS_SPANGLE,preset=True,scale=3)
-        sg.set_observer(nvec=[1,1,1])
-        sg.data.illuminated=True
-        sg.data.loc[sg.data.cos_obs>0,"visible"]=True
-        sg.plot3d()
-        
-        #Test center
-        sg=Spangler(nspangles=100,center_ecl=[0,0,3])
-        sg.populate_spangler(geometry="sphere",spangle_type=GASEOUS_SPANGLE,preset=True,scale=3)
-        center=[0,0,-1]
-        sg.set_intersect(nvec=[0,0,1],center=center)
-        sg.data.illuminated=True
-        sg.data.loc[sg.data.cos_int>0,"visible"]=True
-        sg.plot3d(coords="int")
-         
-        Verbose.VERBOSITY=VERB_NONE
-        
-    def test_setluz(self):
+    def test_setobsluz(self):
+        global sg
         
         Verbose.VERBOSITY=VERB_SIMPLE
 
-        #Sphere
-        sg=Spangler(nspangles=500)
-        sg.populate_spangler(geometry="sphere",spangle_type=GASEOUS_SPANGLE,preset=True,scale=3)
- 
-        sg.set_observer([0,0,1])
-        sg.data.loc[sg.data.cos_obs>0,"visible"]=True
+        #Normal
+        nspangles=10
+        sg=Spangler(nspangles=nspangles,n_equ=[1,0,1],sphash="Planet")
+        sg.populate_spangler(shape="sphere",preset=0,
+                             spangle_type=SPANGLE_SOLID_ROCK,
+                             scale=2)
 
-        sg.set_luz([0,0,1])
-        sg.data.loc[sg.data.cos_luz>0,"illuminated"]=True
+        print_df(sg.data.loc[~sg.data.hidden,SPANGLER_KEY_FIELDS])
 
-        sg.plot3d()
-        
-        #Ring
-        sg=Spangler(nspangles=850)
-        sg.populate_spangler(geometry="ring",preset=True,
-                             spangle_type=GRANULAR_SPANGLE,
-                             scale=2,ri=0.2)
+        sg.set_observer(nvec=[0,0,+1],center=None)
+        sg.set_luz(nvec=[+1,0,0],center=None)
 
-        sg.set_observer([1,1,+1])
-        sg.data.visible=True
+        sg.plot3d(statemark=1)
 
-        sg.set_luz([0,0,+1])
-        sg.data.illuminated=True
-        sg.data.loc[(sg.data.cos_luz*sg.data.cos_obs)<0,"transmit"]=True
-        
-        sg.plot3d()
-        
-        #Two spheres
-        sg1=Spangler(sphash="Star 1",nspangles=100,center_equ=[-5,0,0])
-        sg1.populate_spangler(geometry="sphere",spangle_type=GASEOUS_SPANGLE,preset=True,scale=3)
-        
-        sg2=Spangler(sphash="Star 2",nspangles=100,center_equ=[+5,0,0])
-        sg2.populate_spangler(geometry="sphere",spangle_type=GASEOUS_SPANGLE,preset=True,scale=3)
-        
-        sg=Spangler(spanglers=[sg1,sg2])
+        #Semitransparent
+        nspangles=50
+        sg=Spangler(nspangles=nspangles,n_equ=[1,0,1],sphash="Planet")
+        sg.populate_spangler(shape="sphere",preset=0,
+                             spangle_type=SPANGLE_GASEOUS,
+                             scale=2)
+        sg.set_observer(nvec=[0,0,+1],center=None)
+        sg.set_luz(nvec=[+1,0,0],center=None)
+        sg.plot3d(statemark=1)
 
-        sg.set_observer([0,1,0])
-        sg.data.loc[sg.data.cos_obs>0,"visible"]=True
-
-        sg.set_luz(nvec=[1,0,0],sphash="Star 1")
-        sg.set_luz(nvec=[0,0,1],sphash="Star 2")
-        sg.data.loc[sg.data.cos_luz>0,"illuminated"]=True
-
-        sg.plot3d()
-        
         Verbose.VERBOSITY=VERB_NONE
         
     def test_simplevis(self):
+        global sg
         
         Verbose.VERBOSITY=VERB_SIMPLE
 
         plt.close("all")
         #Ring with semitransparent spangle: all illuminated, all visible, no transmission
         sg=Spangler(nspangles=100,n_equ=[1,1,1])
-        sg.populate_spangler(geometry="ring",ri=0.3,spangle_type=GRANULAR_SPANGLE,preset=True,scale=3)
+        sg.populate_spangler(shape="ring",ri=0.3,spangle_type=SPANGLE_GRANULAR,preset=True,scale=3)
         sg.set_observer([0,0,1])
         sg.set_luz([1,1,-1])
-        sg.update_simple_state()
         sg.plot3d()
 
         #Ring with semitransparent spangle: all illuminated, all visible, no transmission
         sg=Spangler(nspangles=100,n_equ=[1,1,1])
-        sg.populate_spangler(geometry="ring",ri=0.3,spangle_type=GRANULAR_SPANGLE,preset=True,scale=3)
+        sg.populate_spangler(shape="ring",ri=0.3,spangle_type=SPANGLE_GRANULAR,preset=True,scale=3)
         sg.set_observer([0,0,1])
         sg.set_luz([-1,-1,-1])
-        sg.update_simple_state()
         sg.plot3d()
         
         #Sphere with solid spangle: only illuminated 
         sg=Spangler(nspangles=100,n_equ=[1,1,1])
-        sg.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,preset=True,scale=3)
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,preset=True,scale=3)
         sg.set_observer([1,0,1])
         sg.set_luz([0,0,1])
-        sg.update_simple_state()
         sg.plot3d()
         
         #Sphere with stellar spangle: all illuminated, not all visible
         sg=Spangler(nspangles=100,n_equ=[1,1,1])
-        sg.populate_spangler(geometry="sphere",spangle_type=STELLAR_SPANGLE,preset=True,scale=3)
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_STELLAR,preset=True,scale=3)
         sg.set_observer([1,0,1])
         sg.set_luz([0,0,1])
-        sg.update_simple_state()
         sg.plot3d()
 
         #Sphere with semitransparent spangle: all illuminated, all visible
         sg=Spangler(nspangles=100,n_equ=[1,1,1])
-        sg.populate_spangler(geometry="sphere",spangle_type=GASEOUS_SPANGLE,preset=True,scale=3)
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_GASEOUS,preset=True,scale=3)
         sg.set_observer([0,0,1])
         sg.set_luz([1,0,0])
-        sg.update_simple_state()
         sg.plot3d()
 
         #Two spheres
-        sg1=Spangler(sphash="Star 1",nspangles=100,center_equ=[-5,0,0])
-        sg1.populate_spangler(geometry="sphere",spangle_type=GASEOUS_SPANGLE,preset=True,scale=3)
+        sg1=Spangler(sphash="Planet 1",nspangles=100,center_equ=[-5,0,0])
+        sg1.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ICE,preset=True,scale=3)
         
-        sg2=Spangler(sphash="Star 2",nspangles=100,center_equ=[+5,0,0])
-        sg2.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,preset=True,scale=3)
+        sg2=Spangler(sphash="Planet 2",nspangles=100,center_equ=[+5,0,0])
+        sg2.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,preset=True,scale=3)
         
         sg=Spangler(spanglers=[sg1,sg2])
 
         sg.set_observer([0,1,0])
-        sg.set_luz(nvec=[1,0,0],sphash="Star 1")
-        sg.set_luz(nvec=[0,0,1],sphash="Star 2")
-        sg.update_simple_state()
+        sg.set_luz(nvec=[1,0,0],center=[0,0,0],sphash="Planet 1")
+        sg.set_luz(nvec=[-1,0,0],center=[0,0,0],sphash="Planet 2")
         
         sg.plot3d()
+        return
         
         Verbose.VERBOSITY=VERB_NONE
         
-    def test_plotobs(self):
+    def test_plot2d(self):
         
         Verbose.VERBOSITY=VERB_SIMPLE
         
         plt.close("all")
         sg=Spangler(nspangles=2500,sphash="123",n_equ=[1,1,1],center_ecl=[0,0,2])
-        sg.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=2,seed=1,preset=True)
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=2,seed=1,preset=True)
+        #sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_GASEOUS,scale=2,seed=1,preset=True)
+
         sg.set_observer(nvec=[1,0,0])
         sg.set_luz(nvec=[1,1,1])
-        sg.update_simple_state()
-        sg.plot_obs()
+        fs=3
+        sg.plot3d(coords="ecl")
+        sg.plot2d(coords="ecl",fsize=fs)
+        sg.plot2d(coords="luz",fsize=fs)
+        sg.plot2d(coords="obs",fsize=fs)
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -332,20 +291,18 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_SIMPLE
 
         sg1=Spangler(nspangles=1000,sphash="Ring",n_equ=[1,0,5])
-        sg1.populate_spangler(geometry="ring",spangle_type=GRANULAR_SPANGLE,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+        sg1.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
 
         sg2=Spangler(nspangles=1000,sphash="Planet",n_equ=[0,0,1])
-        sg2.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=1,seed=1,preset=True)
+        sg2.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=1,seed=1,preset=True)
 
         sgj=Spangler(spanglers=[sg1,sg2])
         
         sgj.set_observer([1,0,0.1])
         sgj.set_luz([0,0,1])
-        sgj.update_simple_state()
         
         sgj.plot3d()
-        sgj.plot_obs()
-        
+        sgj.plot2d()
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -354,13 +311,14 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_SIMPLE
 
         sg1=Spangler(nspangles=1000,sphash="Ring",n_equ=[1,0,5])
-        sg1.populate_spangler(geometry="ring",spangle_type=GRANULAR_SPANGLE,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+        sg1.populate_spangler(shape="ring",spangle_type=GRANULAR_SPANGLE,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
         sg2=Spangler(nspangles=1000,sphash="Planet",n_equ=[0,0,1])
-        sg2.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=1,seed=1,preset=True)
+        sg2.populate_spangler(shape="sphere",spangle_type=SOLID_SPANGLE,scale=1,seed=1,preset=True)
         sgj=Spangler(spanglers=[sg1,sg2])
         
         #Hulls of obsever
         cond,n_int,d_int=sgj.set_intersect(nvec=[1,0,0.1],center=[1,1,1]) #Each time a set intersect is executed the convex hulls are renewed
+        sgj._calc_qhulls()
         
         fig,ax=plt.subplots()
         ax.scatter(sgj.data[cond].x_int,sgj.data[cond].y_int)
@@ -372,6 +330,7 @@ class Test(unittest.TestCase):
 
         #Hulls of light
         sgj.set_intersect([0,0,1]) #Each time a set intersect is executed the convex hulls are renewed
+        sgj._calc_qhulls()
         fig,ax=plt.subplots()
         cond=sgj.data.visible
         ax.scatter(sgj.data[cond].x_int,sgj.data[cond].y_int)
@@ -382,45 +341,66 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_NONE
 
-    def test_plotint(self):
-        
-        Verbose.VERBOSITY=VERB_SIMPLE
-        
+    def test_upint(self):
         plt.close("all")
+        global sg
+        
+        Verbose.VERBOSITY=VERB_NONE
 
-        nspangles=100
+        nspangles=500
         sps=[]
-        sg=Spangler(nspangles=nspangles,sphash="Parent",n_equ=[0,0,1],center_equ=[-5,0,0])
-        sg.populate_spangler(geometry="sphere",spangle_type=STELLAR_SPANGLE,scale=2,seed=1,preset=True)
-        sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
-        sg.populate_spangler(geometry="sphere",spangle_type=SOLID_SPANGLE,scale=1,seed=1,preset=True)
+        sg=Spangler(nspangles=nspangles,sphash="Parent",n_equ=[0,0,1],center_equ=[-7,0,0])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_STELLAR,scale=3,seed=1,preset=1)
         sps+=[sg]
         sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,0])
-        sg.populate_spangler(geometry="ring",spangle_type=GRANULAR_SPANGLE,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+        sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+        sps+=[sg]
+        sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
         sps+=[sg]
         sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+3.0,0.0,0.0])
-        sg.populate_spangler(geometry="sphere",spangle_type=LIQUID_SPANGLE,scale=0.3,seed=1,preset=True)
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=0.3,seed=1,preset=True)
         sps+=[sg]
+
         sg=Spangler(spanglers=sps)
-        n_obs=sci.cartesian([1,45*Consts.deg,10*Consts.deg])
-        cond=sg.set_observer(nvec=n_obs,center=[0,0,0])
-        
-        #Plot intersect
+
+        #Plot
         sg.reset_state()
-        sg.update_simple_state()
+        
+        sg.set_luz(nvec=sci.direction([10,0]))
+        sg.update_illumination_state()
+
+        sg.set_observer(nvec=sci.direction([30,20]))
         sg.update_visibility_state()
-        fig=sg._plot_intersect(prop="visible")
+
+        sg.plot2d()        
         
-        #View intersect
-        sg._view_intersect(lon=45,lat=30)
-        
-        #Interact intersect
-        sg._interact_intersect()
-        
-        #Animation
-        sg._animate_intersect(filename="/tmp/test.mp4",lat=5,num=5)
-        
+        #Interact
+        def visuals_interact(lon_luz=0,lat_luz=0,lon_obs=0,lat_obs=0):
+
+            lon_luz=float(lon_luz)
+            lat_luz=float(lat_luz)
+            lon_obs=float(lon_obs)
+            lat_obs=float(lat_obs)
+
+            #Plot
+            sg.reset_state()
+            sg.set_luz(nvec=sci.direction([lon_luz,lat_luz]))
+            sg.update_illumination_state()
+
+            sg.set_observer(nvec=sci.direction([lon_obs,lat_obs]))
+            sg.update_visibility_state()
+
+            sg.plot2d()
+
+        opciones=dict(continuous_update=False,readout_format=".3f")
+        interact(visuals_interact,
+                 lon_luz=widgets.FloatSlider(min=0,max=360,step=0.01,value=100,**opciones),
+                 lat_luz=widgets.FloatSlider(min=-90,max=90,step=0.01,value=0,**opciones),
+                 lon_obs=widgets.FloatSlider(min=0,max=360,step=0.01,value=35,**opciones),
+                 lat_obs=widgets.FloatSlider(min=-90,max=90,step=0.01,value=20,**opciones),
+                );
+
         Verbose.VERBOSITY=VERB_NONE
 
 
