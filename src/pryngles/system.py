@@ -456,15 +456,16 @@ def update_body(self,body,**props):
 System.update_body=update_body
 
 
-def set_observer(self,nvec=[0,0,1],alpha=0):
+def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     """Set the position of the observer
     """
     #Only set observer if it is spangled
     self.n_obs=nvec
     self.alpha_obs=alpha
+    self.center=center
     if self._is_spangled():
         #Set observer
-        self.sg.set_observer(nvec=self.n_obs,alpha=self.alpha_obs)
+        self.sg.set_observer(nvec=self.n_obs,alpha=self.alpha_obs,center=self.center)
     else:
         raise AssertionError("You must first spangle system before setting observer direction.")
         

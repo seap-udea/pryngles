@@ -144,17 +144,30 @@ class Test(unittest.TestCase):
 
     def test_obs(self):
         
+        global sys
+        
         Verbose.VERBOSITY=VERB_NONE
         
         nspangles=100
+        
+        #Define system
         sys=System(resetable=True)
+        
+        #Add objects
         S=sys.add(bhash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
         P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,a=2)
+        
+        #Test setting observer without spangling
         self.assertRaises(AssertionError,lambda:sys.set_observer(nvec=[1,0,0]))
+        
+        #Spangle system
         sys.spangle_system()
+        
         sys.sg.plot3d(center_at="Planet",not_plot=["Star"])
+        
         sys.set_observer(nvec=[-1,0,0])
         sys.sg.plot3d()
+        
         sys.set_observer(nvec=[0,0,1])
         sys.sg.plot3d()
         
@@ -174,7 +187,6 @@ class Test(unittest.TestCase):
 
         #All transformations from here are not stored
         sys.sg.plot3d()
-        sys.sg.update_simple_state()
         sys.set_observer(nvec=[0,0,-1])
         sys.sg.plot3d()
 
