@@ -84,9 +84,13 @@ class Plot(object):
         ax.add_patch(Plot.pathpatch_2d_to_3d(pc, center, zDir))
         
     def pryngles_mark(ax):
+        #Height of axe
+        axh=ax.get_window_extent().transformed(ax.get_figure().dpi_scale_trans.inverted()).height
+        fig_factor=axh/4
+        
         args=dict(
             rotation=270,ha='left',va='top',
-            transform=ax.transAxes,color='pink',fontsize=8,zorder=100
+            transform=ax.transAxes,color='pink',fontsize=8*fig_factor,zorder=100
         )
         mark=f"Pryngles {version}"
         try:

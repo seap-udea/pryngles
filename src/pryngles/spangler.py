@@ -34,6 +34,7 @@ from matplotlib.collections import LineCollection
 from matplotlib import animation
 from celluloid import Camera # getting the camera
 from ipywidgets import interact,fixed,widgets
+import itertools
 
 # ## Aliases
 
@@ -320,6 +321,12 @@ class Spangler(PrynglesCommon):
         
         #Convex hulls of spanglers
         self.qhulls=dict()
+        
+        #Required for plotting
+        self.fig2d=None
+        self.ax2d=None
+        self.fig3d=None
+        self.ax3d=None
         
         #Create a spanglers with a list of other spanglers
         if len(spanglers)>0:
@@ -1142,9 +1149,16 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
         sphash: string, default = None:
             Body to apply this light direction
             
+    Update:
+        This method update the 'illuminated' and 'transmit' states.
+                
+    Note:
+        For updating the 'transmit' state it is required that the observer be set.
+        
     """
     verbose(VERB_SIMPLE,f"Setting light-source")
     cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,sphash)
+    verbose(VERB_SIMPLE,f"Number of points: {sum(cond)}")
     self.rqf_luz=sci.spherical(self.n_luz)
     
     self.data.loc[cond,"illuminated"]=False
@@ -1175,6 +1189,8 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
         & Spangle type is semitransparent
         & cos_obs . cos_luz < 0: observer and light source are in opposite sides
     )
+    
+    ATTENTION: TRANSMISSION IS ONLY PROPERLY SET IF OBSERVER HAVE BEEN PREVIOUSLY SET.
     """
     cond=    cond&    (~self.data.hidden)&    (     (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))&     ((self.data.cos_luz*self.data.cos_obs)<=0)
     )
@@ -1192,6 +1208,7 @@ def plot2d(self,
            only=None,
            center_at=None,
            not_plot=[],
+           axis=True,
            fsize=5):
     """
     Plot spangle.
@@ -1218,6 +1235,7 @@ def plot2d(self,
             
     """
     bgcolor='k'
+    fig_factor=fsize/3.0
 
     #Plot only a given object
     if only:
@@ -1243,15 +1261,23 @@ def plot2d(self,
     data=self.data[yes_plot]
     
     #Select scale for plot
+    cond=(data.sphash==center_at)
     cond=cond if sum(cond)>0 else [True]*nyes_plot        
-    maxval=1.2*np.abs(data[cond][[f"x_{coords}",f"y_{coords}"]].to_numpy()-[x_cen,y_cen]).max()
-    size_factor=maxval_full/maxval
+    maxval=1.2*np.abs(np.array(data[cond][[f"x_{coords}",f"y_{coords}"]])-np.array([x_cen,y_cen])).max()
+    
+    size_factor=10*fig_factor*maxval_full/maxval
         
     #Figure
-    fig=plt.figure(figsize=(fsize,fsize))
-    fig.patch.set_facecolor(bgcolor)
-    ax=fig.add_subplot(111,facecolor=bgcolor)
-    ax.axis("off")
+    if self.fig2d is None:
+        fig=plt.figure(figsize=(fsize,fsize))
+        fig.patch.set_facecolor(bgcolor)
+        ax=fig.add_subplot(111,facecolor=bgcolor)
+
+        #Keep figure and axe
+        self.fig2d=fig
+        self.ax2d=ax
+
+    self.ax2d.axis("off")
 
     #Plot according to state
     
@@ -1270,19 +1296,19 @@ def plot2d(self,
                                                                        abs(data[cond].cos_luz),
                                                                        abs(data[cond].cos_obs))
                  ] #Object color
-    sizes[cond]=3.5*size_factor*data.scale[cond]
+    sizes[cond]=size_factor*data.dsp[cond]*abs(data.cos_obs[cond])
 
     #Not illuminated
     cond=(data.visible)&(~data.illuminated)
     verbose(VERB_SIMPLE,f"Visible and not illuminated: {cond.sum()}")
     colors[cond]=Misc.rgb(SPANGLES_DARKNESS_COLOR,to_hex=True)
-    sizes[cond]=3.5*size_factor*data.scale[cond]
+    sizes[cond]=size_factor*data.dsp[cond]*data.cos_obs[cond]
 
     if coords!="obs":
         #Not visible
         cond=(~data.visible)&(data[f"z_{coords}"]>0)
         colors[cond]=Misc.rgb(SHADOW_COLOR_OBS,to_hex=True)
-        sizes[cond]=3.5*size_factor*data.scale[cond]
+        sizes[cond]=size_factor*data.dsp[cond]*abs(data.cos_obs[cond])
 
     #Transmitting
     cond=(data.visible)&(data.transmit)&(data.illuminated)
@@ -1294,33 +1320,42 @@ def plot2d(self,
                                                                        abs(data[cond].cos_luz),
                                                                        abs(data[cond].cos_obs))
                  ] #Object color
-    sizes[cond]=0.5*size_factor*data.scale[cond]
+    sizes[cond]=0.5*size_factor*data.dsp[cond]*abs(data.cos_obs[cond])
     
     #Plot spangles
     sargs=dict(c=colors,sizes=sizes,marker=marker)
-    ax.scatter(data[f"x_{coords}"]-x_cen,data[f"y_{coords}"]-y_cen,**sargs)
+    self.ax2d.scatter(data[f"x_{coords}"]-x_cen,data[f"y_{coords}"]-y_cen,**sargs)
     
     #Plot transmitting marks
     """
     cond=(data.transmit)&(data.visible)&(data.illuminated)
-    ax.scatter(data[cond][f"x_{coords}"]-x_cen,
+    self.ax2d.scatter(data[cond][f"x_{coords}"]-x_cen,
                data[cond][f"y_{coords}"]-y_cen,
                marker='v',s=10,ec='w',fc='None',alpha=0.1)
-    """
+    #"""
     
     #Ranges
-    ax.set_xlim(-maxval,maxval)
-    ax.set_ylim(-maxval,maxval)
+    self.ax2d.set_xlim(-maxval,maxval)
+    self.ax2d.set_ylim(-maxval,maxval)
     
     factor=1
-    xmin,xmax=factor*np.array(list(ax.get_xlim()))
-    ymin,ymax=factor*np.array(list(ax.get_ylim()))
+    xmin,xmax=factor*np.array(list(self.ax2d.get_xlim()))
+    ymin,ymax=factor*np.array(list(self.ax2d.get_ylim()))
 
     #Axis
-    ax.plot([xmin,xmax],[0,0],'w-',alpha=0.3)
-    ax.plot([0,0],[ymin,ymax],'w-',alpha=0.3)
-    ax.text(xmax,0,fr"$x_{{{coords}}}$",color='w',alpha=0.5,fontsize=8)
-    ax.text(0,ymax,fr"$y_{{{coords}}}$",color='w',alpha=0.5,fontsize=8)
+    if axis:
+        self.ax2d.plot([xmin,xmax],[0,0],'w-',alpha=0.3)
+        self.ax2d.plot([0,0],[ymin,ymax],'w-',alpha=0.3)
+        self.ax2d.text(xmax,0,fr"$x_{{{coords}}}$",color='w',alpha=0.5,fontsize=8*fig_factor)
+        self.ax2d.text(0,ymax,fr"$y_{{{coords}}}$",color='w',alpha=0.5,fontsize=8*fig_factor)
+
+        #Scale
+        center_text=""
+        if center_at:
+            center_text=f", Center at '{center_at}'"
+        self.ax2d.text(0,0,f"Axis scale: {maxval*factor:.2g}{center_text}",
+                  fontsize=8*fig_factor,color='w',
+                  transform=self.ax2d.transAxes)
 
     #Title
     label_obs=""
@@ -1335,27 +1370,18 @@ def plot2d(self,
     elif coords=="int":
         lamb=self.rqf_int[1]*Consts.rad
         phi=self.rqf_int[2]*Consts.rad
-        
+
     label_obs=f"{coords} ($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
-    ax.set_title(f"{label_obs}",
-                 color='w',fontsize=10,position=(0.5,+0.5),ha='center')
+    self.ax2d.text(0.5,1.01,f"{label_obs}",
+                 transform=self.ax2d.transAxes,ha='center',
+                 color='w',fontsize=10*fig_factor)
         
     #Water mark
-    Plot.pryngles_mark(ax)
-
-    #Scale
-    center_text=""
-    if center_at:
-        center_text=f", Center at '{center_at}'"
-    ax.text(0,0,f"Axis scale: {maxval*factor:.2g}{center_text}",
-              fontsize=8,color='w',
-              transform=ax.transAxes)
+    Plot.pryngles_mark(self.ax2d)
 
     #Decoration
-    ax.axis("equal")
-    fig.tight_layout()
-    self.fig2d=fig
-    self.ax2d=ax
+    self.ax2d.axis("equal")
+    self.fig2d.tight_layout()
 
 Spangler.plot2d=plot2d
 
@@ -1459,4 +1485,110 @@ Spangler.update_intersection_state=update_intersection_state
 Spangler.update_visibility_state=update_visibility_state
 Spangler.update_illumination_state=update_illumination_state
 
+
+def calc_flyby(normal=[0,0,1],start=0,stop=360,num=10):
+
+    #Range of longitudes and latitudes
+    lonp=np.linspace(start,stop,num)
+    latp=np.zeros_like(lonp)
+    
+    #Rotation matrices
+    M,I=sci.rotation_matrix(normal,0)
+
+    #Compute directions
+    nvecs=np.zeros((num,3))
+    for i in range(num):
+        rp=sci.direction([lonp[i],latp[i]])
+        nvecs[i]=spy.mxv(I,rp)
+
+    return nvecs
+
+Science.calc_flyby=calc_flyby
+
+
+def animate_plot2d(self,filename=None,
+                   nobs=[[0,0,1]],nluz=[[1,0,0]],
+                   interval=1000,
+                   **plot2d_args):
+    """Animate plot2d observation
+    
+    Parameters:
+        filename: string, default = None:
+            File where the movie will be stored. If None not file generated.
+            The extension of the file will determine the format on which
+            the animation is stored.
+            
+        nobs: array (Nx3), default = None:
+            Set of directions in which the observer is set.
+            
+        nluz: array (Nluz x 3), default = None
+            Set of directions in which the light will be set.
+            
+        interval: float, default = 100:
+            Interval in milliseconds between frames.
+            
+        **plot_args: dictionary:
+            Arguments for the plot2d method
+    
+    Example:
+        nobs=sci.calc_flyby(normal=[0,1,1],start=0,stop=360,num=20)
+        sg.animate_plot2d(nobs=nobs)
+        
+    Notes:
+        Based in: https://github.com/jwkvam/celluloid
+    """
+    
+    verbosity=Verbose.VERBOSITY
+    Verbose.VERBOSITY=VERB_NONE
+    
+    self.reset_state()
+
+    self.set_observer(nvec=nobs[0])
+    self.update_visibility_state()
+
+    self.set_luz(nvec=nluz[0])
+    self.update_illumination_state()
+
+    self.fig2d=None
+    self.plot2d(**plot2d_args)
+    
+    camera=Camera(self.fig2d)
+    
+    directions=[nobs]+[nluz]
+    combinations=[]
+    for direction in itertools.product(*directions):
+
+        self.set_observer(nvec=direction[0])
+        self.update_visibility_state()
+
+        self.set_luz(nvec=direction[1])
+        self.update_illumination_state()
+
+        self.plot2d(**plot2d_args)
+            
+        camera.snap()
+        combinations+=[direction]
+        
+    anim=camera.animate(interval=interval)
+
+    Verbose.VERBOSITY=verbosity
+        
+    if filename is not None:
+        if 'gif' in filename:
+            anim.save(filename)
+            del anim
+        elif 'mp4' in filename:
+            ffmpeg=animation.writers["ffmpeg"]
+            metadata = dict(title='Pryngles Spangler Animation',
+                            artist='Matplotlib',
+                            comment='Movie')
+            w=ffmpeg(fps=15,metadata=metadata)
+            anim.save(filename,w)
+            del anim
+        else:
+            raise ValueError(f"Animation format '{filename}' not recognized")
+    else:
+        return anim,combinations
+
+Spangler.animate_plot2d=animate_plot2d
 

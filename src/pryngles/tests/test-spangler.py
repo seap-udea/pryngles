@@ -260,7 +260,7 @@ class Test(unittest.TestCase):
 
         sg.set_observer([0,1,0])
         sg.set_luz(nvec=[1,0,0],center=[0,0,0],sphash="Planet 1")
-        sg.set_luz(nvec=[-1,0,0],center=[0,0,0],sphash="Planet 2")
+        sg.set_luz(nvec=[-1,0,0],sphash="Planet 2")
         
         sg.plot3d()
         return
@@ -268,6 +268,8 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_NONE
         
     def test_plot2d(self):
+        
+        global sg
         
         Verbose.VERBOSITY=VERB_SIMPLE
         
@@ -281,7 +283,9 @@ class Test(unittest.TestCase):
         fs=3
         sg.plot3d(coords="ecl")
         sg.plot2d(coords="ecl",fsize=fs)
+        sg.fig2d=None
         sg.plot2d(coords="luz",fsize=fs)
+        sg.fig2d=None
         sg.plot2d(coords="obs",fsize=fs)
         
         Verbose.VERBOSITY=VERB_NONE
@@ -373,6 +377,7 @@ class Test(unittest.TestCase):
         sg.set_observer(nvec=sci.direction([30,20]))
         sg.update_visibility_state()
 
+        sg.fig2d=None
         sg.plot2d(center_at="Ring")
         
         #Interact
@@ -391,16 +396,36 @@ class Test(unittest.TestCase):
             sg.set_observer(nvec=sci.direction([lon_obs,lat_obs]))
             sg.update_visibility_state()
 
+            sg.fig2d=None
             sg.plot2d(center_at="Ring")
 
         opciones=dict(continuous_update=False,readout_format=".3f")
         interact(visuals_interact,
-                 lon_luz=widgets.FloatSlider(min=0,max=360,step=0.01,value=100,**opciones),
+                 lon_luz=widgets.FloatSlider(min=0,max=360,step=0.01,value=70,**opciones),
                  lat_luz=widgets.FloatSlider(min=-90,max=90,step=0.01,value=0,**opciones),
                  lon_obs=widgets.FloatSlider(min=0,max=360,step=0.01,value=35,**opciones),
                  lat_obs=widgets.FloatSlider(min=-90,max=90,step=0.01,value=20,**opciones),
                 );
 
+        Verbose.VERBOSITY=VERB_NONE
+
+    def test_flyby(self):
+        
+        Verbose.VERBOSITY=VERB_SIMPLE
+        
+        nvecs=calc_flyby(normal=[1,0,1])
+
+        fig=plt.figure()
+        ax=fig.add_subplot(111,projection='3d')
+
+        for i in range(len(nvecs)):
+            ax.scatter(nvecs[i,0],nvecs[i,1],nvecs[i,2],c='r',s=5)
+            ax.text(nvecs[i,0],nvecs[i,1],nvecs[i,2],i)
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        
         Verbose.VERBOSITY=VERB_NONE
 
 
