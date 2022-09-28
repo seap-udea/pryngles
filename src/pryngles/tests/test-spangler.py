@@ -409,22 +409,64 @@ class Test(unittest.TestCase):
 
         Verbose.VERBOSITY=VERB_NONE
 
-    def test_flyby(self):
+    def test_anim(self):
         
         Verbose.VERBOSITY=VERB_SIMPLE
         
-        nvecs=calc_flyby(normal=[1,0,1])
+        nspangles=500
+        sps=[]
+        sg=Spangler(nspangles=nspangles,sphash="Parent",n_equ=[0,0,1],center_equ=[-7,0,0])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_STELLAR,scale=3,seed=1,preset=1)
+        sps+=[sg]
+        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=sci.direction([0,80]))
+        sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+        sps+=[sg]
+        sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
+        sps+=[sg]
+        sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+3.0,0.0,0.0])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=0.3,seed=1,preset=True)
+        sps+=[sg]
 
-        fig=plt.figure()
-        ax=fig.add_subplot(111,projection='3d')
+        sg=Spangler(spanglers=sps)
 
-        for i in range(len(nvecs)):
-            ax.scatter(nvecs[i,0],nvecs[i,1],nvecs[i,2],c='r',s=5)
-            ax.text(nvecs[i,0],nvecs[i,1],nvecs[i,2],i)
+        nobs=calc_flyby(normal=[0,0,1],start=0,stop=360,num=1,lat=30)
+        nluz=calc_flyby(normal=[0,0,1],start=0,stop=360,num=5,lat=20)
 
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
+        #anim,dirs=sg.animate_plot2d(nobs=nobs,nluz=nluz,interval=100,center_at="Ring",axis=False,not_plot=["Parent"])
+        anim,dirs=sg.animate_plot2d(filename="/tmp/flyby-plot2d-luz.gif",nobs=nobs,nluz=nluz,interval=100,center_at="Ring",axis=False)
+        
+        Verbose.VERBOSITY=VERB_NONE
+
+    def test_muluz(self):
+        
+        Verbose.VERBOSITY=VERB_NONE
+
+        nspangles=100
+        sps=[]
+
+        sg=Spangler(nspangles=nspangles,sphash="Planet1",n_equ=[0,0,1],center_ecl=[0,0,0])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
+        sps+=[sg]
+
+        sg=Spangler(nspangles=nspangles,sphash="Moon1",n_equ=[0,0,1],center_ecl=[2,0,0])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=0.5,seed=1,preset=True)
+        sps+=[sg]
+
+        sg=Spangler(spanglers=sps)
+
+        sg.set_observer([1,1,1])
+        sg.update_visibility_state()
+
+        sphash="Planet1"
+        sg.set_luz(nvec=[1,0,0],sphash=sphash)
+        sg.update_illumination_state()
+
+        sphash="Moon1"
+        sg.set_luz(nvec=[-2,1,0],sphash=sphash)
+        sg.update_illumination_state()
+
+        sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
 

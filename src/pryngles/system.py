@@ -23,6 +23,7 @@ from pryngles import *
 # ## External modules
 
 import rebound as rb
+from tqdm import tqdm
 
 # ## Aliases
 
@@ -154,6 +155,18 @@ class System(PrynglesCommon):
         #Update system
         self._update_system()
         
+    def _get_source(self,body):
+        """Get the source of light (stellar body) in the center of a body
+        """
+        if (body.primary is None) or (body.kind == "Star"):
+            return body
+
+        elif body.primary.kind == "Star":
+            return body.primary
+
+        else:
+            return self._get_source(body.primary)
+
     def _update_system(self):
         """Update system properties
         """
@@ -216,7 +229,7 @@ class System(PrynglesCommon):
 System.__doc__=System_doc
 
 
-def add(self,kind="Star",primary=None,center="primary",**props):
+def add(self,kind="Star",primary=None,**props):
     """Add an object to the system
     
     Examples:
@@ -232,12 +245,6 @@ def add(self,kind="Star",primary=None,center="primary",**props):
         primary: Body, default = None:
             Primary object of the body.
             
-        center: string, default = "primary":
-            Center with respect to the positions are indicated.  
-            Possible values: "primary", "inertial".
-            When "inertial" you can provide positions of the objects using cartesian
-            coordinates.
-
         props: dictionary:
             List of properties of the body.
             
@@ -251,7 +258,7 @@ def add(self,kind="Star",primary=None,center="primary",**props):
         S=sys.add()
 
         #Add planet, when an object is added, it is automatically spangled
-        P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
+        P=sys.add("Planet",radius=0.1,m=1e-3,x=1,vy=0.2)
 
         #Add moon: orbital elements are respect to ecliptic system
         M=sys.add("Planet",primary=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
@@ -289,11 +296,7 @@ def add(self,kind="Star",primary=None,center="primary",**props):
         rb_add_options={k:v for k,v in self.__body.__dict__.items() if k in REBOUND_ORBITAL_PROPERTIES}
         rb_add_options.update(hash=self.__body.bhash)
         
-        #Check if positions are given with respect to primary
-        if primary and center=="primary":
-            rb_add_options.update(primary=self.sim.particles[primary.bhash])
-
-        verbose(VERB_VERIFY,f"Adding rebound object with hash {self.__body.bhash} with center {center}")
+        verbose(VERB_VERIFY,f"Adding rebound object with hash {self.__body.bhash}")
         verbose(VERB_DEEP,f"Rebound add options {rb_add_options}")
         
         #Add particle to rebound
@@ -359,17 +362,6 @@ def remove(self,bhash):
 System.remove=remove
 
 
-def integrate(self,*args,**kwargs):
-    """Integrate system
-    
-    *args, **kwargs:
-        Mandatory (non-keyword) arguments and optional (keyword) arguments for rebound.integrate.
-    """
-    self.sim.integrate(*args,**kwargs)
-    
-System.integrate=integrate
-
-
 # ## Spangle System
 
 def spangle_system(self):
@@ -401,7 +393,8 @@ def spangle_system(self):
             source+=1
         
         #Center object around its position according to rebound
-        body.sg.set_positions(center_ecl=self.sim.particles[body.rbhash].xyz)
+        body.center_ecl=np.array(self.sim.particles[body.rbhash].xyz)
+        body.sg.set_positions(center_ecl=body.center_ecl)
             
         self._spanglers[bhash]=body.sg
     
@@ -460,12 +453,20 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     """Set the position of the observer
     """
     #Only set observer if it is spangled
-    self.n_obs=nvec
     self.alpha_obs=alpha
-    self.center=center
+    self.center_obs=center
+    
     if self._is_spangled():
+        
         #Set observer
-        self.sg.set_observer(nvec=self.n_obs,alpha=self.alpha_obs,center=self.center)
+        self.sg.set_observer(nvec=nvec,alpha=self.alpha_obs,center=self.center_obs)
+        self.d_obs=self.sg.d_obs
+        self.n_obs=self.sg.n_obs.copy()
+        self.rqf_obs=self.sg.rqf_obs.copy()
+        
+        #Update visibility
+        self.sg.update_visibility_state()
+        
     else:
         raise AssertionError("You must first spangle system before setting observer direction.")
         
@@ -484,18 +485,117 @@ def reset(self):
 System.reset=reset
 
 
-# ## Illumination
+# ## Set luz
 
-def update_illumination(self):
-    """Determine the visibility conditions of the spangles
-    
-    Update n_luz differently according to body hash
+def set_luz(self):
+    """Set light in the system
     """
-    #Calculate the hull of the bodies in the system
-    for body in self.bodies.values():
-        #Body information
-        bhash=body.hash
-        bkind=body.kind
+    if self._is_spangled():
+        
+        for bhash,body in self.bodies.items():
+            
+            if body.kind == "Star":
+                continue
+                 
+            #Get center of body
+            center=body.center_ecl
+                    
+            #Get source and center
+            source=self._get_source(body)
+            center_source=source.center_ecl
+            
+            verbose(VERB_VERIFY,f"Calculating illumination for '{bhash}' coming from '{source.bhash}' @ {center_source}")
+            
+            #Get direction of light
+            nluz=center_source-center
+            
+            #Set light for this body
+            self.sg.set_luz(nvec=nluz,center=center_source,sphash=bhash)
+            self.sg.update_illumination_state()
+            
+    else:
+        raise AssertionError("You must first spangle system before setting light.")
+        
+System.set_luz=set_luz
+
+
+def integrate(self,*args,**kwargs):
+    """Integrate system
+
+    Parameters:
+        *args, **kwargs:
+            Mandatory (non-keyword) arguments and optional (keyword) arguments for rebound.integrate.
+        
+    Update:
+        Integrate using integrate rebound method.
+        
+        Update center of each body and set positions of the spangles.
+    """
+    #Time of integration
+    t=args[0]
+    verbose(VERB_SIMPLE,"Integrating up to {t}")
     
-System.update_illumination=update_illumination
+    if self._is_spangled():
+        
+        #Integrate
+        self.sim.integrate(*args,**kwargs)
+        self.sim.move_to_com()
+    
+        #Update positions
+        for bhash,body in self.bodies.items():
+            
+            #Position of the body according
+            body.center_ecl=np.array(self.sim.particles[body.rbhash].xyz)
+
+            verbose(VERB_VERIFY,f"Updating center of body {bhash} @ {body.center_ecl}")
+            cond=self.sg.data.sphash==bhash
+            self.sg.data.loc[cond,"center_ecl"]=pd.Series([list(body.center_ecl)]*sum(cond),dtype=object).values
+
+        #Update positions
+        self.sg.set_positions()
+        
+    else:
+        raise AssertionError("You must first spangle system before setting positions.")
+    
+System.integrate=integrate
+
+
+def animate_integration(self,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval=100,coords="obs"):
+
+    verbosity=Verbose.VERBOSITY
+    Verbose.VERBOSITY=VERB_NONE
+    
+    self.sg.fig2d=None
+    self.sg.plot2d(coords=coords,axis=False)
+    camera=Camera(self.sg.fig2d)
+    
+    for t in tqdm(np.linspace(tini,tend,nsnap)):
+        self.integrate(t)
+        self.set_luz()
+        self.sg.plot2d(coords=coords,axis=False)
+        camera.snap()
+    
+    anim=camera.animate(interval=interval)
+    
+    Verbose.VERBOSITY=verbosity
+    
+    if filename is not None:
+        if 'gif' in filename:
+            anim.save(filename)
+            return anim
+        elif 'mp4' in filename:
+            ffmpeg=animation.writers["ffmpeg"]
+            metadata = dict(title='Pryngles Spangler Animation',
+                            artist='Matplotlib',
+                            comment='Movie')
+            w=ffmpeg(fps=15,metadata=metadata)
+            anim.save(filename,w)
+            return anim
+        else:
+            raise ValueError(f"Animation format '{filename}' not recognized")
+    else:
+        return anim
+    
+System.animate_integration=animate_integration
+
 

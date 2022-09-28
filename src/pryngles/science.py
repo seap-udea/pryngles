@@ -27,6 +27,8 @@ import math as mh
 import spiceypy as spy
 from scipy.integrate import quad
 from scipy.spatial import ConvexHull
+from celluloid import Camera # getting the camera
+import rebound as rb
 
 # ## The Science class
 # 
@@ -502,24 +504,78 @@ class Plane(PrynglesCommon):
 
 Science.Plane=Plane
 
-"""
-#Test plane
-p1=[1,0,0]
-p2=[0,1,0]
-p3=[1,1,0]
 
-p1=[-1,2,1]
-p2=[0,-3,2]
-p3=[1,1,-4]
+# ## Flybys
 
-plane=Science.Plane(p1,p2,p3)
-print(plane)
+def calc_flyby(normal=[0,0,1],start=0,stop=360,num=10,lat=0):
+    
+    """Calculate a flyby coordinates
+    
+    Parameters:
+        normal: array (3), default = [0,0,1]:
+            Normal to flyby plane.
+            
+        start: float, default = 0:
+            Start longitude.
+            
+        stop: float, default = 0:
+            Stop longitude.
+            
+        num: int, default = 10:
+            Number of points in flyby.
+            
+        lat: float, default = 0:
+            Constant latitude of flyby.
+    """
 
-p=[2,2,5]
-v=plane.get_projection(p)
-plane.plot_plane(p=p,alpha=0.1,color='r')
-plane.is_above(p,[-1,1,0])
-#plane.is_above(p,axis=2),plane.is_below(p,axis=2),plane.is_above(p,axis=0),plane.is_below(p,axis=1)
-#""";
+    #Range of longitudes and latitudes
+    lonp=np.linspace(start,stop,num)
+    latp=lat*np.ones_like(lonp)
+    
+    #Rotation matrices
+    M,I=Science.rotation_matrix(normal,0)
+
+    #Compute directions
+    nvecs=np.zeros((num,3))
+    for i in range(num):
+        rp=Science.direction([lonp[i],latp[i]])
+        nvecs[i]=spy.mxv(I,rp)
+
+    return nvecs
+
+Science.calc_flyby=calc_flyby
+
+
+# ## Animate rebound
+
+def animate_rebound(sim,tini=0,tend=2*np.pi,nsnap=10,interval=100):
+
+    verbosity=Verbose.VERBOSITY
+    Verbose.VERBOSITY=VERB_NONE
+    
+    fig,ax=plt.subplots()
+
+    camera=Camera(fig)
+
+    for t in np.linspace(tini,tend,nsnap):
+        sim.integrate(t)
+        sim.move_to_com()
+        
+        for p in sim.particles:
+            xyz=p.xyz
+            ax.plot(xyz[0],xyz[1],marker='o',color='r')
+        
+        camera.snap()
+    
+    ax.axis("equal")
+    ax.grid()
+    
+    anim=camera.animate(interval=interval)
+    
+    Verbose.VERBOSITY=verbosity
+    
+    return anim
+
+Science.animate_rebound=animate_rebound
 
 

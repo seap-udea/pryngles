@@ -20,15 +20,15 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_ALL
         
-        B=Body("Body",BODY_DEFAULTS,None,hash='B',m=2,c=2)
+        B=Body("Body",BODY_DEFAULTS,None,bhash='B',m=2,x=2)
         
         print(B)
         print(B.m)
         
-        B.update_body(hash="B")
+        B.update_body(bhash="B")
         print(B)
         
-        C=Body("Body",BODY_DEFAULTS,B,hash="C")
+        C=Body("Body",BODY_DEFAULTS,B,bhash="C")
         print(C)
         print(B)
         
@@ -39,7 +39,7 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_ALL
         
         #Create body
-        B=Body("Body",BODY_DEFAULTS,None,hash='B',m=2,c=2)
+        B=Body("Body",BODY_DEFAULTS,None,bhash='B',m=2,x=2)
         B.spangle_body()
         B.sg.plot3d()
         
@@ -94,7 +94,7 @@ class Test(unittest.TestCase):
                          [True]*1)
         
         #Check a non-existing property
-        P.update_planet(a=5,e=0.5,rho=0.2)
+        P.update_planet(vz=0.2)
         print(P)
         
         #Check exception: primary could not be different from None or Body

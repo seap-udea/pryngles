@@ -35,6 +35,7 @@ from matplotlib import animation
 from celluloid import Camera # getting the camera
 from ipywidgets import interact,fixed,widgets
 import itertools
+from tqdm import tqdm
 
 # ## Aliases
 
@@ -1002,7 +1003,7 @@ def set_intersect(self,
     center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)               for sp,c_ecl,c_equ in zip(self.data[cond].sphash,
                                          np.array(self.data[cond].center_ecl),
                                          np.array(self.data[cond].center_equ))]
-    self.data.loc[cond,"center_int"]=pd.Series(center_int)
+    self.data.loc[cond,"center_int"]=pd.Series(center_int).values
     
     if self.infinite:
         self.data.loc[cond,"z_cen_int"]=-np.inf
@@ -1020,9 +1021,7 @@ def set_intersect(self,
         #Distance to origin of coordinates in the int system where the center is located
         self.data.loc[cond,"d_int"]=np.linalg.norm(self.data[cond][["x_int","y_int","z_int"]],axis=1)
     
-    #Asuming d_int > radius of the object
-
-    #Direction of spangle with respect to direction
+    #Direction of spangle with respect to direction of the intersect vector
     self.data.loc[cond,"cos_int"]=[np.dot(n_ecl,n_int) for n_ecl in self.data.ns_ecl[cond]]
     
     #Update spangles orientations
@@ -1128,7 +1127,7 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
             | Spangle type is semitransparent
         )
     """
-    cond=    (~self.data.hidden)&    (self.data.z_cen_obs<0)&    (        (self.data.cos_obs>0)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
+    cond=    (~self.data.hidden)&    ((self.data.z_cen_obs+self.data.scale)<0)&    (        (self.data.cos_obs>0)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
     )
     self.data.loc[cond,"visible"]=True
     
@@ -1156,13 +1155,26 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
         For updating the 'transmit' state it is required that the observer be set.
         
     """
+   
     verbose(VERB_SIMPLE,f"Setting light-source")
-    cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,sphash)
+ 
+    #Set intersect of all points in order to prepare the update luz
+    cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,sphash=None) 
     verbose(VERB_SIMPLE,f"Number of points: {sum(cond)}")
+    
+    #Depending on body choose which spangles to change
+    cond=[True]*self.nspangles
+    if sphash:
+        cond=(self.data.sphash==sphash)
+    
+    #Set the light source direction in spherical coordinates
     self.rqf_luz=sci.spherical(self.n_luz)
     
+    #Set the default value of the states to change in False
     self.data.loc[cond,"illuminated"]=False
     self.data.loc[cond,"transmit"]=False
+    
+    #Conditions
     self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
     
     #Update states
@@ -1178,7 +1190,7 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
             | cos_luz > 0: spangle it is towards the light source
         )
     """
-    cond=    cond&    (~self.data.hidden)&    (self.data.z_cen_luz<0)&    (        (self.data.geometry==SAMPLER_GEOMETRY_CIRCLE)|        (self.data.cos_luz>0)|        (self.data.spangle_type==SPANGLE_STELLAR)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
+    cond=    cond&    (~self.data.hidden)&    ((self.data.z_cen_luz+self.data.scale)<0)&    (        (self.data.geometry==SAMPLER_GEOMETRY_CIRCLE)|        (self.data.cos_luz>0)|        (self.data.spangle_type==SPANGLE_STELLAR)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
     )
     self.data.loc[cond,"illuminated"]=True
 
@@ -1195,7 +1207,7 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
     cond=    cond&    (~self.data.hidden)&    (     (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))&     ((self.data.cos_luz*self.data.cos_obs)<=0)
     )
     self.data.loc[cond,"transmit"]=True
-
+    
 Spangler.set_observer=set_observer
 Spangler.set_luz=set_luz
 
@@ -1408,7 +1420,14 @@ def update_intersection_state(self):
         
     for sphash in Misc.flatten([self.sphash]):
         
+        #Points in present body
         cond=(self.data.sphash==sphash)
+        
+        #If this body is not in the field-of-view, avoid computation
+        if self.data[cond].z_cen_int.iloc[0]+self.data[cond].scale.iloc[0]>=0:
+            continue
+
+        #By default for all objects
         inhull_not_in_hole=[True]
         
         verbose(VERB_SIMPLE,f"Calculating intersections for '{sphash}'")
@@ -1486,26 +1505,6 @@ Spangler.update_visibility_state=update_visibility_state
 Spangler.update_illumination_state=update_illumination_state
 
 
-def calc_flyby(normal=[0,0,1],start=0,stop=360,num=10):
-
-    #Range of longitudes and latitudes
-    lonp=np.linspace(start,stop,num)
-    latp=np.zeros_like(lonp)
-    
-    #Rotation matrices
-    M,I=sci.rotation_matrix(normal,0)
-
-    #Compute directions
-    nvecs=np.zeros((num,3))
-    for i in range(num):
-        rp=sci.direction([lonp[i],latp[i]])
-        nvecs[i]=spy.mxv(I,rp)
-
-    return nvecs
-
-Science.calc_flyby=calc_flyby
-
-
 def animate_plot2d(self,filename=None,
                    nobs=[[0,0,1]],nluz=[[1,0,0]],
                    interval=1000,
@@ -1530,6 +1529,13 @@ def animate_plot2d(self,filename=None,
         **plot_args: dictionary:
             Arguments for the plot2d method
     
+    Return:
+        anim: Class Animation:
+            Animation object.
+            
+        combinations: list of tuples:
+            Combinations of nobs and nluz components.
+    
     Example:
         nobs=sci.calc_flyby(normal=[0,1,1],start=0,stop=360,num=20)
         sg.animate_plot2d(nobs=nobs)
@@ -1552,11 +1558,13 @@ def animate_plot2d(self,filename=None,
     self.fig2d=None
     self.plot2d(**plot2d_args)
     
+    print(f"Generating {len(nobs)*len(nluz)} frames... be patient")
+    
     camera=Camera(self.fig2d)
     
     directions=[nobs]+[nluz]
     combinations=[]
-    for direction in itertools.product(*directions):
+    for direction in tqdm(itertools.product(*directions)):
 
         self.set_observer(nvec=direction[0])
         self.update_visibility_state()
@@ -1576,6 +1584,7 @@ def animate_plot2d(self,filename=None,
     if filename is not None:
         if 'gif' in filename:
             anim.save(filename)
+            return anim,combinations
             del anim
         elif 'mp4' in filename:
             ffmpeg=animation.writers["ffmpeg"]
@@ -1584,6 +1593,7 @@ def animate_plot2d(self,filename=None,
                             comment='Movie')
             w=ffmpeg(fps=15,metadata=metadata)
             anim.save(filename,w)
+            return anim,combinations
             del anim
         else:
             raise ValueError(f"Animation format '{filename}' not recognized")
@@ -1591,4 +1601,8 @@ def animate_plot2d(self,filename=None,
         return anim,combinations
 
 Spangler.animate_plot2d=animate_plot2d
+
+
+# ## Test multiple sources of light
+
 

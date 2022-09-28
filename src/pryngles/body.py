@@ -141,6 +141,8 @@ BODY_DEFAULTS.update(odict(
     
     #Orbit
     m=1,
+    x=0,y=0,z=0,
+    vx=0,vy=0,vz=0,
 
     #Physics
     radius=1,
@@ -208,7 +210,7 @@ class Body(PrynglesCommon):
             if prop in self.__defaults or prop in REBOUND_ORBITAL_PROPERTIES:
                 self.__dict__[prop]=props[prop]
             else:
-                print(f"Property {prop} not identified in object {self.kind}")
+                raise ValueError(f"Property {prop} not identified in object {self.kind}")
                 
         verbose(VERB_VERIFY,"Updating Body")
         self._update_properties()
@@ -387,8 +389,6 @@ PLANET_DEFAULTS.update(odict(
     
     #Orbit: update
     #Same as Body
-    a=1,
-    e=0,
     
     #Physics: update
     #Same as Body
@@ -416,11 +416,11 @@ class Planet(Body):
             
             Additional properties:
             
-                a: float [ul], default = 1.0
-                    Semi major axis of the orbit with respect to primary.
+                x,y,z: float [ul], default = 1.0, 0.0, 0.0:
+                    Initial position of the body.
 
-                e: float, default = 0.0
-                    Eccentricity of the orbit with respect to primary.
+                vy: float, default = 0.0, 1.0, 0.0:
+                    Intitial velocity of the body
         
     Derived attributes:
         None.
@@ -459,9 +459,6 @@ class Planet(Body):
         """
         verbose(VERB_VERIFY,"Updating Planet properties")
         
-        #Semilatus rectum
-        self.p=self.a*(1-self.e**2)
-
     def update_planet(self,**pars):
         verbose(VERB_VERIFY,"Updating Planet")
         Body.update_body(self,**pars)
