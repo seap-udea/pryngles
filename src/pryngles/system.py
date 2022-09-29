@@ -406,6 +406,12 @@ def spangle_system(self):
         for source_state in SPANGLER_SOURCE_STATES.keys():
             self.sg.data[source_state+f"_{source}"]=0
     
+    #Set default observer
+    self.set_observer(nvec=self.n_obs,alpha=self.alpha_obs)
+    
+    #Set light sources
+    self.set_luz()
+    
     #Save state of the system
     if self._resetable:
         self.save_to(self._snap_file_name)
@@ -571,6 +577,7 @@ def animate_integration(self,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval
     
     for t in tqdm(np.linspace(tini,tend,nsnap)):
         self.integrate(t)
+        self.set_observer(nvec=self.n_obs)
         self.set_luz()
         self.sg.plot2d(coords=coords,axis=False)
         camera.snap()

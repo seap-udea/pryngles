@@ -32,6 +32,12 @@ class Test(unittest.TestCase):
         ax.view_init(elev=15,azim=1)
         Plot.pryngles_mark(ax)
         
+        #rgb
+        print(Misc.rgb([27,0.5,0.5]))
+        
+        #Color sample
+        Misc.rgb_sample(27)
+        
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

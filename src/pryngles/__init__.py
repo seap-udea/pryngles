@@ -25,17 +25,13 @@
 
 # This is the initialization file of the `Pryngles` package.
 
-# ## Warnings
+# ## Useful packages
 
 import unittest
 import warnings
 import dill
 import inspect
-from collections import OrderedDict as odict
-from collections.abc import Iterable
 from copy import deepcopy
-from colorsys import hls_to_rgb
-import matplotlib.pyplot as plt
 warnings.filterwarnings('ignore')
 
 # ## Jupyter compatibilty
@@ -81,6 +77,8 @@ get_ipython().run_line_magic('autoreload', '2')
 SIMPLE: Simple messages.
 SYSTEM: System operations.
 VERIFY: Message to verify operations
+DEEP: Deep debugging messages
+ALL: All debugging messages
 """
 VERB_NONE=0
 VERB_SIMPLE=1
@@ -159,103 +157,10 @@ class PrynglesCommon(object):
         #Remove private attributes
         return str({k:v for k,v in self.__dict__.items() if k[0]!='_'})
 
-# ## Miscelaneous Class
-
-Misc_doc="""
-Miscelaneous routines.
-
-This is a set of util routines intended for a diversity of purposes.
-
-Routines included:
-
-    get_data(file)
-""";
-
-class Misc(object):
-    def get_data(path):
-        """
-        Get the full path of the `datafile` which is one of the datafiles provided with the package.
-        
-        Parameters:
-            datafile: Name of the data file, string.
-            
-        Return:
-            Full path to package datafile in the python environment.
-            
-        """
-        return os.path.join(ROOTDIR,'data',path);
-    
-    def print_df(df):
-        """
-        Print DataFrame.
-        
-        Parameters:
-            df: Pandas DataFrame:
-                DataFrame to print.
-        """
-        display(HTML(df.to_html()))
-        
-    def rgb(hls,to_hex=False):
-        """Convert from hue (0-360), level (0-1) and saturation (0-1) to RGB
-        
-        Parameters:
-        
-            hls: array(3):
-                Array with values of color:
-                    hls[0]: hue, 0-360, see https://pythonfordesigners.com/tutorials/hsl-color-wheel/
-                    hls[1]: level, 0: black, 1: white
-                    hls[2]: saturation, 0: gray, 1: full-color
-                    
-        Return:
-        
-            rgb: array(3):
-                Array with rgb values (R: red, G: green, B: blue)
-        """
-        rgb_color=hls_to_rgb(hls[0]/360.0,hls[1],hls[2])
-        if to_hex:
-            hex_color="#{:02x}{:02x}{:02x}".format(int(rgb_color[0]*255),
-                                                   int(rgb_color[1]*255),
-                                                   int(rgb_color[2]*255))
-            return hex_color
-        return rgb_color
-    
-    def rgb_sample(H=0):
-        """Create a color table for a given hue
-        """
-        fig,ax=plt.subplots(figsize=(9,9))
-        dL=0.1
-        dS=0.1
-        for S in np.arange(0,1+dS,dS):
-            for L in np.arange(0,1+dL,dL):
-                c=Circle((L,S),dL/2.5,color=Misc.rgb([H,L,S]))
-                ax.add_patch(c)
-                ax.text(L,S,f"S={S:.1g},L={L:.1g}",ha='center',va='center',fontsize=6,color='y')
-        ax.axis("off")
-        ax.axis("equal")
-        plt.tight_layout()
-            
-Misc.__doc__=Misc_doc
-
-def flatten(collection):
-    """Flatten a list of objects
-
-    Examples:
-        list(Misc.flatten(["cosa"]))
-        list(Misc.flatten([["cosa"]]))
-        list(Misc.flatten([["cosa","perro"]]))
-        list(Misc.flatten([[1,"perro"],object,float]))
-    """
-    for i in collection:
-        if isinstance(i, Iterable) and not isinstance(i, basestring):
-            for subc in Misc.flatten(i):
-                yield subc
-        else:
-            yield i
-Misc.flatten=flatten
-
 # ## Pryngles modules
 
 from pryngles.version import *
+from pryngles.util import *
 from pryngles.consts import *
 from pryngles.science import *
 from pryngles.plot import *
@@ -268,6 +173,5 @@ from pryngles.legacy import *
 Verbose.VERBOSITY=VERB_NONE
 
 # ## Tests
-
 
 
