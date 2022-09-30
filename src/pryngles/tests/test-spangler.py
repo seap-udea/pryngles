@@ -119,7 +119,7 @@ class Test(unittest.TestCase):
         cond=sg.data.f_equ>45*Consts.deg
         sg.data.loc[cond,"transmit"]=True
 
-        sg.plot3d(statemark=0.5)
+        sg.plot3d(statemark=0.5,coords="ecl")
     
         #No preset
         sg=Spangler(nspangles=850,n_equ=[1,1,1])
@@ -151,22 +151,8 @@ class Test(unittest.TestCase):
         cond,n_int,d_int=sg.set_intersect(nvec=[1,0,1],center=[0,0,-1],
                                           sphash="Ring")
         sg._calc_qhulls()
-        
-        #Plot convexhull
-        from scipy.spatial import convex_hull_plot_2d
-        fig,ax=plt.subplots()
+        sg._plot_qhulls()
 
-        f=convex_hull_plot_2d(sg.qhulls["Ring"][0]["qhull"],ax)
-        f=convex_hull_plot_2d(sg.qhulls["Ring"][1]["qhull"],ax)
-        
-        #Remove points corresponding to qhull
-        for l in fig.axes[0].get_children():
-            if type(l) is Line2D:
-                plt.setp(l,ms=0,zorder=100)
-    
-        ax.scatter(sg.data.x_int,sg.data.y_int,color='r',s=65,fc="None",alpha=0.5,zorder=100)        
-        ax.axis("equal")
-            
         #Plot 3d
         sg.plot3d(coords="int")
         plane=sg.qhulls["Ring"][0]["plane"]
@@ -194,7 +180,7 @@ class Test(unittest.TestCase):
         sg.set_observer(nvec=[0,0,+1],center=None)
         sg.set_luz(nvec=[+1,0,0],center=None)
 
-        sg.plot3d(statemark=1)
+        sg.plot3d(coords="obs",statemark=1)
 
         #Semitransparent
         nspangles=50
@@ -371,41 +357,15 @@ class Test(unittest.TestCase):
         #Plot
         sg.reset_state()
         
-        sg.set_luz(nvec=sci.direction([10,0]))
+        sg.set_luz(nvec=sci.direction(10,0))
         sg.update_illumination_state()
 
-        sg.set_observer(nvec=sci.direction([30,20]))
+        sg.set_observer(nvec=sci.direction(30,20))
         sg.update_visibility_state()
 
         sg.fig2d=None
         sg.plot2d(center_at="Ring")
-        
-        #Interact
-        def visuals_interact(lon_luz=0,lat_luz=0,lon_obs=0,lat_obs=0):
-
-            lon_luz=float(lon_luz)
-            lat_luz=float(lat_luz)
-            lon_obs=float(lon_obs)
-            lat_obs=float(lat_obs)
-
-            #Plot
-            sg.reset_state()
-            sg.set_luz(nvec=sci.direction([lon_luz,lat_luz]))
-            sg.update_illumination_state()
-
-            sg.set_observer(nvec=sci.direction([lon_obs,lat_obs]))
-            sg.update_visibility_state()
-
-            sg.fig2d=None
-            sg.plot2d(center_at="Ring")
-
-        opciones=dict(continuous_update=False,readout_format=".3f")
-        interact(visuals_interact,
-                 lon_luz=widgets.FloatSlider(min=0,max=360,step=0.01,value=70,**opciones),
-                 lat_luz=widgets.FloatSlider(min=-90,max=90,step=0.01,value=0,**opciones),
-                 lon_obs=widgets.FloatSlider(min=0,max=360,step=0.01,value=35,**opciones),
-                 lat_obs=widgets.FloatSlider(min=-90,max=90,step=0.01,value=20,**opciones),
-                );
+        sg._interact_plot2d(center_at="Ring")
 
         Verbose.VERBOSITY=VERB_NONE
 

@@ -19,6 +19,8 @@ class Test(unittest.TestCase):
     def test_fun(self):
         p=Consts.ppm
         self.assertEqual([p],[1e6],[True]*1)
+        print(Consts.get_all())
+        print(Consts.get_physical())
 
 
 if __name__=="__main__":

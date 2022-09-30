@@ -33,11 +33,51 @@ class Test(unittest.TestCase):
         Plot.pryngles_mark(ax)
         
         #rgb
-        print(Misc.rgb([27,0.5,0.5]))
+        print(Plot.rgb([27,0.5,0.5]))
         
         #Color sample
-        Misc.rgb_sample(27)
+        Plot.rgb_sample(27)
         
+    def test_flyby(self):
+        
+        Verbose.VERBOSITY=VERB_SIMPLE
+        
+        nvecs=Plot.calc_flyby(normal=[0,0,1],lat=60)
+
+        fig=plt.figure()
+        ax=fig.add_subplot(111,projection='3d')
+
+        for i in range(len(nvecs)):
+            ax.scatter(nvecs[i,0],nvecs[i,1],nvecs[i,2],c='r',s=5)
+            ax.text(nvecs[i,0],nvecs[i,1],nvecs[i,2],i)
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        
+        Verbose.VERBOSITY=VERB_NONE
+
+    def test_animrb(self):
+        
+        Verbose.VERBOSITY=VERB_NONE
+        
+        sim=rb.Simulation()
+        ms=1
+        sim.add(m=1)
+        mp=1e-3
+        xp=0.3
+        vp=np.sqrt(sim.G*ms/xp)
+        sim.add(m=mp,x=xp,vy=vp)
+        mm=1e-8
+        xm=0.01
+        vm=np.sqrt(sim.G*mp/xm)
+        sim.add(m=mm,x=xp+xm,vy=vp+vm)
+        P=sim.particles[1].P
+
+        anim=Plot.animate_rebound(sim,filename="/tmp/animate-rebound.gif",tend=P,nsnap=5,interval=20)
+        
+        Verbose.VERBOSITY=VERB_NONE
+
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

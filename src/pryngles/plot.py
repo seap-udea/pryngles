@@ -26,6 +26,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from colorsys import hls_to_rgb
+import rebound as rb
+from tqdm import tqdm
 
 #Plotting in 3d
 import mpl_toolkits.mplot3d.art3d as art3d
@@ -37,7 +39,7 @@ from scipy.spatial.transform import Rotation
 
 class Plot(object):
     
-    def pathpatch_2d_to_3d(pathpatch,pivot=[0,0,0],zDir=[0,0,1]):
+    def _pathpatch_2d_to_3d(pathpatch,pivot=[0,0,0],zDir=[0,0,1]):
         """
         Create a patch in 3d around pivot in the direction of zDir
         
@@ -82,18 +84,30 @@ class Plot(object):
         Add a circle in 3d
         """
         pc = Circle(center[0:2], radius, **kwargs)
-        ax.add_patch(Plot.pathpatch_2d_to_3d(pc, center, zDir))
+        ax.add_patch(Plot._pathpatch_2d_to_3d(pc, center, zDir))
         
     def pryngles_mark(ax):
-        #Height of axe
+        """Add a water mark to a 2d or 3d plot.
+        
+        Parameters:
+        
+            ax: Class axes: 
+                Axe where the pryngles mark will be placed.
+        """
+        #Get the height of axe
         axh=ax.get_window_extent().transformed(ax.get_figure().dpi_scale_trans.inverted()).height
         fig_factor=axh/4
         
+        #Options of the water mark
         args=dict(
             rotation=270,ha='left',va='top',
             transform=ax.transAxes,color='pink',fontsize=8*fig_factor,zorder=100
         )
+        
+        #Text of the water mark
         mark=f"Pryngles {version}"
+        
+        #Choose the according to the fact it is a 2d or 3d plot
         try:
             ax.add_collection3d
             plt_text=ax.text2D
@@ -135,7 +149,7 @@ class Plot(object):
         dS=0.1
         for S in np.arange(0,1+dS,dS):
             for L in np.arange(0,1+dL,dL):
-                c=Circle((L,S),dL/2.5,color=Misc.rgb([H,L,S]))
+                c=Circle((L,S),dL/2.5,color=Plot.rgb([H,L,S]))
                 ax.add_patch(c)
                 ax.text(L,S,f"S={S:.1g},L={L:.1g}",ha='center',va='center',fontsize=6,color='y')
         ax.axis("off")
@@ -143,5 +157,97 @@ class Plot(object):
         plt.tight_layout()
 
 # ## Testing
+
+
+# ## Flybys
+
+def calc_flyby(normal=[0,0,1],start=0,stop=360,num=10,lat=0):
+    
+    """Calculate a flyby coordinates
+    
+    Parameters:
+        normal: array (3), default = [0,0,1]:
+            Normal to flyby plane.
+            
+        start: float, default = 0:
+            Start longitude.
+            
+        stop: float, default = 0:
+            Stop longitude.
+            
+        num: int, default = 10:
+            Number of points in flyby.
+            
+        lat: float, default = 0:
+            Constant latitude of flyby.
+    """
+
+    #Range of longitudes and latitudes
+    lonp=np.linspace(start,stop,num)
+    latp=lat*np.ones_like(lonp)
+    
+    #Rotation matrices
+    M,I=Science.rotation_matrix(normal,0)
+
+    #Compute directions
+    nvecs=np.zeros((num,3))
+    for i in range(num):
+        rp=Science.direction(lonp[i],latp[i])
+        nvecs[i]=spy.mxv(I,rp)
+
+    return nvecs
+
+Plot.calc_flyby=calc_flyby
+
+
+# ## Animate rebound
+
+def animate_rebound(sim,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval=100):
+
+    verbosity=Verbose.VERBOSITY
+    Verbose.VERBOSITY=VERB_NONE
+    
+    fig,ax=plt.subplots()
+
+    camera=Camera(fig)
+
+    for t in tqdm(np.linspace(tini,tend,nsnap)):
+        sim.integrate(t)
+        sim.move_to_com()
+        
+        for p in sim.particles:
+            xyz=p.xyz
+            ax.plot(xyz[0],xyz[1],marker='o',color='r')
+        
+        camera.snap()
+    
+    ax.axis("equal")
+    ax.grid()
+    
+    anim=camera.animate(interval=interval)
+    
+    Verbose.VERBOSITY=verbosity
+    
+    if filename is not None:
+        if 'gif' in filename:
+            anim.save(filename)
+            return anim
+        elif 'mp4' in filename:
+            ffmpeg=animation.writers["ffmpeg"]
+            metadata = dict(title='Pryngles Spangler Animation',
+                            artist='Matplotlib',
+                            comment='Movie')
+            w=ffmpeg(fps=15,metadata=metadata)
+            anim.save(filename,w)
+            return anim
+        else:
+            raise ValueError(f"Animation format '{filename}' not recognized")
+    else:
+        return anim
+
+    
+    return anim
+
+Plot.animate_rebound=animate_rebound
 
 

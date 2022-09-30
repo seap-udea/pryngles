@@ -51,7 +51,7 @@ sci=Science
         https://htmlcolorcodes.com/es/
    
     When searching for colors use:
-        Misc.rgb_sample(59)
+        Plot.rgb_sample(59)
 """
 #Type of spangles
 SPANGLE_COLORS=dict()
@@ -282,6 +282,76 @@ SPANGLER_KEY_FIELDS=["sphash","spangle_type","geometry",
 
 #Tolerance in area of the inner border
 SPANGLER_EPS_BORDER=0.01
+
+SPANGLER_COLUMNS_DOC="""
+SPANGLER_COLUMNS=odict({
+    "sphash":"",
+
+    #Type of spangle
+    "spangle_type":SPANGLE_SOLID_ROCK, #For a list of spangle types see the constants module.
+    "geometry":SAMPLER_GEOMETRY_CIRCLE, #Geometry of the spangle (see Sampler module constants)
+
+    #Lengh-scale
+    "scale":1, #The length scale of the body, eg. for a ring this is the outer radius
+
+    #Body parameters
+    "n_equ":[0,0,1], #Direction of the equator of the body with respect
+    "alpha_equ":0, #Zero meridian of equatorial system
+    "w":0, #Rotational angular velocity [rad/ut]
+    "q0":0, #Initial time [rad], Longitude (azimutal angle) are calculated as: q = q0 + w (t - t0)
+
+    #Coordinates of the spangle (cartesian and spherical) in the body-centric system
+    "center_equ":[0,0,0],#Center of the body with respect to barycenter
+    "x_equ":1,"y_equ":0,"z_equ":0, #Cartesian coordinates
+    "r_equ":1,"q_equ":0,"f_equ":0, #Spherical coordinates: q: longitude, f: latitude
+    "ns_equ":[0,0,1], #Unitary vector normal to the spangle
+
+    #Coordinates of the spangle (cartesian and spherical) in the ecliptic system
+    "center_ecl":[0,0,0],#Center of the body with respect to barycenter
+    "x_ecl":1,"y_ecl":0,"z_ecl":0, #Cartesian coordinates of the spangle
+    "ns_ecl":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
+
+    #Coordinates of the spangle (cartesian and spherical) in the intersection system
+    "center_int":[0,0,0],#Center of the body 
+    "x_int":1,"y_int":0,"z_int":0,#Cartesian coordinates
+    "ns_int":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
+    "rho_int":1,"az_int":0,"cost_int":0, #Pseudo cylindrical coordinates (rho, q, cos(theta))
+    "cos_int":1, #Angle between normal to spangle and direction of intersection
+    "d_int":1, #Distance of the Spangle to intersection
+    "z_cen_int":0, #z-coordiante of the center
+
+    #Coordinates of the spangle (cartesian and spherical) in the observer system
+    "center_obs":[0,0,0], #Center of the body
+    "x_obs":1,"y_obs":0,"z_obs":0, #Cartesian coordinates of the spangle
+    "ns_obs":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
+    "rho_obs":1,"az_obs":0,"cost_obs":0, #Cylindrical coordinates of the spangle: rho, q, cos(theta)
+    "cos_obs":1, #Angle between normal to spangle and direction of observer
+    "d_obs":1, #Distance of the Spangle to light-source
+    "z_cen_obs":0, #z-coordiante of the center
+    
+    #Coordinates of the spangle (cartesian and spherical) in the light-source system
+    "center_luz":[0,0,0],#Center of the body
+    "x_luz":1,"y_luz":0,"z_luz":0,#Calculated in the class
+    "ns_luz":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
+    "rho_luz":1,"az_luz":0,"cost_luz":0, #Cylindrical coordinates of the spangle: rho, q, cos(theta)
+    "cos_luz":1, #Angle between normal to spangle and direction of light-source
+    "d_luz":1, #Distance of the Spangle to light-source
+    "z_cen_luz":0, #z-coordiante of the center
+
+    #Geometrical parameters
+    "asp":1.0, #Effective area of the spangle
+    "dsp":1.0, #Effective diameter of spangle, dsp = 2*(asp/pi)**0.5
+
+    #Optical parameters
+    "albedo_gray_normal":1.0,
+    "tau_gray_optical":0.0,
+    
+    #Special states
+    "unset":True, #State has not been set
+    "hidden":False, #The spangle is not taken into account for photometry
+    "source":False, #The spangle belongs to a light-source (it does not reflect light)
+})
+"""
 
 class Spangler(PrynglesCommon):
     
@@ -735,6 +805,7 @@ def plot3d(self,
     qecl=True
     if 'ecl' not in coords:
         qecl=False
+
     scoords=coords
     coords=[f"x_{scoords}",f"y_{scoords}",f"z_{scoords}"]
     
@@ -784,24 +855,28 @@ def plot3d(self,
         if not self.data.loc[i,"illuminated"]:
             #In darkness
             state+="D."
-            color=Misc.rgb(color_hls) #No color modification
+            color=Plot.rgb(color_hls) #No color modification
             
         if self.data.loc[i,"transmit"]:
             #Transmitting
             state+="T."
-            color=Misc.rgb(color_hls) #No color modification
+            color=Plot.rgb(color_hls) #No color modification
 
         if not self.data.loc[i,"visible"]:
             #Not visible
             state+="N."
-            color=Misc.rgb([color_hls[0],
+            color=Plot.rgb([color_hls[0],
                             color_hls[1]/2, #Reduce level to half
                             color_hls[2]
                            ])
         else:
             #Invisible
             state+="V."
-            color=Misc.rgb(color_hls) #No color modification
+            color=Plot.rgb(color_hls) #No color modification
+            
+        if self.data.loc[i,"unset"]:
+            state+="U."
+            color=Plot.rgb([0,0.5,0])
             
         #Define alpha according to albedo
         alpha=alpha_base*self.data.albedo_gray_normal[i]
@@ -819,16 +894,6 @@ def plot3d(self,
         if statemark:
             if np.random.rand()>1-statemark:
                 ax.text(center[0],center[1],center[2],state,fontsize=6,color='w')
-
-    #Scatter plot of transmit
-    """
-    cond=(~self.data.hidden)&(self.data.transmit)&(~self.data.sphash.isin(not_plot))
-    ax.scatter(self.data[cond][coords[0]]-x_cen,
-               self.data[cond][coords[1]]-y_cen,
-               self.data[cond][coords[2]]-z_cen,
-               marker='v',s=10,ec='w',fc='None',alpha=0.5)
-    """
-        
         
     #Aspect
     ax.set_box_aspect([1,1,1])
@@ -860,28 +925,22 @@ def plot3d(self,
     ax.text(0,0,zmax,rf"$z_{{{scoords}}}$",color='w',alpha=0.5,fontsize=8)
     
     #Plot n_obs and n_luz vector only in the case of ecliptic system
+    increase=1.05*factor*maxval
     if qecl:
-        increase=1.05*factor*maxval
-        if "n_luz" in self.__dict__:
-            #Light
-            ax.quiver(+self.n_luz[0]*increase,+self.n_luz[1]*increase,+self.n_luz[2]*increase,
-                      -self.n_luz[0]*increase,-self.n_luz[1]*increase,-self.n_luz[2]*increase,
-                      color='y',alpha=0.7)
-            ax.text(self.n_luz[0]*increase,self.n_luz[1]*increase,self.n_luz[2]*increase,
-                    r"$n_{luz}$",color='w',alpha=0.7,fontsize=8,ha='left',va='bottom')
-
-        if "n_obs" in self.__dict__:
-            #Observer
-            ax.quiver(+self.n_obs[0]*increase,+self.n_obs[1]*increase,+self.n_obs[2]*increase,
-                      -self.n_obs[0]*increase,-self.n_obs[1]*increase,-self.n_obs[2]*increase,
-                      color='c',alpha=0.7)
-            ax.text(self.n_obs[0]*increase,self.n_obs[1]*increase,self.n_obs[2]*increase,
-                    r"$n_{obs}$",color='c',alpha=0.7,fontsize=8,ha='right',va='top')
-
-            r_obs,t_obs,f_obs=sci.spherical(self.n_obs)
-            ax.view_init(f_obs*Consts.rad,t_obs*Consts.rad)
-    else:
+        ax.quiver(+self.n_luz[0]*increase,+self.n_luz[1]*increase,+self.n_luz[2]*increase,
+                  -self.n_luz[0]*increase,-self.n_luz[1]*increase,-self.n_luz[2]*increase,
+                  color='y',alpha=0.7)
+        ax.text(self.n_luz[0]*increase,self.n_luz[1]*increase,self.n_luz[2]*increase,
+                r"$n_{luz}$",color='w',alpha=0.7,fontsize=8,ha='left',va='bottom')
+        ax.quiver(+self.n_obs[0]*increase,+self.n_obs[1]*increase,+self.n_obs[2]*increase,
+                  -self.n_obs[0]*increase,-self.n_obs[1]*increase,-self.n_obs[2]*increase,
+                  color='c',alpha=0.7)        
+        ax.text(self.n_obs[0]*increase,self.n_obs[1]*increase,self.n_obs[2]*increase,
+                r"$n_{obs}$",color='c',alpha=0.7,fontsize=8,ha='right',va='top')
         ax.view_init(30,60)
+    else:
+        r_obs,t_obs,f_obs=sci.spherical(self.n_obs)
+        ax.view_init(f_obs*Consts.rad,t_obs*Consts.rad)
         
     #Title
     ax.set_title(f"Spangler {self.shape}, N = {self.nspangles}",
@@ -1088,9 +1147,38 @@ def _calc_qhulls(self):
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]]),
                 plane=plane
             )]
-                
+
+def _plot_qhulls(self):
+    """Plot the convex hulls 
+    """
+    
+    if not self.qhulls:
+        raise AssertionError("You cannot plot convex hulls because none has been yet calculated.")
+    
+    fig,ax=plt.subplots()
+
+    for sphash,sphull in self.qhulls.items():
+        for qhull in sphull:
+            chull=qhull["qhull"]
+            if chull:
+                f=convex_hull_plot_2d(chull,ax)
+            
+    #Remove points corresponding to qhull
+    for l in fig.axes[0].get_children():
+        if type(l) is Line2D:
+            plt.setp(l,ms=0,zorder=100)
+
+    ax.scatter(self.data.x_int,self.data.y_int,color='r',s=65,fc="None",alpha=0.5,zorder=100)        
+    
+    ax.set_xlabel(r"$x_{int}$")
+    ax.set_ylabel(r"$y_{int}$")
+    ax.grid()
+    
+    ax.axis("equal")
+            
 Spangler.set_intersect=set_intersect
 Spangler._calc_qhulls=_calc_qhulls
+Spangler._plot_qhulls=_plot_qhulls
 
 
 def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
@@ -1221,7 +1309,9 @@ def plot2d(self,
            center_at=None,
            not_plot=[],
            axis=True,
-           fsize=5):
+           fsize=5,
+           newfig=True
+          ):
     """
     Plot spangle.
 
@@ -1245,6 +1335,8 @@ def plot2d(self,
         fsize: integer, default = 5:
             Size of figure
             
+        newfig: boolean, default = True:
+            If True a new figure is created.  The False value is intended for animations.
     """
     bgcolor='k'
     fig_factor=fsize/3.0
@@ -1280,7 +1372,7 @@ def plot2d(self,
     size_factor=10*fig_factor*maxval_full/maxval
         
     #Figure
-    if self.fig2d is None:
+    if (self.fig2d is None) or newfig:
         fig=plt.figure(figsize=(fsize,fsize))
         fig.patch.set_facecolor(bgcolor)
         ax=fig.add_subplot(111,facecolor=bgcolor)
@@ -1301,7 +1393,7 @@ def plot2d(self,
     #Illuminated
     cond=(data.visible)&(data.illuminated)
     verbose(VERB_SIMPLE,f"Visible and illuminated: {cond.sum()}")
-    colors[cond]=[Misc.rgb([SPANGLE_COLORS[stype][0],
+    colors[cond]=[Plot.rgb([SPANGLE_COLORS[stype][0],
                             SPANGLE_COLORS[stype][1]*min((cos_luz*cos_obs+0.3),1),
                             SPANGLE_COLORS[stype][2]],
                             to_hex=True) for stype,cos_luz,cos_obs in zip(data[cond].spangle_type,
@@ -1313,19 +1405,19 @@ def plot2d(self,
     #Not illuminated
     cond=(data.visible)&(~data.illuminated)
     verbose(VERB_SIMPLE,f"Visible and not illuminated: {cond.sum()}")
-    colors[cond]=Misc.rgb(SPANGLES_DARKNESS_COLOR,to_hex=True)
+    colors[cond]=Plot.rgb(SPANGLES_DARKNESS_COLOR,to_hex=True)
     sizes[cond]=size_factor*data.dsp[cond]*data.cos_obs[cond]
 
     if coords!="obs":
         #Not visible
         cond=(~data.visible)&(data[f"z_{coords}"]>0)
-        colors[cond]=Misc.rgb(SHADOW_COLOR_OBS,to_hex=True)
+        colors[cond]=Plot.rgb(SHADOW_COLOR_OBS,to_hex=True)
         sizes[cond]=size_factor*data.dsp[cond]*abs(data.cos_obs[cond])
 
     #Transmitting
     cond=(data.visible)&(data.transmit)&(data.illuminated)
     verbose(VERB_SIMPLE,f"Visible, illuminated and transmitting: {cond.sum()}")
-    colors[cond]=[Misc.rgb([SPANGLE_COLORS[stype][0],
+    colors[cond]=[Plot.rgb([SPANGLE_COLORS[stype][0],
                             SPANGLE_COLORS[stype][1]*min((cos_luz*cos_obs+0.3),1)/2,
                             SPANGLE_COLORS[stype][2]],
                             to_hex=True) for stype,cos_luz,cos_obs in zip(data[cond].spangle_type,
@@ -1334,18 +1426,15 @@ def plot2d(self,
                  ] #Object color
     sizes[cond]=0.5*size_factor*data.dsp[cond]*abs(data.cos_obs[cond])
     
+    #Unset
+    cond=(data.unset)
+    colors[cond]=Plot.rgb([0,0.5,0],to_hex=True)
+    sizes[cond]=size_factor*data.dsp[cond]
+    
     #Plot spangles
     sargs=dict(c=colors,sizes=sizes,marker=marker)
     self.ax2d.scatter(data[f"x_{coords}"]-x_cen,data[f"y_{coords}"]-y_cen,**sargs)
-    
-    #Plot transmitting marks
-    """
-    cond=(data.transmit)&(data.visible)&(data.illuminated)
-    self.ax2d.scatter(data[cond][f"x_{coords}"]-x_cen,
-               data[cond][f"y_{coords}"]-y_cen,
-               marker='v',s=10,ec='w',fc='None',alpha=0.1)
-    #"""
-    
+        
     #Ranges
     self.ax2d.set_xlim(-maxval,maxval)
     self.ax2d.set_ylim(-maxval,maxval)
@@ -1375,15 +1464,21 @@ def plot2d(self,
     phi=0
     if coords=="obs":
         lamb=self.rqf_obs[1]*Consts.rad
-        phi=self.rqf_obs[2]*Consts.rad        
+        phi=self.rqf_obs[2]*Consts.rad
+        coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
     elif coords=="luz":
         lamb=self.rqf_luz[1]*Consts.rad
         phi=self.rqf_luz[2]*Consts.rad
+        coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
     elif coords=="int":
         lamb=self.rqf_int[1]*Consts.rad
         phi=self.rqf_int[2]*Consts.rad
+    coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
 
-    label_obs=f"{coords} ($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
+    if coords=="ecl":
+        coords_label=""
+
+    label_obs=f"{coords} {coords_label}"
     self.ax2d.text(0.5,1.01,f"{label_obs}",
                  transform=self.ax2d.transAxes,ha='center',
                  color='w',fontsize=10*fig_factor)
@@ -1503,6 +1598,36 @@ def update_illumination_state(self):
 Spangler.update_intersection_state=update_intersection_state
 Spangler.update_visibility_state=update_visibility_state
 Spangler.update_illumination_state=update_illumination_state
+
+def _interact_plot2d(self,**plot2d_args):
+    #Interact
+    def visuals_interact(lon_luz=0,lat_luz=0,lon_obs=0,lat_obs=0):
+
+        lon_luz=float(lon_luz)
+        lat_luz=float(lat_luz)
+        lon_obs=float(lon_obs)
+        lat_obs=float(lat_obs)
+
+        #Plot
+        self.reset_state()
+        self.set_luz(nvec=sci.direction(lon_luz,lat_luz))
+        self.update_illumination_state()
+
+        self.set_observer(nvec=sci.direction(lon_obs,lat_obs))
+        self.update_visibility_state()
+
+        self.plot2d(**plot2d_args)
+
+    opciones=dict(continuous_update=False,readout_format=".3f")
+    interact(visuals_interact,
+             lon_luz=widgets.FloatSlider(min=0,max=360,step=0.01,value=70,**opciones),
+             lat_luz=widgets.FloatSlider(min=-90,max=90,step=0.01,value=0,**opciones),
+             lon_obs=widgets.FloatSlider(min=0,max=360,step=0.01,value=35,**opciones),
+             lat_obs=widgets.FloatSlider(min=-90,max=90,step=0.01,value=20,**opciones),
+            );
+
+    
+Spangler._interact_plot2d=_interact_plot2d
 
 
 def animate_plot2d(self,filename=None,

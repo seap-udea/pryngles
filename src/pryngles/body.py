@@ -24,6 +24,7 @@ from pryngles import *
 
 import spiceypy as spy
 import numpy as np
+from copy import deepcopy
 
 # ## Aliases
 
@@ -368,7 +369,7 @@ class Star(Body):
         sci.limb_darkening(0,self.limb_coeffs)
         
         #Store limb darkening normalization
-        self.norm_limb_darkening=LIMB_NORMALIZATIONS[hash(tuple(self.limb_coeffs))]
+        self.norm_limb_darkening=Science.LIMB_NORMALIZATIONS[hash(tuple(self.limb_coeffs))]
         
     def update_star(self,**props):
         """General update propeties of the Star

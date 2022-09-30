@@ -16,7 +16,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Pryngles module: Util
+# # Pryngles module: Miscellaneous
 
 from pryngles import *
 
@@ -24,6 +24,7 @@ from pryngles import *
 
 from collections import OrderedDict as odict
 from collections.abc import Iterable
+import inspect
 
 # ## Miscelaneous Class
 
@@ -53,8 +54,7 @@ class Misc(object):
         return os.path.join(ROOTDIR,'data',path);
     
     def print_df(df):
-        """
-        Print DataFrame.
+        """Print DataFrame.
         
         Parameters:
             df: Pandas DataFrame:
@@ -77,6 +77,11 @@ class Misc(object):
                     yield subc
             else:
                 yield i
+                
+    def get_methods(my_class):
+        """Get a list of the methods for class my_class
+        """
+        return sorted([member[0] for member in inspect.getmembers(my_class) if '__' not in member[0]])
                 
 Misc.__doc__=Misc_doc
 

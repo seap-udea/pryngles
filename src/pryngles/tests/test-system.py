@@ -79,6 +79,58 @@ class Test(unittest.TestCase):
 
         Verbose.VERBOSITY=VERB_NONE
 
+    def test_obs(self):
+        
+        global sys
+        
+        Verbose.VERBOSITY=VERB_NONE
+        
+        nspangles=100
+        
+        #Define system
+        sys=System(resetable=True)
+        
+        #Add objects
+        S=sys.add(bhash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
+        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,x=2)
+        
+        #Test setting observer without spangling
+        self.assertRaises(AssertionError,lambda:sys.set_observer(nvec=[1,0,0]))
+        
+        #Spangle system
+        sys.spangle_system()
+        
+        sys.set_observer(nvec=[-1,0,0])
+        sys.sg.plot3d()
+        
+        sys.set_observer(nvec=[0,0,1])
+        sys.sg.plot3d()
+        
+        Verbose.VERBOSITY=VERB_NONE
+
+    def test_setluz(self):
+        
+        global sys
+        
+        Verbose.VERBOSITY=VERB_NONE
+        
+        nspangles=100
+        sys=System()
+        S=sys.add("Star",bhash="Star",nspangles=nspangles,m=1,radius=1,x=0,y=0,vy=0)
+        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,m=1e-3,
+                  x=2,vy=np.sqrt(sys.sim.G/2))
+        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,
+                  x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
+        R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
+        sys.spangle_system()
+
+        sys.set_observer([0,0,1])
+        sys.set_luz()
+        
+        sys.sg.plot3d()
+        
+        Verbose.VERBOSITY=VERB_NONE
+
     def test_spangle(self):
         
         global sys
@@ -129,35 +181,6 @@ class Test(unittest.TestCase):
 
         Verbose.VERBOSITY=VERB_NONE
 
-    def test_obs(self):
-        
-        global sys
-        
-        Verbose.VERBOSITY=VERB_NONE
-        
-        nspangles=100
-        
-        #Define system
-        sys=System(resetable=True)
-        
-        #Add objects
-        S=sys.add(bhash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
-        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,x=2)
-        
-        #Test setting observer without spangling
-        self.assertRaises(AssertionError,lambda:sys.set_observer(nvec=[1,0,0]))
-        
-        #Spangle system
-        sys.spangle_system()
-        
-        sys.set_observer(nvec=[-1,0,0])
-        sys.sg.plot3d()
-        
-        sys.set_observer(nvec=[0,0,1])
-        sys.sg.plot3d()
-        
-        Verbose.VERBOSITY=VERB_NONE
-
     def test_reset(self):
         
         global sys
@@ -181,29 +204,6 @@ class Test(unittest.TestCase):
         sys.reset()
         sys.sg.plot3d()
 
-        Verbose.VERBOSITY=VERB_NONE
-
-    def test_setluz(self):
-        
-        global sys
-        
-        Verbose.VERBOSITY=VERB_NONE
-        
-        nspangles=100
-        sys=System()
-        S=sys.add("Star",bhash="Star",nspangles=nspangles,m=1,radius=1,x=0,y=0,vy=0)
-        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,m=1e-3,
-                  x=2,vy=np.sqrt(sys.sim.G/2))
-        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,
-                  x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
-        R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
-        sys.spangle_system()
-
-        sys.set_observer([0,0,1])
-        sys.set_luz()
-        
-        sys.sg.plot3d()
-        
         Verbose.VERBOSITY=VERB_NONE
 
     def test_int(self):

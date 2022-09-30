@@ -29,34 +29,13 @@ from scipy.integrate import quad
 from scipy.spatial import ConvexHull
 from celluloid import Camera # getting the camera
 import rebound as rb
+import matplotlib.pyplot as plt
 
 # ## The Science class
 # 
 # The Science class is a class with routines intended to perform a wide diversity of mathematical, physical and astronomical calculations.
 
 class Science(PrynglesCommon):pass
-
-# ### Template method
-
-def template(foo=1):
-    """
-    Method
-
-    Parameters:
-
-        foo: type [units], default = 1:
-            Description.
-
-    Return:
-
-        fee: type [units]:
-            Desctiption.
-
-    """
-    return foo
-
-Science.template=template
-
 
 # ### Cartesian to spherical
 
@@ -148,22 +127,22 @@ def cartesian(rqf):
     """
     return spy.latrec(rqf[0],rqf[1],rqf[2])
 
-def direction(n):
+def direction(*args):
     """Calculate the direction on which a vector is pointing
     
     Parameters:
-        n: array:
-            If len(n)==2, components are longitude and latitude of the direction (in degrees).
-            If len(n)==3, components are cartisian coordinates of the vector n.
+        args: array:
+            If len(args)==2, components are longitude and latitude of the direction (in degrees).
+            If len(args)==3, components are cartisian coordinates of the vector n.
             
     Return:
 
-        If len(n)==2:
+        If len(args)==2:
         
-            nvec: array(3):
+            vx,vy,vz: float:
                 Cartesian components of the vector.
 
-        If len(n)==3:
+        If len(args)==2:
     
             lamb: float [degrees]:
                 Longitude (angle with respect to x-axis).
@@ -171,15 +150,17 @@ def direction(n):
             beta: float [degrees]:
                 Latitude (elevation angle with respect to xy-plane).
     """
-    if len(n)==3:
-        rqf=spherical(n)
+    if len(args)==3:
+        rqf=spherical(list(args))
         return rqf[1]*Consts.rad,rqf[2]*Consts.rad
-    elif len(n)==2:
-        if abs(n[1])>90:
+    elif len(args)==2:
+        if abs(args[1])>90:
             raise ValueError("Elevation angle should be in the interval [-90,90]")
-        nvec=cartesian([1,n[0]*Consts.deg,n[1]*Consts.deg])
+        nvec=cartesian([1,args[0]*Consts.deg,args[1]*Consts.deg])
         return nvec
-
+    else:
+        raise ValueError("You provided a wrong number of arguments '{args}'.  It should be 2 or 3'")
+    
 Science.spherical=spherical
 Science.cospherical=cospherical
 Science.pcylindrical=pcylindrical
@@ -218,10 +199,11 @@ def rotation_matrix(ez,alpha):
 Science.rotation_matrix=rotation_matrix
 
 
-LIMB_NORMALIZATIONS=dict()
+Science.LIMB_NORMALIZATIONS=dict()
 
 def limb_darkening(rho,cs=[0.6562],N=None):
-    """
+    """Limb darkening computation
+    
     Parameters:
         rho: float:
             Distance to center of the star in units of stellar radius.
@@ -262,13 +244,13 @@ def limb_darkening(rho,cs=[0.6562],N=None):
     #Calculate normalization constant
     if N is None:
         chash=hash(tuple(cs))
-        if chash in LIMB_NORMALIZATIONS:
-            N=LIMB_NORMALIZATIONS[chash]
+        if chash in Science.LIMB_NORMALIZATIONS:
+            N=Science.LIMB_NORMALIZATIONS[chash]
         else:
             integrand=lambda rho:Science.limb_darkening(rho,cs,N=1)*2*np.pi*rho
             N=quad(integrand,0.0,1.0,epsrel=1e-5)[0]
             verbose(VERB_VERIFY,f"Normalization of limb darkening function for cs = {cs}, N = {N}")
-            LIMB_NORMALIZATIONS[chash]=N
+            Science.LIMB_NORMALIZATIONS[chash]=N
             
     if order==0:
         I=np.ones_like(rho)
@@ -349,7 +331,7 @@ Science.points_in_hull=points_in_hull
 # ## Plane
 
 class Plane(PrynglesCommon):
-    """Get plane coefficients and coordinates.
+    """A plane in 3d.
     
     Initialization parameters:
         
@@ -503,79 +485,5 @@ class Plane(PrynglesCommon):
         ax.set_zlim(-f*maxval,+f*maxval)
 
 Science.Plane=Plane
-
-
-# ## Flybys
-
-def calc_flyby(normal=[0,0,1],start=0,stop=360,num=10,lat=0):
-    
-    """Calculate a flyby coordinates
-    
-    Parameters:
-        normal: array (3), default = [0,0,1]:
-            Normal to flyby plane.
-            
-        start: float, default = 0:
-            Start longitude.
-            
-        stop: float, default = 0:
-            Stop longitude.
-            
-        num: int, default = 10:
-            Number of points in flyby.
-            
-        lat: float, default = 0:
-            Constant latitude of flyby.
-    """
-
-    #Range of longitudes and latitudes
-    lonp=np.linspace(start,stop,num)
-    latp=lat*np.ones_like(lonp)
-    
-    #Rotation matrices
-    M,I=Science.rotation_matrix(normal,0)
-
-    #Compute directions
-    nvecs=np.zeros((num,3))
-    for i in range(num):
-        rp=Science.direction([lonp[i],latp[i]])
-        nvecs[i]=spy.mxv(I,rp)
-
-    return nvecs
-
-Science.calc_flyby=calc_flyby
-
-
-# ## Animate rebound
-
-def animate_rebound(sim,tini=0,tend=2*np.pi,nsnap=10,interval=100):
-
-    verbosity=Verbose.VERBOSITY
-    Verbose.VERBOSITY=VERB_NONE
-    
-    fig,ax=plt.subplots()
-
-    camera=Camera(fig)
-
-    for t in np.linspace(tini,tend,nsnap):
-        sim.integrate(t)
-        sim.move_to_com()
-        
-        for p in sim.particles:
-            xyz=p.xyz
-            ax.plot(xyz[0],xyz[1],marker='o',color='r')
-        
-        camera.snap()
-    
-    ax.axis("equal")
-    ax.grid()
-    
-    anim=camera.animate(interval=interval)
-    
-    Verbose.VERBOSITY=verbosity
-    
-    return anim
-
-Science.animate_rebound=animate_rebound
 
 

@@ -32,6 +32,9 @@ class Test(unittest.TestCase):
         print(list(Misc.flatten(["hola"])))
         print(list(Misc.flatten(["hola",["perro","gato"]])))
         
+        #Get methods
+        print(Misc.get_methods(Misc))
+        
 
 if __name__=="__main__":
         unittest.main(argv=['first-arg-is-ignored'],exit=False)

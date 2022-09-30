@@ -25,7 +25,7 @@
 
 # This is the initialization file of the `Pryngles` package.
 
-# ## Useful packages
+# ## Packages common to all modules
 
 import unittest
 import warnings
@@ -160,15 +160,22 @@ class PrynglesCommon(object):
 # ## Pryngles modules
 
 from pryngles.version import *
-from pryngles.util import *
+
+#General modules
 from pryngles.consts import *
+from pryngles.misc import *
 from pryngles.science import *
 from pryngles.plot import *
+
+#Core modules
 from pryngles.sampler import *
 from pryngles.spangler import *
 from pryngles.body import *
 from pryngles.system import *
+
+#Legacy modules
 from pryngles.legacy import *
+
 #Reset verbosity
 Verbose.VERBOSITY=VERB_NONE
 

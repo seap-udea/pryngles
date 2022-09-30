@@ -362,7 +362,7 @@ def remove(self,bhash):
 System.remove=remove
 
 
-# ## Spangle System
+# ## Spnagle System, Set Observer and Set Luz
 
 def spangle_system(self):
     """Generate the spangles of the objects in the system
@@ -419,7 +419,61 @@ def spangle_system(self):
     #Already spangled
     self._spangled=True
 
+def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
+    """Set the position of the observer
+    """
+    #Only set observer if it is spangled
+    self.alpha_obs=alpha
+    self.center_obs=center
+    
+    if self._is_spangled():
+        
+        #Set observer
+        self.sg.set_observer(nvec=nvec,alpha=self.alpha_obs,center=self.center_obs)
+        self.d_obs=self.sg.d_obs
+        self.n_obs=self.sg.n_obs.copy()
+        self.rqf_obs=self.sg.rqf_obs.copy()
+        
+        #Update visibility
+        self.sg.update_visibility_state()
+        
+    else:
+        raise AssertionError("You must first spangle system before setting observer direction.")
+        
+def set_luz(self):
+    """Set light in the system
+    """
+    if self._is_spangled():
+        
+        for bhash,body in self.bodies.items():
+            
+            if body.kind == "Star":
+                continue
+                 
+            #Get center of body
+            center=body.center_ecl
+                    
+            #Get source and center
+            source=self._get_source(body)
+            center_source=source.center_ecl
+            
+            verbose(VERB_VERIFY,f"Calculating illumination for '{bhash}' coming from '{source.bhash}' @ {center_source}")
+            
+            #Get direction of light
+            nluz=center_source-center
+            
+            #Set light for this body
+            self.sg.set_luz(nvec=nluz,center=center_source,sphash=bhash)
+            self.sg.update_illumination_state()
+            
+    else:
+        raise AssertionError("You must first spangle system before setting light.")
+        
+System.set_luz=set_luz
+System.set_observer=set_observer
 System.spangle_system=spangle_system
+
+
 
 
 # ### Miscelaneous methods
@@ -455,30 +509,6 @@ def update_body(self,body,**props):
 System.update_body=update_body
 
 
-def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
-    """Set the position of the observer
-    """
-    #Only set observer if it is spangled
-    self.alpha_obs=alpha
-    self.center_obs=center
-    
-    if self._is_spangled():
-        
-        #Set observer
-        self.sg.set_observer(nvec=nvec,alpha=self.alpha_obs,center=self.center_obs)
-        self.d_obs=self.sg.d_obs
-        self.n_obs=self.sg.n_obs.copy()
-        self.rqf_obs=self.sg.rqf_obs.copy()
-        
-        #Update visibility
-        self.sg.update_visibility_state()
-        
-    else:
-        raise AssertionError("You must first spangle system before setting observer direction.")
-        
-System.set_observer=set_observer
-
-
 def reset(self):
     """Reset system to spangling state
     """
@@ -489,40 +519,6 @@ def reset(self):
         print("System is not resetable. Use resetable = True when defining the System or when you spangle it.")
     
 System.reset=reset
-
-
-# ## Set luz
-
-def set_luz(self):
-    """Set light in the system
-    """
-    if self._is_spangled():
-        
-        for bhash,body in self.bodies.items():
-            
-            if body.kind == "Star":
-                continue
-                 
-            #Get center of body
-            center=body.center_ecl
-                    
-            #Get source and center
-            source=self._get_source(body)
-            center_source=source.center_ecl
-            
-            verbose(VERB_VERIFY,f"Calculating illumination for '{bhash}' coming from '{source.bhash}' @ {center_source}")
-            
-            #Get direction of light
-            nluz=center_source-center
-            
-            #Set light for this body
-            self.sg.set_luz(nvec=nluz,center=center_source,sphash=bhash)
-            self.sg.update_illumination_state()
-            
-    else:
-        raise AssertionError("You must first spangle system before setting light.")
-        
-System.set_luz=set_luz
 
 
 def integrate(self,*args,**kwargs):
@@ -572,14 +568,14 @@ def animate_integration(self,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval
     Verbose.VERBOSITY=VERB_NONE
     
     self.sg.fig2d=None
-    self.sg.plot2d(coords=coords,axis=False)
+    self.sg.plot2d(coords=coords,axis=False,newfig=False)
     camera=Camera(self.sg.fig2d)
     
     for t in tqdm(np.linspace(tini,tend,nsnap)):
         self.integrate(t)
         self.set_observer(nvec=self.n_obs)
         self.set_luz()
-        self.sg.plot2d(coords=coords,axis=False)
+        self.sg.plot2d(coords=coords,axis=False,newfig=False)
         camera.snap()
     
     anim=camera.animate(interval=interval)

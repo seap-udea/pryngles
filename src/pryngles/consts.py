@@ -103,4 +103,25 @@ Consts.rsaturn=60268e3 #m, equatorial radius, source:
 RAD=Consts.rad
 DEG=Consts.deg
 
+def get_physical():
+    import pryngles as pr
+    all_constants=[]
+    for key in Consts.__dict__.keys():
+        patterns = "^[a-z]+$"
+        if re.search(patterns,key):
+            all_constants+=[key]
+    return sorted(all_constants)
+
+def get_all():
+    import pryngles as pr
+    all_constants=[]
+    for key in pr.__dict__.keys():
+        patterns = "^[A-Z_]+$"
+        if re.search(patterns,key):
+            all_constants+=[key]
+    return sorted(all_constants)
+
+Consts.get_physical=get_physical
+Consts.get_all=get_all
+
 

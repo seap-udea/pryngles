@@ -79,12 +79,18 @@ Sampler_doc = f"""    Fibonacci sampling of disks and spheres.
 
     Atributes to load data from presets:
 
-        preset: string, default = None:
+        preset: tupe, default = None:
             If set, we load a preset sample from disk of the type preset.
-            Possible values: "sphere", "circle", "ring"
-            
-        ri: float, default = 0:
-            Inner radius of the ring when preset = "ring"
+            preset should have two components: 
+
+                geometry: string:
+                    Possible values: "sphere", "circle", "ring"
+
+                geometry_args: dict:
+                    Arguments of the routine to generate sample from preset.  Example:
+
+                        ri: float, default = 0:
+                            Inner radius of the ring when preset = "ring"
                 
     Secondary attributes:
     
@@ -393,6 +399,9 @@ def gen_ring(self, ri=0.5, perturbation=1, boundary=2):
     if self.N < SAMPLER_MIN_RING:
         raise ValueError(f"The number of points for a ring shouldn't be lower than {SAMPLER_MIN_RING}.  You provided {self.N}")
 
+    if ri >=1 :
+        raise ValueError(f"The radius of the inner ring should be less than 1 (r ={ri} provided)")
+        
     #Compute effective number
     self.N = int(self.N / (1-ri**2))
     self.gen_circle(perturbation,boundary)

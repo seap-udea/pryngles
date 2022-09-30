@@ -16,19 +16,6 @@
 import unittest
 from pryngles import *
 class Test(unittest.TestCase):
-    def test_temp(self):
-        
-        #Test
-        Science.template()
-        """
-        self.assertEqual(self.P.Nr,8,True)
-        self.assertEqual(np.isclose([P.physics.wrot],
-                                    [2*np.pi/PlanetDefaults.physics["prot"]],
-                                    rtol=1e-7),
-                         [True]*1)
-        self.assertRaises(AssertionError,lambda:Observer(primary="Nada"))
-        """
-        
     def test_coords(self):
         
         #Test axis
@@ -76,9 +63,8 @@ class Test(unittest.TestCase):
             print(f"Octant {i+1}:",xyz) 
             
         #Test direction
-        n=[120,45]
-        nvec=direction(n)
-        print(n,nvec,direction(nvec))
+        nvec=direction(120,45)
+        print(nvec,direction(*nvec))
 
     def test_rot(self):
         
@@ -123,7 +109,7 @@ class Test(unittest.TestCase):
 
         rng = np.random.default_rng()
         points = rng.random((30, 2))
-        hull = ConvexHull(points)
+        hull = Science.get_convexhull(points)
 
         ps = rng.random((30, 2))-0.5
         cond=Science.points_in_hull(ps,hull)
@@ -166,46 +152,6 @@ class Test(unittest.TestCase):
         print("Projection: ",v)
         plane.plot_plane(p=p,alpha=0.1,color='r')
 
-        Verbose.VERBOSITY=VERB_NONE
-
-    def test_flyby(self):
-        
-        Verbose.VERBOSITY=VERB_SIMPLE
-        
-        nvecs=calc_flyby(normal=[0,0,1],lat=60)
-
-        fig=plt.figure()
-        ax=fig.add_subplot(111,projection='3d')
-
-        for i in range(len(nvecs)):
-            ax.scatter(nvecs[i,0],nvecs[i,1],nvecs[i,2],c='r',s=5)
-            ax.text(nvecs[i,0],nvecs[i,1],nvecs[i,2],i)
-
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-        
-        Verbose.VERBOSITY=VERB_NONE
-
-    def test_animrb(self):
-        
-        Verbose.VERBOSITY=VERB_NONE
-        
-        sim=rb.Simulation()
-        ms=1
-        sim.add(m=1)
-        mp=1e-3
-        xp=0.3
-        vp=np.sqrt(sim.G*ms/xp)
-        sim.add(m=mp,x=xp,vy=vp)
-        mm=1e-8
-        xm=0.01
-        vm=np.sqrt(sim.G*mp/xm)
-        sim.add(m=mm,x=xp+xm,vy=vp+vm)
-        P=sim.particles[1].P
-
-        anim=Science.animate_rebound(sim,tend=P,nsnap=100,interval=20)
-        
         Verbose.VERBOSITY=VERB_NONE
 
 
