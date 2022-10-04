@@ -353,7 +353,7 @@ class Test(unittest.TestCase):
         sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
         sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,2])
+        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,-2])
         sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
         sps+=[sg]
         sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+4.0,0.0,0.0])

@@ -265,7 +265,7 @@ SPANGLER_COLUMNS.update(SPANGLER_SOURCE_STATES)
 SPANGLER_EQUIV_COL=dict(obs="visible",int="intersect",luz="illuminated")
 
 #Columns to copy when calculating visibility and illumination
-SPANGLER_COL_COPY=["center","x","y","z","ns","rho","az","cost","cos","azim","d","z_cen"]
+SPANGLER_COL_COPY=["center","x","y","z","ns","rho","az","cosf","cos","azim","d","z_cen"]
 SPANGLER_COL_LUZ=[column+"_luz" for column in SPANGLER_COL_COPY]
 SPANGLER_COL_OBS=[column+"_obs" for column in SPANGLER_COL_COPY]
 SPANGLER_COL_INT=[column+"_int" for column in SPANGLER_COL_COPY]
@@ -303,6 +303,7 @@ SPANGLER_KEY_FIELDS=["sphash","spangle_type","geometry",
 SPANGLER_EPS_BORDER=0.01
 
 SPANGLER_COLUMNS_DOC="""
+#@consts:Spangler
 #Columns of spangling
 SPANGLER_COLUMNS=odict({
     "sphash":"",
@@ -329,13 +330,15 @@ SPANGLER_COLUMNS=odict({
     #Coordinates of the spangle (cartesian and spherical) in the ecliptic system
     "center_ecl":[0,0,0],#Center of the body with respect to barycenter
     "x_ecl":1,"y_ecl":0,"z_ecl":0, #Cartesian coordinates of the spangle
+    "wx_ecl":[1,0,0],#y-axis on the surface of the tangent plane to the spangle: wx = (wy x ns)
+    "wy_ecl":[0,1,0],#y-axis on the surface of the tangent plane to the spangle: wy = (ns x ez)
     "ns_ecl":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
 
     #Coordinates of the spangle (cartesian and spherical) in the intersection system
     "center_int":[0,0,0],#Center of the body 
     "x_int":1,"y_int":0,"z_int":0,#Cartesian coordinates
     "ns_int":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
-    "rho_int":1,"az_int":0,"cost_int":0, #Pseudo cylindrical coordinates (rho, q, cos(theta))
+    "rho_int":1,"az_int":0,"cosf_int":0, #Pseudo cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_int":1, #Angle between normal to spangle and direction of intersection
     "azim_int":0, #Azimuth of the direction of intersection
     "d_int":1, #Distance of the Spangle to intersection
@@ -346,7 +349,7 @@ SPANGLER_COLUMNS=odict({
     "center_obs":[0,0,0], #Center of the body
     "x_obs":1,"y_obs":0,"z_obs":0, #Cartesian coordinates of the spangle
     "ns_obs":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
-    "rho_obs":1,"az_obs":0,"cost_obs":0, #Cylindrical coordinates of the spangle: rho, q, cos(theta)
+    "rho_obs":1,"az_obs":0,"cosf_obs":0, #Cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_obs":1, #Angle between normal to spangle and direction of observer
     "azim_obs":0, #Azimuth of the direction of the observer
     "d_obs":1, #Distance of the Spangle to light-source
@@ -357,7 +360,7 @@ SPANGLER_COLUMNS=odict({
     "center_luz":[0,0,0],#Center of the body
     "x_luz":1,"y_luz":0,"z_luz":0,#Calculated in the class
     "ns_luz":[0,0,1],#Unitary vector normal to the spangle, calculated in the class
-    "rho_luz":1,"az_luz":0,"cost_luz":0, #Cylindrical coordinates of the spangle: rho, q, cos(theta)
+    "rho_luz":1,"az_luz":0,"cosf_luz":0, #Cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_luz":1, #Angle between normal to spangle and direction of light-source
     "azim_luz":0, #Azimuth of the direction of the light-source
     "d_luz":1, #Distance of the Spangle to light-source
@@ -1095,6 +1098,12 @@ def set_intersect(self,
         Coordinates of the spangles in the intersection system, (x_int,y_int,z_int).
 
         Normal to spangles in the intersection system, ns_int.
+        
+        
+    Notes:
+        If the intersection direction is in the center of the body (for instance, when a ring or a bubble 
+        is illuminated from the center), set intersect to True for all spangles and compute the distance and
+        relative orientation (cos_int) of the spangles correspondingly.
 
     """
     
@@ -1148,6 +1157,10 @@ def set_intersect(self,
     else:
         self.data.loc[cond,"z_cen_int"]=np.array(center_int)[:,2]
 
+    """
+    Change here to include the possibility of intersection from the center of a body
+    """
+        
     #Pseudo-cylindrical coordinates in the observer system
     self.data.loc[cond,["rho_int","az_int","cost_int"]]=        [sci.pcylindrical(r) for r in          np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
 
@@ -1731,7 +1744,22 @@ def update_illumination_state(self):
     self.data.illuminated=self.data.illuminated&self.data.intersect
     
     #Not intersected and spangles in the direction of the light-source are for sure shadowed spangles
-    self.data.shadow=(self.data.shadow)|((~self.data.intersect)&(self.data.cos_int>0))
+    #Condition for visibility
+    """
+    | shadow
+    & ~intersect : spangle does not intersect
+        (
+            | cos_obs > 0: spangle it is towards the observer
+            | Spangle type is semitransparent
+        )
+    """
+    self.data.shadow=    (self.data.shadow)|    (
+        (~self.data.intersect)&\
+        (
+            (self.data.cos_int>0)|
+            (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
+        )
+    )
     
     #Stellar spangles are always illuminated
     cond=(self.data.spangle_type==SPANGLE_STELLAR)

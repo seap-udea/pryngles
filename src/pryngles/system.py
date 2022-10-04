@@ -125,7 +125,11 @@ class System(PrynglesCommon):
         
         #Check if spangled
         self._spangled=False
-
+        
+        #Check if observer has been set
+        self._observer_set=False
+        self._luz_set=False
+        
         #Initialize spangler object
         self.sg=None
         
@@ -141,9 +145,16 @@ class System(PrynglesCommon):
     def update_units(self,units):
         """Update units of the system
         """
-        self.units=units
+        #Check units
+        if units[0] not in rb.units.lengths_SI:
+            raise ValueError(f"Length unit provided '{units[0]}' is not recognized by Rebound.  Use one of these: {tuple(rb.units.lengths_SI.keys())}")
+        if units[1] not in rb.units.masses_SI:
+            raise ValueError(f"Mass unit provided '{units[1]}' is not recognized by Rebound.  Use one of these: {tuple(rb.units.masses_SI.keys())}")
+        if units[2] not in rb.units.times_SI:
+            raise ValueError(f"Time unit provided '{units[2]}' is not recognized by Rebound.  Use one of these: {tuple(rb.units.times_SI.keys())}")
         
-        #Units
+        #Units        
+        self.units=units
         self._ul,self._um,self._ut=self.units
         self.sim.units=self.units
         
@@ -176,7 +187,11 @@ class System(PrynglesCommon):
         
     def _is_spangled(self):
         return True if self.sg else False
-        
+    
+    def reset_state(self):
+        self.sg.reset_state()
+        self._observer_set=False
+
     def save_to(self,filename):
         """Save system from file
         
@@ -274,7 +289,9 @@ def add(self,kind="Star",primary=None,**props):
         raise ValueError(f"Object kind '{kind}' is not recognized.")
 
     #Create body
+    props.update(dict(hash_by_kind=True))
     exec(f"self.__body={kind}(primary=primary,**props)")
+    #del props["hash_by_kind"]
     
     if self.__body.bhash in self.bodies:
         raise ValueError(f"An object with hash '{self.__body.bhash}' has been already added.")
@@ -428,6 +445,9 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     
     if self._is_spangled():
         
+        #At changing the observer, reset state
+        self.sg.reset_state()
+        
         #Set observer
         self.sg.set_observer(nvec=nvec,alpha=self.alpha_obs,center=self.center_obs)
         self.d_obs=self.sg.d_obs
@@ -437,18 +457,45 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
         #Update visibility
         self.sg.update_visibility_state()
         
+        #Check that observer has been set
+        self._observer_set=True
+        
     else:
         raise AssertionError("You must first spangle system before setting observer direction.")
         
-def set_luz(self):
-    """Set light in the system
+def set_luz(self,source=None):
+    """Set illumination in the system.
+    
+    Parameters:
+        source: string, default = None:
+            Body hash of the source with respect the illumination is computed.
+            
+    Update:
+        States: illuminated, shadow, hidden_by_luz
     """
     if self._is_spangled():
+        
+        if not self._observer_set:
+            raise AssertionError("You must first set observer before setting light.")
         
         for bhash,body in self.bodies.items():
             
             if body.kind == "Star":
                 continue
+                
+            """
+                If it is a ring of a planet: 
+                - No independent update of illumination required.
+                - When illuminating the planet, illuminate the ring
+                
+                If it is a ring around the source of light:
+                - All spangles illuminated
+                - No illumination required to calculate the shadows of the other bodies.
+                - Calculate (because it is not calculated with ):
+                  * cos_luz
+                  * d_luz
+                - This procedure should be included in the Spangler module.
+            """
                  
             #Get center of body
             center=body.center_ecl
@@ -465,7 +512,8 @@ def set_luz(self):
             #Set light for this body
             self.sg.set_luz(nvec=nluz,center=center_source,sphash=bhash)
             self.sg.update_illumination_state()
-            
+        
+        self._luz_set=True
     else:
         raise AssertionError("You must first spangle system before setting light.")
         

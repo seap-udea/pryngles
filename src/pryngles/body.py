@@ -139,6 +139,7 @@ BODY_DEFAULTS=dict()
 BODY_DEFAULTS.update(odict(
     
     bhash=None,
+    hash_by_kind=False,
     
     #Orbit
     m=1,
@@ -174,8 +175,11 @@ class Body(PrynglesCommon):
         #Hash object
         if 'bhash' in props:
             bhash=self.bhash=str(props["bhash"])
+        elif 'hash_by_kind' in props:
+            bhash=self.bhash=self.kind
         else:
             bhash=self.bhash=str(hash(self))
+            
 
         #Update childs and parent
         if primary is not None:

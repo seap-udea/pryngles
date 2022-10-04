@@ -49,7 +49,7 @@ class Test(unittest.TestCase):
         sys=System()
         S=sys.add(m=8,radius=4,x=5,vy=2)
         P=sys.add("Planet",primary=S,radius=2,x=1)
-        M=sys.add("Planet",primary=P,radius=2,x=2)
+        M=sys.add("Planet",bhash="Moon",primary=P,radius=2,x=2)
         R=sys.add("Ring",primary=P,fi=1.3,fe=2.3)
         
         for particle in sys.sim.particles:
@@ -91,8 +91,8 @@ class Test(unittest.TestCase):
         sys=System(resetable=True)
         
         #Add objects
-        S=sys.add(bhash="Star",nspangles=nspangles,m=8,radius=1,x=0,vy=2)
-        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,x=2)
+        S=sys.add(nspangles=nspangles,m=8,radius=1,x=0,vy=2)
+        P=sys.add("Planet",primary=S,nspangles=nspangles,radius=0.2,x=2)
         
         #Test setting observer without spangling
         self.assertRaises(AssertionError,lambda:sys.set_observer(nvec=[1,0,0]))
@@ -116,18 +116,29 @@ class Test(unittest.TestCase):
         
         nspangles=100
         sys=System()
-        S=sys.add("Star",bhash="Star",nspangles=nspangles,m=1,radius=1,x=0,y=0,vy=0)
-        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,m=1e-3,
-                  x=2,vy=np.sqrt(sys.sim.G/2))
-        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,
-                  x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
-        R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
+        S=sys.add("Star",nspangles=nspangles,m=1,radius=1,x=0,y=0,vy=0)
+        orbit=dict(x=2,vy=np.sqrt(sys.sim.G/2))
+        P=sys.add("Planet",primary=S,nspangles=nspangles,radius=0.2,m=1e-3,**orbit)
+        R=sys.add("Ring",primary=P,nspangles=nspangles,fi=1.3,fe=2.3,i=-20*Consts.deg)
+        orbit=dict(x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
+        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,**orbit)
+
+        """
+        orbit=dict(x=1.5,y=0,vy=np.sqrt(sys.sim.G/1))
+        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,**orbit)
+        R=sys.add("Ring",primary=P,nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
+        orbit=dict(x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
+        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,**orbit)
+        """
+        
         sys.spangle_system()
 
+        sys.reset_state()
         sys.set_observer([0,0,1])
         sys.set_luz()
         
-        sys.sg.plot3d()
+        sys.sg.plot3d(center_at="Ring")
+        sys.sg.plot2d(center_at="Ring")
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -227,7 +238,12 @@ class Test(unittest.TestCase):
         sys.set_observer([0,0,1])
         sys.set_luz()
         
-        sys.sg.plot3d()
+        sys.integrate(2)
+        
+        sys.set_observer([0,0,1])
+        sys.set_luz()
+
+        sys.sg.plot3d(center_at="Ring")
         
         Verbose.VERBOSITY=VERB_NONE
 

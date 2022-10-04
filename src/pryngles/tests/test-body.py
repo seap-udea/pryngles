@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_ALL
         
-        B=Body("Body",BODY_DEFAULTS,None,bhash='B',m=2,x=2)
+        B=Body("Body",BODY_DEFAULTS,None,m=2,x=2,hash_by_kind=True)
         
         print(B)
         print(B.m)
