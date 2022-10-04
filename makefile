@@ -17,6 +17,7 @@
 ##################################################################
 #VARIABLES
 ##################################################################
+SHELL:=/bin/bash
 PACKDIR=.pack/
 include $(PACKDIR)/packrc
 DEVFILES=$(shell ls dev/$(PACKNAME)-*.ipynb)
@@ -132,9 +133,9 @@ install:
 test:convert
 	@echo "Testing package..."
 ifeq ($(MOD),None)
-	@$(NOSETESTS)
+	@$(NOSETESTS) 2> >(tee -a /tmp/$(PACKNAME)-test-errors.log >&2)
 else
-	@$(NOSETESTS) src/pryngles/tests/test-$(MOD).py
+	@$(NOSETESTS) src/pryngles/tests/test-$(MOD).py 2> >(tee -a /tmp/$(PACKNAME)-test-errors-$(MOD).log >&2)
 endif
 
 version:

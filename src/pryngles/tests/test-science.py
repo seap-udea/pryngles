@@ -74,8 +74,9 @@ class Test(unittest.TestCase):
         Msys2uni,Muni2sys=Science.rotation_matrix([0,0,1],0)
         print(Msys2uni)
 
-        Msys2uni,Muni2sys=Science.rotation_matrix([0,0,-1],0)
+        Msys2uni,Muni2sys=Science.rotation_matrix([1,0,-1],0)
         print(Msys2uni)
+        print(Muni2sys)
 
         Verbose.VERBOSITY=VERB_NONE
 

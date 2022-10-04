@@ -25,21 +25,21 @@ class Test(unittest.TestCase):
         Misc.print_df(sg.data.head(1))
 
         print("\nCenter equ:")
-        sg=Spangler(nspangles=3,center_equ=[0,0,1])
+        sg=Spangler(nspangles=3,center_equ=[0,0,1],n_equ=[0,1,0])
         Misc.print_df(sg.data.head(1))
 
         print("\nCenter ecl:")
-        sg=Spangler(nspangles=3,center_ecl=[0,0,1])
+        sg=Spangler(nspangles=3,center_ecl=[0,0,1],n_equ=[0,0,1])
         Misc.print_df(sg.data.head(1))
 
         print("\nRotation:")
-        sg=Spangler(nspangles=3,w=30*Consts.deg,q0=40*Consts.deg)
+        sg=Spangler(nspangles=3,w=30*Consts.deg,q0=40*Consts.deg,n_equ=[0,1,1])
         sg.set_positions(t=1)
         Misc.print_df(sg.data.head(1))
 
         print("\nJoin:")
-        sg1=Spangler(sphash="Body 1",nspangles=3,w=40*Consts.deg)
-        sg2=Spangler(sphash="Body 2",nspangles=3,w=30*Consts.deg)
+        sg1=Spangler(sphash="Body 1",nspangles=3,w=40*Consts.deg,n_equ=[1,1,0])
+        sg2=Spangler(sphash="Body 2",nspangles=3,w=30*Consts.deg,n_equ=[1,0,1])
         sg=Spangler(spanglers=[sg1,sg2])
         sg.set_positions(t=1)
         Misc.print_df(sg.data)
@@ -97,6 +97,7 @@ class Test(unittest.TestCase):
         sg.sample.plot(spangled=dict(color='r',alpha=0.1))
         sg.sample.ax.set_title(f"N={sg.nspangles}")
         sg.sample.fig.tight_layout()
+        
         print_df(sg.data.head(3))
         
         Verbose.VERBOSITY=VERB_NONE
@@ -269,10 +270,14 @@ class Test(unittest.TestCase):
         fs=3
         sg.plot3d(coords="ecl")
         sg.plot2d(coords="ecl",fsize=fs)
-        sg.fig2d=None
         sg.plot2d(coords="luz",fsize=fs)
-        sg.fig2d=None
         sg.plot2d(coords="obs",fsize=fs)
+        
+        sg=Spangler(nspangles=200,sphash="123",n_equ=[1,1,1],center_ecl=[0,0,2])
+        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=2,seed=1,preset=True)
+        sg.set_observer(nvec=[1,0,0])
+        sg.set_luz(nvec=[1,1,1])
+        sg.plot2d(coords="obs",show_azim=True,fsize=5)
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -336,37 +341,42 @@ class Test(unittest.TestCase):
         global sg
         
         Verbose.VERBOSITY=VERB_NONE
-
-        nspangles=500
+        
+        """Shadow-test
+        """
+        nspangles=1000
         sps=[]
-        sg=Spangler(nspangles=nspangles,sphash="Parent",n_equ=[0,0,1],center_equ=[-7,0,0])
+        sg=Spangler(nspangles=nspangles,sphash="Star",n_equ=[0,0,1],center_equ=[-7,0,0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_STELLAR,scale=3,seed=1,preset=1)
         sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,0])
-        sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
-        sps+=[sg]
+        nspangles=1000
         sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
         sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+3.0,0.0,0.0])
+        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,2])
+        sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+        sps+=[sg]
+        sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+4.0,0.0,0.0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=0.3,seed=1,preset=True)
         sps+=[sg]
 
         sg=Spangler(spanglers=sps)
 
-        #Plot
-        sg.reset_state()
-        
-        sg.set_luz(nvec=sci.direction(10,0))
-        sg.update_illumination_state()
-
-        sg.set_observer(nvec=sci.direction(30,20))
+        #"""
+        sg.set_observer(nvec=sci.direction(30,0))
         sg.update_visibility_state()
+        #""";
 
-        sg.fig2d=None
+        #"""
+        sg.set_luz(nvec=sci.direction(0,0))
+        sg.update_illumination_state()
+        #""";
+
+        SHADOW_COLOR_LUZ=[90,0.2,1.0]
+        sg.plot3d(center_at="Ring")
         sg.plot2d(center_at="Ring")
-        sg._interact_plot2d(center_at="Ring")
-
+        sg._interact_plot2d(center_at="Ring",lon_luz=0)
+        
         Verbose.VERBOSITY=VERB_NONE
 
     def test_anim(self):
@@ -378,7 +388,7 @@ class Test(unittest.TestCase):
         sg=Spangler(nspangles=nspangles,sphash="Parent",n_equ=[0,0,1],center_equ=[-7,0,0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_STELLAR,scale=3,seed=1,preset=1)
         sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=sci.direction([0,80]))
+        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=sci.direction(0,80))
         sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
         sps+=[sg]
         sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
@@ -390,12 +400,12 @@ class Test(unittest.TestCase):
 
         sg=Spangler(spanglers=sps)
 
-        nobs=calc_flyby(normal=[0,0,1],start=0,stop=360,num=1,lat=30)
-        nluz=calc_flyby(normal=[0,0,1],start=0,stop=360,num=5,lat=20)
+        nobs=Plot.calc_flyby(normal=[0,0,1],start=0,stop=360,num=1,lat=30)
+        nluz=Plot.calc_flyby(normal=[0,0,1],start=0,stop=360,num=5,lat=20)
 
         #anim,dirs=sg.animate_plot2d(nobs=nobs,nluz=nluz,interval=100,center_at="Ring",axis=False,not_plot=["Parent"])
-        anim,dirs=sg.animate_plot2d(filename="/tmp/flyby-plot2d-luz.gif",nobs=nobs,nluz=nluz,interval=100,center_at="Ring",axis=False)
-        
+        anim,dirs=sg._animate_plot2d(filename="/tmp/flyby-plot2d-luz.gif",nobs=nobs,nluz=nluz,interval=500,center_at="Ring",axis=False)
+                
         Verbose.VERBOSITY=VERB_NONE
 
     def test_muluz(self):
@@ -422,9 +432,11 @@ class Test(unittest.TestCase):
         sg.set_luz(nvec=[1,0,0],sphash=sphash)
         sg.update_illumination_state()
 
+        #"""
         sphash="Moon1"
         sg.set_luz(nvec=[-2,1,0],sphash=sphash)
         sg.update_illumination_state()
+        #"""
 
         sg.plot3d()
         

@@ -3,6 +3,51 @@ Guide to developers
 
 In this guide you will find common procedures for developers.
 
+NOTE:
+- You will need /bin/bash installed for Makefile properly works.
+
+Convert 
+-------
+
+Convert is the task in which the Jupyter notebooks are converted into python
+files.  Conversion is required for releasing the packages.
+
+There are two types of conversion:
+
+- **Simple conversion**: Developing Jupyter notebooks are first
+  converted into Python files and then parsed to extract testing
+  codes.
+
+  In simple conversion testing code starts with "if IN_JUPYTER:"
+  conditional.  All code after a cell including the "--End--" string
+  is ignored in simple conversion.
+
+- **Advanced conversion**: Also called `xconvert`.  In the first stage
+  of this procedure a simple conversion is performed.  Then the
+  resulting python module files are parsed searching comments of the
+  form "#@command" instructing the script to separate componentes by
+  classes and constants.
+
+  All classes in a file are first located in a `<module>-<class>.temp`
+  file.
+
+  All stand-alone methods, which are tagged with a `#@method <class>`
+  command, are then appended to the `<module>-<class>.temp` file.
+
+  Class documentation is also identified (variables `<class>_doc`) and
+  placed in a proper plass in the class file.
+
+  Once all the classes and methods are gathered the final python
+  modules are assambled.
+
+  All comments starting with `# #` and the blank lines surrounding
+  them, which are titles in the Jupyter files are deleted.  As a
+  result, only the internal comments are preserved.
+
+  Constants of the modules are all gathered in the `consts.py` module.
+
+  In all cases the `#@end` comment are used to delimitate block of
+  code.
 
 Error types
 -----------
