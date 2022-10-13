@@ -257,7 +257,7 @@ def spangle_body(self):
     #Create spangler
     self.sg=Spangler(
         nspangles=self.nspangles,
-        sphash=self.bhash,
+        bhash=self.bhash,
         n_equ=self.n_equ,
         alpha_equ=self.alpha,
         w=self.wrot,

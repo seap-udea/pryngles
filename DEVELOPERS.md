@@ -49,6 +49,59 @@ There are two types of conversion:
   In all cases the `#@end` comment are used to delimitate block of
   code.
 
+
+JupDev
+------
+
+`JupDev` is a programming style designed by Jorge I. Zuluaga and based
+on Jupyter. It uses notebooks to write down and test the modules of a
+package and python and bash scripts to generate programatically the
+production source codes.
+
+The module files in this style are called `dev/pryngles-module.ipynb`.
+They have all the structure of Jupyter notebooks, they could have
+titles and text.
+
+Special comments helps to identify which code will be included in the
+final version of the production files:
+
+- `#@end`: marks the end of a code selection.
+
+- `#@external`: show the beginning of the external packages required
+  for the specific modules.  All the packages will be compiled in a
+  file __packages.temp.
+
+- `#@consts:<Module>`: show the beginning of constants associated to a
+  module __packages.temp.
+
+- `#@method:<Class>`: marks the begining of a method for a given
+  class.
+
+- `#@standalone`: marks the begining of standalone code in a module.
+
+- `#@data`: marks the beginning of data.
+
+- `#@doc:<Class>`: marks the beginning of the class doc.
+
+- `Class`: marks the beginning of a class of the package.  A file with
+  the name `__<module>_<Class>.temp` is used to compile the methods
+  used afterwards.
+
+Temporal files:
+
+- `__<module>_<Class>.temp`: temporal file with a Class and all the
+  methods of a module.
+
+- `__consts.temp`: temporal file containing all constants in the
+  package (uppercase variables)
+
+- `__<module>.temp`: file with the standalone code.
+
+Once the `.temp` files are generated the production source code is
+obtained by merging the corresponding files in the
+`src/pryngles/<module>.py` and the
+`src/pryngles/tests/test-<module>.py` directories.
+
 Error types
 -----------
 

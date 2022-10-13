@@ -143,6 +143,7 @@ class PrynglesCommon(object):
         pikd = open(filename,"wb")
         dill.dump(self, pikd)
         pikd.close()
+        
             
     def load_from(self,filename,compressed=False):
         verbose(VERB_SYSTEM,f"Loading object from {filename}")

@@ -43,6 +43,7 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_NONE
 
     def test_system_add(self):
+        global sys
         
         Verbose.VERBOSITY=VERB_ALL
         
@@ -56,7 +57,7 @@ class Test(unittest.TestCase):
             print(particle)
             
         print(sys)
-        print(sys.nbodies,sys.nparticles,sys.nsources)
+        print(sys.nbodies,sys.nparticles)
 
         Verbose.VERBOSITY=VERB_NONE
                 
@@ -113,33 +114,19 @@ class Test(unittest.TestCase):
         global sys
         
         Verbose.VERBOSITY=VERB_NONE
-        
-        nspangles=100
+        nspangles=500
         sys=System()
         S=sys.add("Star",nspangles=nspangles,m=1,radius=1,x=0,y=0,vy=0)
-        orbit=dict(x=2,vy=np.sqrt(sys.sim.G/2))
-        P=sys.add("Planet",primary=S,nspangles=nspangles,radius=0.2,m=1e-3,**orbit)
-        R=sys.add("Ring",primary=P,nspangles=nspangles,fi=1.3,fe=2.3,i=-20*Consts.deg)
-        orbit=dict(x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
-        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,**orbit)
-
-        """
-        orbit=dict(x=1.5,y=0,vy=np.sqrt(sys.sim.G/1))
-        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,**orbit)
-        R=sys.add("Ring",primary=P,nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
-        orbit=dict(x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
-        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,**orbit)
-        """
-        
+        D=sys.add("Ring",bhash="Disk",primary=S,nspangles=nspangles,fi=5,fe=10,i=0*Consts.deg)
+        P=sys.add("Planet",primary=S,nspangles=nspangles,radius=0.2,m=1e-3,x=2)
+        R=sys.add("Ring",primary=P,nspangles=nspangles,fi=1.5,fe=2.0,i=-20*Consts.deg)
+        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,x=2.5,y=-0.2)
+        K=sys.add("Ring",bhash="Cronoring",primary=M,nspangles=nspangles,fi=1.1,fe=1.5,i=20*Consts.deg)
         sys.spangle_system()
+        sys.sg.plot3d(center_at="Ring",not_plot=["Disk"])
+        cond=(sys.sg.data.bhash=="Moon")&(sys.sg.data.hidden_by_luz!="")
+        print_df(sys.sg.data.loc[cond,["hidden_by_luz"]].head(10))
 
-        sys.reset_state()
-        sys.set_observer([0,0,1])
-        sys.set_luz()
-        
-        sys.sg.plot3d(center_at="Ring")
-        sys.sg.plot2d(center_at="Ring")
-        
         Verbose.VERBOSITY=VERB_NONE
 
     def test_spangle(self):
@@ -159,8 +146,7 @@ class Test(unittest.TestCase):
         sys.spangle_system()
         
         #Check addition columns
-        print(sys.nsources)
-        print(sys.sources)
+        print(sys.source)
         print(sys.sg.data.columns)
         
         #Check save
@@ -226,10 +212,10 @@ class Test(unittest.TestCase):
         nspangles=100
         sys=System()
         S=sys.add("Star",bhash="Star",nspangles=nspangles,m=1,radius=1,x=0,y=0,vy=0)
+        M=sys.add("Planet",primary=S,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,
+                  x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
         P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,m=1e-3,
                   x=2,vy=np.sqrt(sys.sim.G/2))
-        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,
-                  x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
         R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
         sys.spangle_system()
 
@@ -238,11 +224,12 @@ class Test(unittest.TestCase):
         sys.set_observer([0,0,1])
         sys.set_luz()
         
-        sys.integrate(2)
+        sys.integrate(1)
         
         sys.set_observer([0,0,1])
         sys.set_luz()
 
+        sys.sg.plot3d()
         sys.sg.plot3d(center_at="Ring")
         
         Verbose.VERBOSITY=VERB_NONE

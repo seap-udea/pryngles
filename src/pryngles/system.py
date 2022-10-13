@@ -22,18 +22,21 @@ from pryngles import *
 
 # ## External modules
 
+#@external
 import rebound as rb
 from tqdm import tqdm
+#@end
 
-# ## Aliases
-
+#@aliases
 sci=Science
 print_df=Misc.print_df
+#@end
 
 # ## System Class
 # 
 # This is the most important class in the whole package.  This class allows to create the planetary system and manipulate it.
 
+#@doc:System
 System_doc=f"""Creates a planetary system.
 
     Initialization attributes:
@@ -64,14 +67,8 @@ System_doc=f"""Creates a planetary system.
         bodies: dictionary:
             Bodies in the system.
 
-        sources: dictionary:
-            Bodies in the system which are sources of light.
-
         nbodies: int:
             Number of bodies.
-
-        nsources: int:
-            Number of sources of light.
 
         nparticles: int:
             Numbre of particles in rebound simulation.
@@ -99,6 +96,7 @@ System_doc=f"""Creates a planetary system.
         R=sys.add("Ring",primary=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)
 
 """;
+#@end
 
 class System(PrynglesCommon):
     
@@ -117,11 +115,13 @@ class System(PrynglesCommon):
         
         #Attributes by default
         self.bodies=dict()
-        self.sources=dict()
+        self.source=None
+        self.center_source=np.array([0,0,0])
         
         #Observer properties
-        self.n_obs=[0,0,1]
+        self.n_obs=np.array([0,0,1])
         self.alpha_obs=0  
+        self.center_obs=None
         
         #Check if spangled
         self._spangled=False
@@ -182,15 +182,19 @@ class System(PrynglesCommon):
         """Update system properties
         """
         self.nbodies=len(self.bodies)
-        self.nsources=len(self.sources)
         self.nparticles=len(self.sim.particles)
         
     def _is_spangled(self):
+        """Check if system is spangled
+        """
         return True if self.sg else False
     
     def reset_state(self):
+        """Reset the state of the spangler
+        """
         self.sg.reset_state()
         self._observer_set=False
+        self._luz_set=False
 
     def save_to(self,filename):
         """Save system from file
@@ -238,12 +242,13 @@ class System(PrynglesCommon):
         self.sim=rb.Simulation(rb_filename)
         
     def status(self):
-        print(f"System with {self.nbodies} bodies, {self.nsources} sources and {self.nparticles} particles")
+        print(f"System with {self.nbodies} bodies and {self.nparticles} particles (rings and disk are not particles)")
         sys.sim.status()
 
 System.__doc__=System_doc
 
 
+#@method:System
 def add(self,kind="Star",primary=None,**props):
     """Add an object to the system
     
@@ -299,8 +304,11 @@ def add(self,kind="Star",primary=None,**props):
     self.bodies[self.__body.bhash]=self.__body
     
     if kind == "Star":
-        #Add a source
-        self.sources[self.__body.bhash]=self.__body
+        if self.source:
+            raise AssertionError("Present version of Pryngles only works with one star per system")
+            
+        #Add the source of light
+        self.source=self.__body
     
     if kind == "Ring":
         
@@ -326,10 +334,14 @@ def add(self,kind="Star",primary=None,**props):
     #Update system
     self._update_system()
     return self.__body
-    
+
+#@end
 System.add=add
 
+#@test
+#@end
 
+#@method:System
 def remove(self,bhash):
     """Remove a body from a system.
 
@@ -375,12 +387,15 @@ def remove(self,bhash):
         self._update_system()
     else:
         raise ValueError(f"No object with hash '{bhash}' in the system")
-
+#@end
 System.remove=remove
 
+#@test
+#@end
 
 # ## Spnagle System, Set Observer and Set Luz
 
+#@method:System
 def spangle_system(self):
     """Generate the spangles of the objects in the system
     
@@ -397,37 +412,31 @@ def spangle_system(self):
         This method create the spangler of the system
 
     """
-    
     self._spanglers=dict()
-    source=1
+    
     for bhash,body in self.bodies.items():
         
         verbose(VERB_SIMPLE,f"Spangling body '{bhash}' (kind '{body.kind}')")
         body.spangle_body()
 
-        if body.kind=="Star":
-            body.sg.data.source=source
-            source+=1
-        
         #Center object around its position according to rebound
         body.center_ecl=np.array(self.sim.particles[body.rbhash].xyz)
         body.sg.set_positions(center_ecl=body.center_ecl)
             
         self._spanglers[bhash]=body.sg
     
+        if body.kind=="Star":
+            body.sg.data.source=True
+            self.center_source=body.center_ecl
+        
     #Join spanglers
     self.sg=Spangler(spanglers=list(self._spanglers.values()))
-    
-    #Add column for controlling information on sources
-    for source in range(1,self.nsources+1):
-        for source_state in SPANGLER_SOURCE_STATES.keys():
-            self.sg.data[source_state+f"_{source}"]=0
+
+    #An usefule alias
+    self.data=self.sg.data
     
     #Set default observer
-    self.set_observer(nvec=self.n_obs,alpha=self.alpha_obs)
-    
-    #Set light sources
-    self.set_luz()
+    self.update_perspective(n_obs=self.n_obs,alpha_obs=self.alpha_obs)
     
     #Save state of the system
     if self._resetable:
@@ -436,24 +445,23 @@ def spangle_system(self):
     #Already spangled
     self._spangled=True
 
-def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
+def _set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     """Set the position of the observer
     """
     #Only set observer if it is spangled
-    self.alpha_obs=alpha
-    self.center_obs=center
-    
     if self._is_spangled():
         
         #At changing the observer, reset state
         self.sg.reset_state()
         
         #Set observer
-        self.sg.set_observer(nvec=nvec,alpha=self.alpha_obs,center=self.center_obs)
+        self.sg.set_observer(nvec=nvec,alpha=alpha,center=center)
         self.d_obs=self.sg.d_obs
         self.n_obs=self.sg.n_obs.copy()
         self.rqf_obs=self.sg.rqf_obs.copy()
-        
+        self.alpha_obs=self.sg.alpha_obs
+        self.center_obs=self.sg.center_obs
+    
         #Update visibility
         self.sg.update_visibility_state()
         
@@ -463,13 +471,20 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     else:
         raise AssertionError("You must first spangle system before setting observer direction.")
         
-def set_luz(self,source=None):
+def _set_luz_recursive(self,bhash,nluz):
+    """Set light source for body and 
+    """
+    verbose(VERB_SIMPLE,f"Illuminating body {bhash}, with {nluz} and {self.center_source}")
+    body=self.bodies[bhash]
+    self.sg.set_luz(nvec=nluz,center=self.center_source,bhash=bhash)
+    if body.childs:
+        verbose(VERB_SIMPLE,f"Object {bhash} has childs!")
+        for child_bhash in body.childs:
+            self._set_luz_recursive(child_bhash,nluz)
+            
+def _set_luz(self):
     """Set illumination in the system.
     
-    Parameters:
-        source: string, default = None:
-            Body hash of the source with respect the illumination is computed.
-            
     Update:
         States: illuminated, shadow, hidden_by_luz
     """
@@ -478,50 +493,66 @@ def set_luz(self,source=None):
         if not self._observer_set:
             raise AssertionError("You must first set observer before setting light.")
         
+        self.bodies_illuminated=[]
         for bhash,body in self.bodies.items():
-            
+          
             if body.kind == "Star":
+                verbose(VERB_SIMPLE,f"Body is a star... skipping")
                 continue
                 
-            """
-                If it is a ring of a planet: 
-                - No independent update of illumination required.
-                - When illuminating the planet, illuminate the ring
-                
-                If it is a ring around the source of light:
-                - All spangles illuminated
-                - No illumination required to calculate the shadows of the other bodies.
-                - Calculate (because it is not calculated with ):
-                  * cos_luz
-                  * d_luz
-                - This procedure should be included in the Spangler module.
-            """
-                 
+            if body.primary.bhash in self.bodies_illuminated:
+                verbose(VERB_SIMPLE,f"Primary body of {bhash}, {body.primary.bhash}, has been already illuminated")
+                continue
+                        
             #Get center of body
             center=body.center_ecl
                     
             #Get source and center
-            source=self._get_source(body)
-            center_source=source.center_ecl
-            
-            verbose(VERB_VERIFY,f"Calculating illumination for '{bhash}' coming from '{source.bhash}' @ {center_source}")
-            
-            #Get direction of light
-            nluz=center_source-center
-            
-            #Set light for this body
-            self.sg.set_luz(nvec=nluz,center=center_source,sphash=bhash)
-            self.sg.update_illumination_state()
-        
+            verbose(VERB_SIMPLE,f"Calculating illumination for '{bhash}' coming from '{self.source.bhash}' @ {self.center_source}")            
+            nluz=self.center_source-center
+                    
+            if body.kind == "Ring" and body.primary.kind == "Star":
+                verbose(VERB_SIMPLE,f"Primary body of ring, {body.primary.bhash} is a star. All spangles will be illuminated")
+                self.sg.set_luz(nvec=nluz,center=self.center_source,bhash=bhash)
+                cond=(self.sg.data.bhash==bhash)
+                self.sg.data.loc[cond,"unset"]=False
+                self.sg.data.loc[cond,"illuminated"]=True                    
+            else:                
+                verbose(VERB_SIMPLE,f"Illuminating body {bhash} and all its childs")
+                self._set_luz_recursive(bhash,nluz)
+                self.sg.update_illumination_state()
+                self.bodies_illuminated+=[bhash]
+                
         self._luz_set=True
     else:
         raise AssertionError("You must first spangle system before setting light.")
         
-System.set_luz=set_luz
-System.set_observer=set_observer
+def update_perspective(self,n_obs=None,alpha_obs=0,center_obs=None):
+    """Update perspective (observer)
+    """
+    if n_obs is not None:
+        #Update observing conditions
+        self.n_obs,one=spy.unorm(n_obs)
+        self.alpha_obs=alpha_obs
+        self.center_obs=center_obs
+
+    #Set observer
+    self._set_observer(nvec=self.n_obs,alpha=self.alpha_obs,center=center_obs)
+    self._set_luz()
+    
+#@end
+            
+System._set_luz_recursive=_set_luz_recursive
+System._set_observer=_set_observer
+System._set_luz=_set_luz
+System.update_perspective=update_perspective
 System.spangle_system=spangle_system
 
+#@test
+#@end
 
+#@test
+#@end
 
 
 # ### Miscelaneous methods
@@ -598,7 +629,7 @@ def integrate(self,*args,**kwargs):
             body.center_ecl=np.array(self.sim.particles[body.rbhash].xyz)
 
             verbose(VERB_VERIFY,f"Updating center of body {bhash} @ {body.center_ecl}")
-            cond=self.sg.data.sphash==bhash
+            cond=self.sg.data.bhash==bhash
             self.sg.data.loc[cond,"center_ecl"]=pd.Series([list(body.center_ecl)]*sum(cond),dtype=object).values
 
         #Update positions

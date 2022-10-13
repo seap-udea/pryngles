@@ -24,7 +24,7 @@ from pryngles import *
 
 # ## External modules and aliases
 
-#@modules
+#@external
 import pandas as pd
 import random
 
@@ -34,14 +34,16 @@ from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection
 from matplotlib import animation
 from celluloid import Camera # getting the camera
+from IPython.display import Image
 from ipywidgets import interact,fixed,widgets
 import itertools
 from tqdm import tqdm
+#@end:external
 
-#Aliases
+#@aliases
 print_df=Misc.print_df
 sci=Science
-#@end
+#@end:aliases
 
 # ## Constants
 
@@ -160,7 +162,7 @@ Core attributes:
 #@consts:Spangler
 #Columns of spangling
 SPANGLER_COLUMNS=odict({
-    "sphash":"",
+    "bhash":"", #Identification of the body having the spangler
 
     #Type of spangle
     "spangle_type":SPANGLE_SOLID_ROCK, #For a list of spangle types see the constants module.
@@ -195,10 +197,16 @@ SPANGLER_COLUMNS=odict({
     "rho_int":1,"az_int":0,"cosf_int":0, #Pseudo cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_int":1, #Angle between normal to spangle and direction of intersection
     "azim_int":0, #Azimuth of the direction of intersection
-    "d_int":1, #Distance of the Spangle to intersection
-    "z_cen_int":0, #z-coordiante of the center
+    "n_int":[0,0,-np.inf],#Vector from the intersection origin to each spangle
+    "n_int_ecl":[0,0,-1],#Vector from the intersection origin to each spangle in the ecliptic syste,
+    "d_int":-np.inf, #Distance of the Spangle to intersection
+    "asp_int":1.0, #Effective area of the spangle with respect to intersection perspective 
+    "z_cen_int":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_int":"", #Which body intersect the observer or light coming to a Spangle
+    "transit_over_int":"", #Which body is intersected by the Spangle (is transiting over)
 
+    "string_int":"",#Temporal string
+    
     #Coordinates of the spangle (cartesian and spherical) in the observer system
     "center_obs":[0,0,0], #Center of the body
     "x_obs":1,"y_obs":0,"z_obs":0, #Cartesian coordinates of the spangle
@@ -206,9 +214,12 @@ SPANGLER_COLUMNS=odict({
     "rho_obs":1,"az_obs":0,"cosf_obs":0, #Cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_obs":1, #Angle between normal to spangle and direction of observer
     "azim_obs":0, #Azimuth of the direction of the observer
-    "d_obs":1, #Distance of the Spangle to light-source
-    "z_cen_obs":0, #z-coordiante of the center
+    "n_obs":[0,0,-np.inf],#Vector from the observer origin to each spangle
+    "d_obs":-np.inf, #Distance of the Spangle to light-source
+    "asp_obs":1.0, #Effective area of the spangle with respect to observer perspective 
+    "z_cen_obs":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_obs":"", #Which body intersect the observer or light coming to a Spangle
+    "transit_over_obs":"", #Which body is intersected by the Spangle (is transiting over)
     
     #Coordinates of the spangle (cartesian and spherical) in the light-source system
     "center_luz":[0,0,0],#Center of the body
@@ -217,15 +228,18 @@ SPANGLER_COLUMNS=odict({
     "rho_luz":1,"az_luz":0,"cosf_luz":0, #Cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_luz":1, #Angle between normal to spangle and direction of light-source
     "azim_luz":0, #Azimuth of the direction of the light-source
-    "d_luz":1, #Distance of the Spangle to light-source
-    "z_cen_luz":0, #z-coordiante of the center
+    "n_luz":[0,0,-np.inf],#Vector from the light-source origin to each spangle
+    "d_luz":-np.inf, #Distance of the Spangle to light-source
+    "asp_luz":1, #Effective area of the spangle with respect to light-source perspective 
+    "z_cen_luz":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_luz":"", #Which body intersect the observer or light coming to a Spangle
+    "transit_over_luz":"", #Which body is intersected by the Spangle (is transiting over)
     
     #Azimutal angles
     "azim_obs_luz":0,#Difference between the azimuth of the light-source and the observer over the spangle
 
     #Geometrical parameters
-    "asp":1.0, #Effective area of the spangle
+    "asp":1.0, #Effective area of the spangle in 3D 
     "dsp":1.0, #Effective diameter of spangle, dsp = 2*(asp/pi)**0.5
 
     #Optical parameters
@@ -261,11 +275,90 @@ SPANGLER_SOURCE_STATES=odict({
 })
 SPANGLER_COLUMNS.update(SPANGLER_SOURCE_STATES)
 
+SPANGLER_KEY_ORDERING=[
+    
+    #Spangle type
+    'bhash','spangle_type', 
+    #Coordinates
+    'x_ecl', 'y_ecl', 'z_ecl', 'ns_ecl',
+    #Orientation
+    'azim_obs', 'n_obs', 'd_obs', 'asp_obs', 'cos_obs', 'hidden_by_obs', 'transit_over_obs', 
+    'azim_luz', 'n_luz', 'd_luz', 'asp_luz', 'cos_luz', 'hidden_by_luz', 'transit_over_luz',
+    #Geometrical bulk properties
+    'asp', 
+    #Physical bulk properties
+    'albedo_gray_normal', 'albedo_gray_spherical', 'tau_gray_optical', 
+    'Teq', 'Tem', 'emmisivity', 
+    #State
+    'visible', 'shadow', 'indirect', 'emit', 
+    'illuminated', 'transmit', 
+    #Transit
+    'transit', 'occult', 
+
+    #Separator column
+    'scale', 
+
+    #Internal attributes
+    'geometry', 
+    'n_equ', 'alpha_equ', 
+    'w', 'q0', 
+    
+    'center_equ', 
+    'x_equ', 'y_equ', 'z_equ', 
+    'r_equ', 'q_equ', 'f_equ', 'ns_equ', 
+    
+    'center_ecl', 
+    'wx_ecl', 'wy_ecl', 
+    
+    'center_int', 
+    'x_int', 'y_int', 'z_int', 'ns_int', 
+    'rho_int', 'az_int', 'cosf_int', 'cos_int', 
+    'azim_int', 'n_int', 'n_int_ecl', 'd_int', 'asp_int', 'z_cen_int', 'hidden_by_int', 'transit_over_int', 
+    'string_int',
+    
+    'center_obs', 
+    'x_obs', 'y_obs', 'z_obs', 'ns_obs', 
+    'rho_obs', 'az_obs', 'cosf_obs', 
+    'z_cen_obs',
+    
+    'center_luz', 
+    'x_luz', 'y_luz', 'z_luz', 'ns_luz', 
+    'rho_luz', 'az_luz', 'cosf_luz', 
+    'z_cen_luz', 
+    'azim_obs_luz', 
+    
+    'dsp', 
+    
+    #Internal states
+    'unset', 'hidden', 'source', 'intersect', 'above', 
+    ]
+
+#These are the critical columns of the Spangler data frames to do some physics
+SPANGLER_KEY_SUMMARY=[
+     #Spangle type
+    'bhash','spangle_type', 
+    #Coordinates
+    'x_ecl', 'y_ecl', 'z_ecl', 'ns_ecl',
+    #Orientation
+    'azim_obs', 'n_obs', 'd_obs', 'asp_obs', 'cos_obs', 'hidden_by_obs', 'transit_by_obs',
+    'azim_luz', 'n_luz', 'd_luz', 'asp_luz', 'cos_luz', 'hidden_by_luz', 'transit_by_luz',
+    #Geometrical bulk properties
+    'asp', 
+    #Physical bulk properties
+    'albedo_gray_normal', 'albedo_gray_spherical', 'tau_gray_optical', 
+    'Teq', 'Tem', 'emmisivity', 
+    #State
+    'visible', 'shadow', 'indirect', 'emit', 
+    'illuminated', 'transmit', 
+    #Transit
+    'transit', 'occult', 'rho_transit',
+]
+
 #States corresponging to a given point of view
 SPANGLER_EQUIV_COL=dict(obs="visible",int="intersect",luz="illuminated")
 
 #Columns to copy when calculating visibility and illumination
-SPANGLER_COL_COPY=["center","x","y","z","ns","rho","az","cosf","cos","azim","d","z_cen"]
+SPANGLER_COL_COPY=["center","x","y","z","ns","rho","az","cosf","n","cos","azim","d","z_cen","asp"]
 SPANGLER_COL_LUZ=[column+"_luz" for column in SPANGLER_COL_COPY]
 SPANGLER_COL_OBS=[column+"_obs" for column in SPANGLER_COL_COPY]
 SPANGLER_COL_INT=[column+"_int" for column in SPANGLER_COL_COPY]
@@ -282,7 +375,7 @@ SPANGLER_LENGTHS=[
 
 #Spangler columns which correspond to areas
 SPANGLER_AREAS=[
-    "asp",
+    "asp","asp_int","asp_obs","asp_luz"
 ]
 #Spangler columns which correspond to vectores
 SPANGLER_VECTORS=[
@@ -290,12 +383,14 @@ SPANGLER_VECTORS=[
     "center_equ",
     "center_obs",
     "center_int",
+    "n_int","n_obs","n_luz",
 ]
 
-SPANGLER_KEY_FIELDS=["sphash","spangle_type","geometry",
-                     "x_obs","y_obs","z_obs","d_obs","cos_obs",
-                     "x_luz","y_luz","z_luz","d_luz","cos_luz",
-                     "x_int","y_int","z_int"]+\
+#Debugging purposes
+SPANGLER_DEBUG_FIELDS=["bhash","spangle_type","geometry",
+                     "x_obs","y_obs","z_obs","n_obs","d_obs","cos_obs",
+                     "x_luz","y_luz","z_luz","n_luz","d_luz","cos_luz",
+                     "x_int","y_int","z_int","n_int","d_int","cos_int"]+\
                      ["unset"]+\
                      list(SPANGLER_VISIBILITY_STATES)+list(SPANGLER_SOURCE_STATES)
 
@@ -303,10 +398,9 @@ SPANGLER_KEY_FIELDS=["sphash","spangle_type","geometry",
 SPANGLER_EPS_BORDER=0.01
 
 SPANGLER_COLUMNS_DOC="""
-#@consts:Spangler
 #Columns of spangling
 SPANGLER_COLUMNS=odict({
-    "sphash":"",
+    "bhash":"", #Identification of the body having the spangler
 
     #Type of spangle
     "spangle_type":SPANGLE_SOLID_ROCK, #For a list of spangle types see the constants module.
@@ -341,8 +435,11 @@ SPANGLER_COLUMNS=odict({
     "rho_int":1,"az_int":0,"cosf_int":0, #Pseudo cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_int":1, #Angle between normal to spangle and direction of intersection
     "azim_int":0, #Azimuth of the direction of intersection
-    "d_int":1, #Distance of the Spangle to intersection
-    "z_cen_int":0, #z-coordiante of the center
+    "n_int":[0,0,-np.inf],#Vector from the intersection origin to each spangle
+    "n_int_ecl":[0,0,-1],#Vector from the intersection origin to each spangle in the ecliptic syste,
+    "d_int":-np.inf, #Distance of the Spangle to intersection
+    "asp_int":1.0, #Effective area of the spangle with respect to intersection perspective 
+    "z_cen_int":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_int":"", #Which body intersect the observer or light coming to a Spangle
 
     #Coordinates of the spangle (cartesian and spherical) in the observer system
@@ -352,8 +449,10 @@ SPANGLER_COLUMNS=odict({
     "rho_obs":1,"az_obs":0,"cosf_obs":0, #Cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_obs":1, #Angle between normal to spangle and direction of observer
     "azim_obs":0, #Azimuth of the direction of the observer
-    "d_obs":1, #Distance of the Spangle to light-source
-    "z_cen_obs":0, #z-coordiante of the center
+    "n_obs":[0,0,-np.inf],#Vector from the observer origin to each spangle
+    "d_obs":-np.inf, #Distance of the Spangle to light-source
+    "asp_obs":1.0, #Effective area of the spangle with respect to observer perspective 
+    "z_cen_obs":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_obs":"", #Which body intersect the observer or light coming to a Spangle
     
     #Coordinates of the spangle (cartesian and spherical) in the light-source system
@@ -363,15 +462,18 @@ SPANGLER_COLUMNS=odict({
     "rho_luz":1,"az_luz":0,"cosf_luz":0, #Cylindrical coordinates of the spangle: rho, phi, cos(theta)
     "cos_luz":1, #Angle between normal to spangle and direction of light-source
     "azim_luz":0, #Azimuth of the direction of the light-source
-    "d_luz":1, #Distance of the Spangle to light-source
-    "z_cen_luz":0, #z-coordiante of the center
+    "n_luz":[0,0,-np.inf],#Vector from the light-source origin to each spangle
+    "d_luz":-np.inf, #Distance of the Spangle to light-source
+    "asp_luz":1, #Effective area of the spangle with respect to light-source perspective 
+    "z_cen_luz":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_luz":"", #Which body intersect the observer or light coming to a Spangle
+    "rho_transit":0, #Distance from the spangle to the center of the source disk
     
     #Azimutal angles
     "azim_obs_luz":0,#Difference between the azimuth of the light-source and the observer over the spangle
 
     #Geometrical parameters
-    "asp":1.0, #Effective area of the spangle
+    "asp":1.0, #Effective area of the spangle in 3D 
     "dsp":1.0, #Effective diameter of spangle, dsp = 2*(asp/pi)**0.5
 
     #Optical parameters
@@ -407,7 +509,8 @@ SPANGLER_SOURCE_STATES=odict({
 })
 SPANGLER_COLUMNS.update(SPANGLER_SOURCE_STATES)
 """
-#@end
+#@end:consts
+
 
 class Spangler(PrynglesCommon):
     
@@ -417,7 +520,7 @@ class Spangler(PrynglesCommon):
                      spanglers=[],
                  #Basic
                      nspangles=1,
-                     sphash=None,
+                     bhash=None,
                      n_equ=SPANGLER_COLUMNS["n_equ"],
                      alpha_equ=SPANGLER_COLUMNS["alpha_equ"],
                      center_equ=SPANGLER_COLUMNS["center_equ"],
@@ -430,15 +533,13 @@ class Spangler(PrynglesCommon):
         #Common attributes
         self.n_obs=np.array([0,0,1])
         self.n_luz=np.array([0,0,1])
-        self.n_int=np.array([0,0,1])
-        self.d_int=self.d_obs=self.d_luz=1
+        self.d_obs=self.d_luz=1
         self.sample=None
         self.geometry=-1
         
         #Direction of vantages point in spherical coordinates
         self.rqf_obs=sci.spherical(self.n_obs)
         self.rqf_luz=sci.spherical(self.n_luz)
-        self.rqf_int=sci.spherical(self.n_int)
         self.center_luz=None
         self.center_obs=None
         
@@ -469,14 +570,14 @@ class Spangler(PrynglesCommon):
             #Default property values
             self._defaults=deepcopy(SPANGLER_COLUMNS)
 
-            if not sphash:
+            if not bhash:
                 #Generate a random hash for object
-                self.sphash=str(random.getrandbits(16))
-                verbose(VERB_VERIFY,f"Generating random hash {self.sphash}")
+                self.bhash=str(random.getrandbits(16))
+                verbose(VERB_VERIFY,f"Generating random hash {self.bhash}")
             else:
-                self.sphash=sphash
+                self.bhash=bhash
                 
-            self._defaults.update(dict(sphash=self.sphash))
+            self._defaults.update(dict(bhash=self.bhash))
             
             #Update other parameters
             self._defaults.update(
@@ -509,6 +610,7 @@ class Spangler(PrynglesCommon):
         self.data["unset"]=True
         for coords in "int","obs","luz":
             self.data["hidden_by_"+coords]=""
+            self.data["transit_over_"+coords]=""
 
     def set_scale(self,scale):
         """Set scale
@@ -531,15 +633,15 @@ class Spangler(PrynglesCommon):
             spanglers: list of Spanglers:
                 Spanglers to join.
         """
-        self.sphash=[]
+        self.bhash=[]
         for spangler in spanglers:
             if not isinstance(spangler,Spangler):
                 raise AssertionError(f"One of the spangler is not an Spangler instance")
                 
-            if spangler.sphash in self.sphash:
-                raise ValueError(f"Hash '{spangler.sphash}' already included in spangler '{self.sphash}'")
+            if spangler.bhash in self.bhash:
+                raise ValueError(f"Hash '{spangler.bhash}' already included in spangler '{self.bhash}'")
                 
-            self.sphash+=[spangler.sphash]
+            self.bhash+=[spangler.bhash]
 
         #When joining there is no single geometry
         self.shape="Join"
@@ -558,7 +660,27 @@ class Spangler(PrynglesCommon):
         #Join properties
         self.nspangles=len(self.data)
         
+    def get_mem_usage(self,info=False):
+        """Get size of the Spangler DataFrame in megabytes
 
+        Optional parameters:
+            info: boolean, default = False:
+                Get detailed information on memory usage.
+                
+        Return:
+            mem_usage: float:
+                Size in Mb of the memomory usage.
+        """
+        mem_usage=self.data.memory_usage(deep=True).sum()/1024**2
+        if info:
+            print(f"Basic information:\n")
+            self.data.info(memory_usage="deep")
+            print(f"\nDetailed size:\n")
+            print(self.data.memory_usage(deep=True).to_string())
+            print(f"\nTotal size: {mem_usage:.1g} Mb")
+
+        return mem_usage
+        
     def set_positions(self,
                       n_equ=[],alpha_equ=0,
                       center_equ=[],center_ecl=[],
@@ -623,7 +745,7 @@ class Spangler(PrynglesCommon):
             self.data["n_equ"]=[n_equ]*self.nspangles
 
             #Transformation matrices
-            self.M_equ2ecl[self.sphash],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ)
+            self.M_equ2ecl[self.bhash],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ)
 
             qupdate=True
 
@@ -652,12 +774,12 @@ class Spangler(PrynglesCommon):
 
         #Convert from equatorial to ecliptic
         verbose(VERB_VERIFY,f"Converting to equatorial")
-        self.data[["x_ecl","y_ecl","z_ecl"]]=            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl             for sph,r,cequ,cecl in zip(self.data.sphash,
+        self.data[["x_ecl","y_ecl","z_ecl"]]=            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl             for sph,r,cequ,cecl in zip(self.data.bhash,
                                         np.array(self.data[["x_equ","y_equ","z_equ"]]),
                                         self.data.center_equ,self.data.center_ecl)]
         
         #Update orientation of the spangle
-        self.data["ns_ecl"]=[np.matmul(self.M_equ2ecl[sph],n) for sph,n in zip(self.data.sphash,
+        self.data["ns_ecl"]=[np.matmul(self.M_equ2ecl[sph],n) for sph,n in zip(self.data.bhash,
                                                                                self.data.ns_equ)]
         
         #Update matrix of the transformation from ecliptic to local (horizontal) reference frame of the spangle
@@ -666,7 +788,8 @@ class Spangler(PrynglesCommon):
         cond=pd.Series([abs(spy.vdot(ns,[0,0,1]))!=1 for ns in self.data.ns_ecl])
         if sum(cond)>0:
             verbose(VERB_VERIFY,f"Setting local vectors based on ns: {sum(cond)}")
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,[0,0,1]))[0]                                                     for ns in self.data[cond].ns_ecl],dtype=object).values
+            #wy = ez x ns because with this definition seen from above the system is oriented as usual
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0]                                                     for ns in self.data[cond].ns_ecl],dtype=object).values
             self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns)                                                     for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
                                                    dtype=object).values
             cond=~cond
@@ -812,9 +935,20 @@ def populate_spangler(self,
         
     #Update positions
     self.set_positions()
+    
+def _update_column_order(self):
+    """Reorder columns in a more convenient way.
+    """
+    for col in self.data.columns:
+        if col not in SPANGLER_KEY_ORDERING:
+            raise AssertionError(f"Column {col} not present in key ordering.  Please checl SPANGLER_KEY_ORDERING")
+    
+    #Order columns
+    self.data=self.data.loc[:,SPANGLER_KEY_ORDERING]
+     
 #@end
-
 Spangler.populate_spangler=populate_spangler
+Spangler._update_column_order=_update_column_order
 
 
 # ### Plot3D
@@ -827,6 +961,7 @@ def plot3d(self,
            fsize=5,
            factor=1.2,
            statemark=0,
+           show_directions=False
           ):
     """Plot spangle in 3d.
 
@@ -840,7 +975,7 @@ def plot3d(self,
             Plot only the object with this hash.        
 
         center_at: string, default = None:
-            Hash of the object around which the plotting will be centered at (see sphash column
+            Hash of the object around which the plotting will be centered at (see bhash column
             of the Spangler DataFrame).
             
         not_plot: list of strings, default = []:
@@ -856,6 +991,10 @@ def plot3d(self,
         statemark: float, default = 0:
             If different than 0 mark with state the spangles in 3d plot.  
             It will mark the 1-markstate spangles in plot.
+            
+        show_directions: boolean, default = False:
+            If True show the direction of normal vectors to spangles and vectors directed from the 
+            origin of the intersection system of reference to the spangles.
             
     Color coding:
         
@@ -876,7 +1015,7 @@ def plot3d(self,
 
     #Plot only a given object
     if only:
-        not_plot=list(self.data.sphash.unique())
+        not_plot=list(self.data.bhash.unique())
         if only not in not_plot:
             raise ValueError(f"Spangler '{only}' not among available spanglers ({not_plot})")
         else:
@@ -892,7 +1031,7 @@ def plot3d(self,
     coords=[f"x_{scoords}",f"y_{scoords}",f"z_{scoords}"]
     
     #Center
-    cond=(self.data.sphash==center_at)
+    cond=(self.data.bhash==center_at)
     x_cen,y_cen,z_cen=self.data[cond][coords].mean() if sum(cond)>0 else np.array([0,0,0])
     
     #Figure
@@ -905,8 +1044,8 @@ def plot3d(self,
     for i in range(self.nspangles):
 
         #Avoid plotting 
-        sphash=self.data.loc[i,"sphash"]
-        if sphash in not_plot:
+        bhash=self.data.loc[i,"bhash"]
+        if bhash in not_plot:
             continue
         
         #Reference transparency of spangles
@@ -981,11 +1120,11 @@ def plot3d(self,
     ax.set_box_aspect([1,1,1])
 
     #Zoom around center
-    cond=(self.data.sphash==center_at)
+    cond=(self.data.bhash==center_at)
     cond=cond if sum(cond)>0 else [True]*self.nspangles
 
     #Not 
-    cond=cond&(~self.data.sphash.isin(not_plot))
+    cond=cond&(~self.data.bhash.isin(not_plot))
     
     #Range
     maxval=1.0*np.abs(self.data[cond][coords].to_numpy()-[x_cen,y_cen,z_cen]).max()
@@ -1024,6 +1163,34 @@ def plot3d(self,
         r_obs,t_obs,f_obs=sci.spherical(self.n_obs)
         ax.view_init(f_obs*Consts.rad,t_obs*Consts.rad)
         
+    #Show vectors
+    if show_directions:
+        
+        cond=cond&(~self.data.hidden)
+        
+        if scoords=="ecl":
+            nstr="n_int_"+scoords
+        else:
+            nstr="n_"+scoords
+        
+        #It is important to stress that "vectors" should be directed towards the light-source 
+        vectors=np.array(list(self.data.loc[cond,nstr]))
+        
+        normals=np.array(list(self.data.loc[cond,"ns_"+scoords]))
+        
+        ax.scatter(self.data.loc[cond,"x_"+scoords],self.data.loc[cond,"y_"+scoords],self.data.loc[cond,"z_"+scoords],
+                   marker="*",c='w',s=10)
+        ax.quiver(self.data.loc[cond,"x_"+scoords],self.data.loc[cond,"y_"+scoords],self.data.loc[cond,"z_"+scoords],
+                  vectors[:,0],vectors[:,1],vectors[:,2],color='w',label="From intersection")
+        ax.quiver(self.data.loc[cond,"x_"+scoords],self.data.loc[cond,"y_"+scoords],self.data.loc[cond,"z_"+scoords],
+                  normals[:,0],normals[:,1],normals[:,2],color='y',label="Normal")
+        
+        leg=ax.legend(loc='lower right',facecolor='k',ncol=3,prop={'size':8},bbox_to_anchor=(0.5,-0.01, 0.5, 0.5))
+        frame=leg.get_frame()
+        frame.set_edgecolor("k")
+        for text in leg.get_texts():
+            text.set_color("w")
+
     #Title
     ax.set_title(f"Spangler {self.shape}, N = {self.nspangles}",
                  color='w',fontsize=10)
@@ -1051,7 +1218,7 @@ def set_intersect(self,
                   nvec=[0,0,1],
                   alpha=0,
                   center=None,
-                  sphash=None,
+                  bhash=None,
                  ):
     """Set the positions and orientation of spanglers in an intersection direction
 
@@ -1068,7 +1235,7 @@ def set_intersect(self,
             Location of the vantage point in the ecliptic reference system.
             If None, we assume that the vantage point is at an infinite distance.
             
-        sphash: string, default = None:
+        bhash: string, default = None:
             Spangler hash to which the transformation will be applied.
 
     Return:
@@ -1088,10 +1255,10 @@ def set_intersect(self,
             Convex hulls of bodies from this vantage point.
             
             key: 
-                sphash
+                bhash
             
             value: 
-                list with hulls corresponding to each sphash.
+                list with hulls corresponding to each bhash.
             
     Update:
 
@@ -1108,7 +1275,7 @@ def set_intersect(self,
     """
     
     verbose(VERB_SIMPLE,
-            f"Setting intersect using nvec = {nvec}, alpha = {alpha} center = {center}, sphash = {sphash}")
+            f"Setting intersect using nvec = {nvec}, alpha = {alpha} center = {center}, bhash = {bhash}")
     
     verbose(VERB_VERIFY,f"Generating intersection matrices from pvec = {nvec}")
 
@@ -1120,7 +1287,7 @@ def set_intersect(self,
     self.rqf_int=sci.spherical(n_int)
     self.n_int=n_int
     
-    #Distance to center
+    #Distance to center of intersection
     if center is None:
         self.infinite=True
         d_int=np.inf
@@ -1133,58 +1300,67 @@ def set_intersect(self,
 
     #Transformation matrices
     M_int2ecl,self.M_ecl2int=Science.rotation_matrix(n_int,alpha_int)
+    self.M_int2ecl=M_int2ecl
     
     #Depending on body
     cond=[True]*self.nspangles
-    if sphash:
-        cond=(self.data.sphash==sphash)
+    if bhash:
+        cond=(self.data.bhash==bhash)
 
-    #If no point is of type sphash
+    #If no point is of type bhash
     if sum(cond)==0:
         return
         
-    #Update positions
+    #Update positions in the intersection reference frame
     self.data.loc[cond,["x_int","y_int","z_int"]]=        [np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
     
     #Center of the object in the observer reference system
-    center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)               for sp,c_ecl,c_equ in zip(self.data[cond].sphash,
+    center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)               for sp,c_ecl,c_equ in zip(self.data[cond].bhash,
                                          np.array(self.data[cond].center_ecl),
                                          np.array(self.data[cond].center_equ))]
     self.data.loc[cond,"center_int"]=pd.Series(center_int).values
     
+    #According to distance to intersetcion point generate z_cen_int
     if self.infinite:
         self.data.loc[cond,"z_cen_int"]=-np.inf
     else:
         self.data.loc[cond,"z_cen_int"]=np.array(center_int)[:,2]
 
-    """
-    Change here to include the possibility of intersection from the center of a body
-    """
-        
     #Pseudo-cylindrical coordinates in the observer system
-    self.data.loc[cond,["rho_int","az_int","cost_int"]]=        [sci.pcylindrical(r) for r in          np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
+    self.data.loc[cond,["rho_int","az_int","cosf_int"]]=        [sci.pcylindrical(r) for r in          np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
 
-    #Compute distance to light-source of each spangle
+    #Compute distance to intersection of each spangle and the 
     if self.infinite:
         #Distance to all points is assumed infinite
+        self.data.loc[cond,"n_int"]=pd.Series([[0,0,1]]*sum(cond),dtype=object)
         self.data.loc[cond,"d_int"]=np.inf
+        self.data.loc[cond,"n_int_ecl"]=pd.Series([list(n_int)]*sum(cond),dtype=object)
     else:
         #Distance to origin of coordinates in the int system where the center is located
-        self.data.loc[cond,"d_int"]=np.linalg.norm(self.data[cond][["x_int","y_int","z_int"]],axis=1)
-    
-    #Cosine of the direction of the intersection vector and the normal to the spangle
-    self.data.loc[cond,"cos_int"]=[np.dot(n_ecl,n_int) for n_ecl in self.data.ns_ecl[cond]]
-
+        lista=[spy.unorm(list(-r)) for r in np.array(self.data[cond][["x_int","y_int","z_int"]])]
+        self.data.loc[cond,["n_int","d_int"]]=pd.DataFrame(lista).values
+        n_int_ecl=[spy.mxv(M_int2ecl,n_int) for n_int in self.data.n_int[cond]]
+        self.data.loc[cond,"n_int_ecl"]=pd.Series(n_int_ecl,dtype=object)
+        
     #Azimuth of the direction of the intersection vector in the tangent plane of the spangle
     self.data.loc[cond,"azim_int"]=[np.arctan2(spy.vdot(wy,n_int),
                                                spy.vdot(wx,n_int)) \
-                                    for wy,wx in zip(self.data.wy_ecl[cond],
-                                                     self.data.wx_ecl[cond])]
-
+                                    for wy,wx,n_int in zip(self.data.wy_ecl[cond],
+                                                           self.data.wx_ecl[cond],
+                                                           self.data.n_int_ecl[cond])]
+    
     #Update spangles orientations
     lista=[np.matmul(self.M_ecl2int,n_ecl) for n_ecl in self.data[cond].ns_ecl]
     self.data.loc[cond,"ns_int"]=pd.Series(lista,dtype=object).values
     
+    #Cosine of the direction of the intersection vector and the normal to the spangle
+    if self.infinite:
+        #In this case n_int is a global variable
+        self.data.loc[cond,"cos_int"]=[spy.vdot(n_ecl,n_int) for n_ecl in self.data.ns_ecl[cond]]
+    else:
+        #In this case n_int is a per-spangle variable
+        self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int)                                        for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
+        
     return cond,n_int,d_int
 
 def _calc_qhulls(self):
@@ -1193,11 +1369,12 @@ def _calc_qhulls(self):
     """
     
     #Convex hulls
-    for sphash in Misc.flatten([self.sphash]):
+    for bhash in Misc.flatten([self.bhash]):
 
-        self.qhulls[sphash]=[]
-        cond_obj=(self.data.sphash==sphash)
-        zcen=self.data[cond_obj].center_int.iloc[0][2]
+        self.qhulls[bhash]=[]
+        cond_obj=(self.data.bhash==bhash)
+        center=list(self.data[cond_obj].center_int.iloc[0])
+        zord=min(self.data[cond_obj].z_int)
 
         if (self.data[cond_obj].hidden).sum()==0:
 
@@ -1205,10 +1382,11 @@ def _calc_qhulls(self):
             cond_hull=(cond_obj)&(~self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (whole object):",sum(cond_hull))
 
-            self.qhulls[sphash]+=[dict(
-                sphash=sphash,
+            self.qhulls[bhash]+=[dict(
+                bhash=bhash,
                 hulltype="cen",
-                zcen=zcen,
+                center=center,
+                zord=zord,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]])
             )]
 
@@ -1226,10 +1404,11 @@ def _calc_qhulls(self):
             cond_hull=(cond_obj)&(self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (hidden):",sum(cond_hull))
 
-            self.qhulls[sphash]+=[dict(
-                sphash=sphash,
+            self.qhulls[bhash]+=[dict(
+                bhash=bhash,
                 hulltype="hidden",
-                zcen=zcen,
+                center=center,
+                zord=zord,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]]),
                 plane=plane
             )]
@@ -1238,10 +1417,11 @@ def _calc_qhulls(self):
             cond_hull=(cond_obj)&(~self.data[cond_obj].hidden)
             verbose(VERB_SIMPLE,"Hull points (visible ring):",sum(cond_hull))
 
-            self.qhulls[sphash]+=[dict(
-                sphash=sphash,
+            self.qhulls[bhash]+=[dict(
+                bhash=bhash,
                 hulltype="plane",
-                zcen=zcen,
+                center=center,
+                zord=zord,
                 qhull=Science.get_convexhull(self.data[cond_hull][["x_int","y_int"]]),
                 plane=plane
             )]
@@ -1255,7 +1435,7 @@ def _plot_qhulls(self):
     
     fig,ax=plt.subplots()
 
-    for sphash,sphull in self.qhulls.items():
+    for bhash,sphull in self.qhulls.items():
         for qhull in sphull:
             chull=qhull["qhull"]
             if chull:
@@ -1296,7 +1476,9 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     """
     verbose(VERB_SIMPLE,f"Setting observer")
     cond,self.n_obs,self.d_obs=self.set_intersect(nvec,alpha,center)
+    self.alpha_obs=alpha
     self.rqf_obs=sci.spherical(self.n_obs)
+    self.center_obs=center.copy() if center else center
     
     self.data.loc[cond,"visible"]=False
     self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT].values
@@ -1307,7 +1489,7 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     #Condition for visibility
     """
     & ! Hidden
-    & z_cen_obs < 0: spangle is observable from the observer vantage point-
+    & z_cen_obs+scale < 0: spangle is observable from the observer vantage point-
         (
             | cos_obs > 0: spangle it is towards the observer
             | Spangle type is semitransparent
@@ -1317,7 +1499,7 @@ def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
     )
     self.data.loc[cond,"visible"]=True
     
-def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
+def set_luz(self,nvec=[0,0,1],alpha=0,center=None,bhash=None):
     """Set the positions and orientation of spanglers in the light-source system.
 
     Parameters:
@@ -1331,7 +1513,7 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
         center: list/array(3), default = None:
             Define the position of the vantage point in the ecliptic system.
 
-        sphash: string, default = None:
+        bhash: string, default = None:
             Body to apply this light direction
             
     Update:
@@ -1345,13 +1527,13 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
     verbose(VERB_SIMPLE,f"Setting light-source")
  
     #Set intersect of all points in order to prepare the update luz
-    cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,sphash=None) 
+    cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,bhash=None) 
     verbose(VERB_SIMPLE,f"Number of points: {sum(cond)}")
     
     #Depending on body choose which spangles to change
     cond=[True]*self.nspangles
-    if sphash:
-        cond=(self.data.sphash==sphash)
+    if bhash:
+        cond=(self.data.bhash==bhash)
     
     #Set the light source direction in spherical coordinates
     self.rqf_luz=sci.spherical(self.n_luz)
@@ -1369,7 +1551,7 @@ def set_luz(self,nvec=[0,0,1],alpha=0,center=None,sphash=None):
     #Condition for illumination
     """
     & ! Hidden
-    & z_cen_luz < 0: spangle is in front of the light-source.
+    & z_cen_luz+scale < 0: spangle is in front of the light-source.
         (
             | geometry = circle : 2d spangles are always illuminated
             | spangle_type = stellar: stellar spangles are always illuminated
@@ -1403,9 +1585,9 @@ Spangler.set_luz=set_luz
 
 def plot2d(self,
            coords="obs",
-           only=None,
            center_at=None,
-           not_plot=[],
+           include=[],
+           exclude=[],
            axis=True,
            fsize=5,
            newfig=True,
@@ -1421,14 +1603,14 @@ def plot2d(self,
     
     Other parameters:
             
-        only: string, default = None:
-            Plot only the object with this hash.
-                    
         center_at: string, default = None:
-            Hash of the object around which the plotting will be centered at (see sphash column
+            Hash of the object around which the plotting will be centered at (see bhash column
             of the Spangler DataFrame).
             
-        not_plot: list of strings, default = []:
+        include: string, default = None:
+            List of objects (hashes) to plot exclusively.
+                    
+        exclude: list of strings, default = []:
             List of objects (hashes) to not plot.
             
         fsize: integer, default = 5:
@@ -1444,37 +1626,43 @@ def plot2d(self,
     fig_factor=fsize/3.0
 
     #Plot only a given object
-    if only:
-        not_plot=list(self.data.sphash.unique())
-        if only not in not_plot:
-            raise ValueError(f"Spangler '{only}' not among available spanglers ({not_plot})")
-        else:
-            not_plot.remove(only)
-            center_at=only
+    if len(include)>0:
+        
+        #List of all spanglers
+        exclude=list(self.data.bhash.unique())
+        
+        for bhash in include:
+            if bhash not in exclude:
+                raise ValueError(f"Spangler '{bhash}' not among available spanglers ({exclude})")
+            else:
+                exclude.remove(bhash)
+                
+        #Center at the first object in the list
+        center_at=include[0]
 
     #Center of plot
-    cond=(self.data.sphash==center_at)
+    cond=(self.data.bhash==center_at)
     x_cen,y_cen,z_cen=self.data[cond][[f"x_{coords}",f"y_{coords}",f"z_{coords}"]].mean() if sum(cond)>0 else np.array([0,0,0])
 
     #Maxval original
     maxval_full=1.2*np.abs(self.data[[f"x_{coords}",f"y_{coords}"]].to_numpy()-[x_cen,y_cen]).max()
 
     #Select plotting bodies
-    yes_plot=(~self.data.hidden)&(~self.data.sphash.isin(not_plot))
-    nyes_plot=sum(yes_plot)
-    if nyes_plot==0:
-        raise AssertionError(f"No body remain after removing {not_plot}")
-    data=self.data[yes_plot]
+    cond_included=(~self.data.hidden)&(~self.data.bhash.isin(exclude))
+    num_included=sum(cond_included)
+    if num_included==0:
+        raise AssertionError(f"No body remain after removing {exclude}")
+    data=self.data[cond_included]
     
     #Select scale for plot
-    cond=(data.sphash==center_at)
-    cond=cond if sum(cond)>0 else [True]*nyes_plot        
+    cond=(data.bhash==center_at)
+    cond=cond if sum(cond)>0 else [True]*num_included        
     maxval=1.2*np.abs(np.array(data[cond][[f"x_{coords}",f"y_{coords}"]])-np.array([x_cen,y_cen])).max()
     
     size_factor=10*fig_factor*maxval_full/maxval
         
     #Figure
-    if (self.fig2d is None) or newfig:
+    if "fig2d" not in self.__dict__ or newfig:
         fig=plt.figure(figsize=(fsize,fsize))
         fig.patch.set_facecolor(bgcolor)
         ax=fig.add_subplot(111,facecolor=bgcolor)
@@ -1483,13 +1671,11 @@ def plot2d(self,
         self.fig2d=fig
         self.ax2d=ax
 
-    self.ax2d.axis("off")
-
     #Plot according to state
     
     #Default colors
-    colors=np.array(['#000000']*nyes_plot)
-    sizes=np.array([0.0]*nyes_plot)
+    colors=np.array(['#000000']*num_included)
+    sizes=np.array([0.0]*num_included)
     marker='o'
 
     #Illuminated
@@ -1553,34 +1739,36 @@ def plot2d(self,
     
     if show_azim:
         #Choose which directions to show
-        cond=(self.data["cos_"+coords]>=0)&(~self.data.hidden)
+        cond=(self.data["cos_"+coords]>=0)&(~self.data.hidden)&(cond_included)
 
         #Options of arrows showing direction
         quiver_args=dict(scale=15,angles='xy',scale_units='width',
                          width=0.005,alpha=0.6,zorder=-100,headwidth=0)
         
         
+        print(x_cen,y_cen)
+        
         #Quiver plot of azimuth for light
         azx=np.cos(self.data[cond].azim_luz)
         azy=np.sin(self.data[cond].azim_luz)
-        self.ax2d.quiver(self.data[cond]["x_"+coords],self.data[cond]["y_"+coords],
-                       azx,azy,color='m',label="Az.luz",**quiver_args)
+        self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
+                         azx,azy,color='m',label="Az.luz",**quiver_args)
 
         #Quiver plot of azimuth for observer
         azx=np.cos(self.data[cond].azim_obs)
         azy=np.sin(self.data[cond].azim_obs)
-        self.ax2d.quiver(self.data[cond]["x_"+coords],self.data[cond]["y_"+coords],
-                       azx,azy,color='w',label="Az.obs",**quiver_args)
+        self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
+                         azx,azy,color='w',label="Az.obs",**quiver_args)
 
         #Quiver plot of elevation for light
         tx=np.sqrt(1-self.data[cond].cos_int**2)
         ty=self.data[cond].cos_int
-        self.ax2d.quiver(self.data[cond]["x_"+coords],self.data[cond]["y_"+coords],
-                       tx,ty,color='c',label="Elev.luz",**quiver_args)
+        self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
+                         tx,ty,color='c',label="Elev.luz",**quiver_args)
 
         #Legend decoration
         leg=self.ax2d.legend(loc='lower right',facecolor='k',ncol=3,prop={'size':8},
-                           bbox_to_anchor=(0.5, -0.05, 0.5, 0.5))
+                             bbox_to_anchor=(0.5, -0.05, 0.5, 0.5))
         frame=leg.get_frame()
         frame.set_edgecolor("k")
         for text in leg.get_texts():
@@ -1588,7 +1776,7 @@ def plot2d(self,
         axis=False
 
     #Axis
-    if axis:
+    if newfig and axis:
         self.ax2d.plot([xmin,xmax],[0,0],'w-',alpha=0.3)
         self.ax2d.plot([0,0],[ymin,ymax],'w-',alpha=0.3)
         self.ax2d.text(xmax,0,fr"$x_{{{coords}}}$",color='w',alpha=0.5,fontsize=8*fig_factor)
@@ -1602,37 +1790,41 @@ def plot2d(self,
                   fontsize=8*fig_factor,color='w',
                   transform=self.ax2d.transAxes)
 
-    #Title
-    label_obs=""
-    lamb=0
-    phi=0
-    if coords=="obs":
-        lamb=self.rqf_obs[1]*Consts.rad
-        phi=self.rqf_obs[2]*Consts.rad
-        coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
-    elif coords=="luz":
-        lamb=self.rqf_luz[1]*Consts.rad
-        phi=self.rqf_luz[2]*Consts.rad
-        coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
-    elif coords=="int":
-        lamb=self.rqf_int[1]*Consts.rad
-        phi=self.rqf_int[2]*Consts.rad
-    coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
-
-    if coords=="ecl":
-        coords_label=""
-
-    label_obs=f"{coords} {coords_label}"
-    self.ax2d.text(0.5,1.01,f"{label_obs}",
-                 transform=self.ax2d.transAxes,ha='center',
-                 color='w',fontsize=10*fig_factor)
-        
-    #Water mark
-    Plot.pryngles_mark(self.ax2d)
-
     #Decoration
+    if newfig:
+        #Title
+        label_obs=""
+        lamb=0
+        phi=0
+        if coords=="obs":
+            lamb=self.rqf_obs[1]*Consts.rad
+            phi=self.rqf_obs[2]*Consts.rad
+            coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
+        elif coords=="luz":
+            lamb=self.rqf_luz[1]*Consts.rad
+            phi=self.rqf_luz[2]*Consts.rad
+            coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
+        elif coords=="int":
+            lamb=self.rqf_int[1]*Consts.rad
+            phi=self.rqf_int[2]*Consts.rad
+        coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
+
+        if coords=="ecl":
+            coords_label=""
+
+        label_obs=f"{coords} {coords_label}"
+        self.ax2d.text(0.5,1.01,f"{label_obs}",
+                     transform=self.ax2d.transAxes,ha='center',
+                     color='w',fontsize=10*fig_factor)
+
+        self.ax2d.axis("off")
+        Plot.pryngles_mark(self.ax2d)
+    
+    #Adjust axis
     self.ax2d.axis("equal")
     self.fig2d.tight_layout()
+    
+    return x_cen,y_cen
 
 Spangler.plot2d=plot2d
 
@@ -1657,53 +1849,60 @@ def update_intersection_state(self):
     cond=(~self.data.hidden)&((self.data.cos_int>0)|(self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT)))
     self.data.loc[cond,"intersect"]=True
     self.data.hidden_by_int=""
+    self.data.transit_over_int=""
         
-    for sphash in Misc.flatten([self.sphash]):
+    for bhash in Misc.flatten([self.bhash]):
         
         #Points in present body
-        cond=(self.data.sphash==sphash)
+        cond=(self.data.bhash==bhash)
         
         #If this body is not in the field-of-view, avoid computation
-        if self.data[cond].z_cen_int.iloc[0]+self.data[cond].scale.iloc[0]>=0:
+        z_cen_int=self.data[cond].z_cen_int.iloc[0]
+        scale=self.data[cond].scale.iloc[0]
+        if (z_cen_int+scale)>=0:
             continue
 
         #By default for all objects
         inhull_not_in_hole=[True]
         
-        verbose(VERB_SIMPLE,f"Calculating intersections for '{sphash}'")
-        for i,hull in enumerate(self.qhulls[sphash]):
+        verbose(VERB_SIMPLE,f"Calculating intersections for '{bhash}'")
+        for i,hull in enumerate(self.qhulls[bhash]):
             
             qhull=hull["qhull"]
             if qhull is None:
-                verbose(VERB_SIMPLE,f"No hull for '{sphash}'")
+                verbose(VERB_SIMPLE,f"No hull for '{bhash}'")
                 continue
             
             htype=hull["hulltype"]
-            zcen=hull["zcen"]
+            xcen,ycen,zcen=hull["center"]
+            zord=hull["zord"]
             
-            verbose(VERB_SIMPLE,f"Hull {i+1} for '{sphash}' of type '{htype}'")
+            verbose(VERB_SIMPLE,f"Hull {i+1} for '{bhash}' of type '{htype}'")
 
             #Evaluate conditions
             inhull=sci.points_in_hull(self.data[["x_int","y_int"]],qhull)&(~cond)
             below=np.array([False]*self.nspangles)
+            above=np.array([False]*self.nspangles)
             
             if htype=="hidden":
 
                 #Holes
                 inhull_not_in_hole=(~inhull)
-                verbose(VERB_SIMPLE,f"Points outside hidden hull for '{sphash}': {sum(inhull_not_in_hole)}")
+                verbose(VERB_SIMPLE,f"Points outside hidden hull for '{bhash}': {sum(inhull_not_in_hole)}")
                 hull["notinhole"]=sum(inhull_not_in_hole)
                 continue
                 
             else:
                 #Body
-                verbose(VERB_SIMPLE,f"Points not in hole for '{sphash}:{htype}': {sum(inhull_not_in_hole)}")
+                verbose(VERB_SIMPLE,f"Points not in hole for '{bhash}:{htype}': {sum(inhull_not_in_hole)}")
 
                 #Spangles to evaluate
-                cond_int=(~self.data.hidden)&(self.data.sphash!=sphash) #&(self.data.intersect)
+                cond_vis=(self.data.cos_int>0)|(self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
+                cond_int=(~self.data.hidden)&(self.data.bhash!=bhash)&(cond_vis)
 
                 if htype=="cen":
                     below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zcen)
+                    above=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]>zcen)
                     
                 elif htype=="plane":
                     #Not in hole, inhull, not hidden, not in object and intersect
@@ -1712,16 +1911,21 @@ def update_intersection_state(self):
                     
                     plane=hull["plane"]
                     below[cond_full]=[plane.is_below(r,[0,0,1]) for r in self.data[cond_full][["x_int","y_int","z_int"]].values]
+                    above[cond_full]=~below[cond_full]
                 else:
                     raise ValueError("Type of hull '{htype}' not recognized")
             
             #Store information
-            verbose(VERB_SIMPLE,f"Points in hull for '{sphash}:{htype}': {sum(inhull)}")
-            verbose(VERB_SIMPLE,f"Points below '{sphash}:{htype}': {sum(below)}")
+            verbose(VERB_SIMPLE,f"Points in hull for '{bhash}:{htype}': {sum(inhull)}")
+            verbose(VERB_SIMPLE,f"Points below '{bhash}:{htype}': {sum(below)}")
             
             #Set visibility
             self.data.loc[below,"intersect"]=False
-            self.data.loc[below,"hidden_by_int"]=self.data.loc[below,"hidden_by_int"]+f"{sphash}:"
+            self.data.loc[below,"hidden_by_int"]=self.data.loc[below,"hidden_by_int"]+f"{bhash}:{zord:.3e}&"
+                
+            #Compute distance to center for transiting spangles
+            self.data.loc[above,"string_int"]=[f"{bhash}:{zord:.3e}:{((r[0]-xcen)**2+(r[1]-ycen)**2)**0.5/scale:.3e}&"                                                for r in self.data[above][["x_int","y_int"]].values]
+            self.data.loc[above,"transit_over_int"]=self.data.loc[above,"transit_over_int"]+self.data.loc[above,"string_int"]
             
             hull["inhull"]=sum(inhull)
             hull["below"]=sum(below)
@@ -1731,7 +1935,7 @@ def update_visibility_state(self):
     """
     self.update_intersection_state()
     self.data.hidden_by_obs=self.data.hidden_by_obs+self.data.hidden_by_int
-
+    self.data.transit_over_obs=self.data.transit_over_obs+self.data.transit_over_int
     self.data.visible=self.data.visible&self.data.intersect
 
 def update_illumination_state(self):
@@ -1739,6 +1943,7 @@ def update_illumination_state(self):
     """
     self.update_intersection_state()
     self.data.hidden_by_luz=self.data.hidden_by_luz+self.data.hidden_by_int
+    self.data.transit_over_luz=self.data.transit_over_luz+self.data.transit_over_int
     
     #Update illumination
     self.data.illuminated=self.data.illuminated&self.data.intersect
@@ -1771,139 +1976,6 @@ def update_illumination_state(self):
 Spangler.update_intersection_state=update_intersection_state
 Spangler.update_visibility_state=update_visibility_state
 Spangler.update_illumination_state=update_illumination_state
-
-def _animate_plot2d(self,filename=None,
-                   nobs=[[0,0,1]],nluz=[[1,0,0]],
-                   interval=1000,
-                   **plot2d_args):
-    """Animate plot2d observation
-    
-    Parameters:
-        filename: string, default = None:
-            File where the movie will be stored. If None not file generated.
-            The extension of the file will determine the format on which
-            the animation is stored.
-            
-        nobs: array (Nx3), default = None:
-            Set of directions in which the observer is set.
-            
-        nluz: array (Nluz x 3), default = None
-            Set of directions in which the light will be set.
-            
-        interval: float, default = 100:
-            Interval in milliseconds between frames.
-            
-        **plot_args: dictionary:
-            Arguments for the plot2d method
-    
-    Return:
-        anim: Class Animation:
-            Animation object.
-            
-        combinations: list of tuples:
-            Combinations of nobs and nluz components.
-    
-    Example:
-        nobs=sci.calc_flyby(normal=[0,1,1],start=0,stop=360,num=20)
-        sg.animate_plot2d(nobs=nobs)
-        
-    Notes:
-        Based in: https://github.com/jwkvam/celluloid
-    """
-    
-    verbosity=Verbose.VERBOSITY
-    Verbose.VERBOSITY=VERB_NONE
-    
-    self.reset_state()
-
-    self.set_observer(nvec=nobs[0])
-    self.update_visibility_state()
-
-    self.set_luz(nvec=nluz[0])
-    self.update_illumination_state()
-
-    plot2d_args.update(dict(newfig=False))
-    self.plot2d(**plot2d_args)
-    
-    print(f"Generating {len(nobs)*len(nluz)} frames... be patient")
-    
-    camera=Camera(self.fig2d)
-    
-    directions=[nobs]+[nluz]
-    combinations=[]
-    for direction in tqdm(itertools.product(*directions)):
-
-        self.reset_state()
-
-        self.set_observer(nvec=direction[0])
-        self.update_visibility_state()
-
-        self.set_luz(nvec=direction[1])
-        self.update_illumination_state()
-
-        self.plot2d(**plot2d_args)
-            
-        camera.snap()
-        combinations+=[direction]
-        
-    anim=camera.animate(interval=interval)
-
-    Verbose.VERBOSITY=verbosity
-        
-    if filename is not None:
-        if 'gif' in filename:
-            anim.save(filename)
-            return anim,combinations
-        elif 'mp4' in filename:
-            ffmpeg=animation.writers["ffmpeg"]
-            metadata = dict(title='Pryngles Spangler Animation',
-                            artist='Matplotlib',
-                            comment='Movie')
-            w=ffmpeg(fps=15,metadata=metadata)
-            anim.save(filename,w)
-            return anim,combinations
-        else:
-            raise ValueError(f"Animation format '{filename}' not recognized")
-    else:
-        return anim,combinations
-
-def _interact_plot2d(self,
-                     lon_luz=70,lat_luz=0,lon_obs=35,lat_obs=20,
-                     **plot2d_args):
-    verbosity=Verbose.VERBOSITY
-    Verbose.VERBOSITY=VERB_NONE
-
-    #Interact
-    def visuals_interact(lon_luz=0,lat_luz=0,lon_obs=0,lat_obs=0):
-
-        lon_luz=float(lon_luz)
-        lat_luz=float(lat_luz)
-        lon_obs=float(lon_obs)
-        lat_obs=float(lat_obs)
-
-        #Plot
-        self.reset_state()
-        self.set_luz(nvec=sci.direction(lon_luz,lat_luz))
-        self.update_illumination_state()
-
-        self.set_observer(nvec=sci.direction(lon_obs,lat_obs))
-        self.update_visibility_state()
-
-        self.plot2d(**plot2d_args)
-
-    opciones=dict(continuous_update=False,readout_format=".3f")
-    interact(visuals_interact,
-             lon_luz=widgets.FloatSlider(min=0,max=360,step=0.01,value=lon_luz,**opciones),
-             lat_luz=widgets.FloatSlider(min=-90,max=90,step=0.01,value=lat_luz,**opciones),
-             lon_obs=widgets.FloatSlider(min=0,max=360,step=0.01,value=lon_obs,**opciones),
-             lat_obs=widgets.FloatSlider(min=-90,max=90,step=0.01,value=lat_obs,**opciones),
-            );
-
-    Verbose.VERBOSITY=verbosity
-    
-Spangler._interact_plot2d=_interact_plot2d
-Spangler._animate_plot2d=_animate_plot2d
-
 
 
 # ## Test multiple sources of light

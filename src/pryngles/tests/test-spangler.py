@@ -16,6 +16,20 @@
 import unittest
 from pryngles import *
 class Test(unittest.TestCase):
+    def test_const(self):
+        
+        Verbose.VERBOSITY=VERB_ALL
+        
+        for key in SPANGLER_KEY_ORDERING:
+            if key not in SPANGLER_COLUMNS:
+                raise AssertionError(f"Column '{key}' in SPANGLER_KEY_ORDERING not in SPANGLER_COLUMNS")
+                        
+        for key in SPANGLER_COLUMNS:
+            if key not in SPANGLER_KEY_ORDERING:
+                raise AssertionError(f"Column '{key}' in SPANGLER_COLUMNS not in SPANGLER_KEY_ORDERING")
+                
+        Verbose.VERBOSITY=VERB_NONE
+
     def test_init(self):
         
         Verbose.VERBOSITY=VERB_ALL
@@ -23,6 +37,7 @@ class Test(unittest.TestCase):
         print("Basic definition:")
         sg=Spangler(nspangles=1,center_equ=[0,0,0],n_equ=[1,0,0])
         Misc.print_df(sg.data.head(1))
+        sg.get_mem_usage(True)
 
         print("\nCenter equ:")
         sg=Spangler(nspangles=3,center_equ=[0,0,1],n_equ=[0,1,0])
@@ -38,8 +53,8 @@ class Test(unittest.TestCase):
         Misc.print_df(sg.data.head(1))
 
         print("\nJoin:")
-        sg1=Spangler(sphash="Body 1",nspangles=3,w=40*Consts.deg,n_equ=[1,1,0])
-        sg2=Spangler(sphash="Body 2",nspangles=3,w=30*Consts.deg,n_equ=[1,0,1])
+        sg1=Spangler(bhash="Body 1",nspangles=3,w=40*Consts.deg,n_equ=[1,1,0])
+        sg2=Spangler(bhash="Body 2",nspangles=3,w=30*Consts.deg,n_equ=[1,0,1])
         sg=Spangler(spanglers=[sg1,sg2])
         sg.set_positions(t=1)
         Misc.print_df(sg.data)
@@ -111,6 +126,7 @@ class Test(unittest.TestCase):
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ICE,preset=0,scale=3)
         sg.reset_state()
         
+        sg.data.unset=False
         cond=sg.data.z_ecl>0
         sg.data.loc[cond,"illuminated"]=True
         cond=sg.data.x_ecl>0
@@ -127,6 +143,8 @@ class Test(unittest.TestCase):
         sg.populate_spangler(shape="ring",preset=True,
                              spangle_type=SPANGLE_GRANULAR,
                              scale=2,ri=0.2)
+
+        sg.data.unset=False
         sg.data.illuminated=True
         sg.data.illuminated=True
         cond=sg.data.x_ecl>0
@@ -134,6 +152,13 @@ class Test(unittest.TestCase):
         sg.data.loc[cond,"transmit"]=True
         sg.plot3d(statemark=0.1)
     
+        #No preset
+        sg=Spangler(nspangles=50,n_equ=[1,1,1])
+        sg.populate_spangler(shape="ring",preset=True,
+                             spangle_type=SPANGLE_GRANULAR,
+                             scale=2,ri=0.2)
+        sg.plot3d(coords="ecl",show_directions=True)
+        
         Verbose.VERBOSITY=VERB_NONE
         
     def test_setint(self):
@@ -142,7 +167,7 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_SIMPLE
 
         #No preset
-        sg=Spangler(nspangles=50,sphash="Ring")
+        sg=Spangler(nspangles=50,bhash="Ring")
         sg.populate_spangler(shape="ring",seed=1,
                              spangle_type=SPANGLE_GRANULAR,
                              scale=2,ri=0.2)
@@ -150,7 +175,7 @@ class Test(unittest.TestCase):
         sg.data.visible=True
         
         cond,n_int,d_int=sg.set_intersect(nvec=[1,0,1],center=[0,0,-1],
-                                          sphash="Ring")
+                                          bhash="Ring")
         sg._calc_qhulls()
         sg._plot_qhulls()
 
@@ -171,12 +196,12 @@ class Test(unittest.TestCase):
 
         #Normal
         nspangles=10
-        sg=Spangler(nspangles=nspangles,n_equ=[1,0,1],sphash="Planet")
+        sg=Spangler(nspangles=nspangles,n_equ=[1,0,1],bhash="Planet")
         sg.populate_spangler(shape="sphere",preset=0,
                              spangle_type=SPANGLE_SOLID_ROCK,
                              scale=2)
 
-        print_df(sg.data.loc[~sg.data.hidden,SPANGLER_KEY_FIELDS])
+        print_df(sg.data.loc[~sg.data.hidden,SPANGLER_DEBUG_FIELDS])
 
         sg.set_observer(nvec=[0,0,+1],center=None)
         sg.set_luz(nvec=[+1,0,0],center=None)
@@ -185,7 +210,7 @@ class Test(unittest.TestCase):
 
         #Semitransparent
         nspangles=50
-        sg=Spangler(nspangles=nspangles,n_equ=[1,0,1],sphash="Planet")
+        sg=Spangler(nspangles=nspangles,n_equ=[1,0,1],bhash="Planet")
         sg.populate_spangler(shape="sphere",preset=0,
                              spangle_type=SPANGLE_GASEOUS,
                              scale=2)
@@ -237,17 +262,17 @@ class Test(unittest.TestCase):
         sg.plot3d()
 
         #Two spheres
-        sg1=Spangler(sphash="Planet 1",nspangles=100,center_equ=[-5,0,0])
+        sg1=Spangler(bhash="Planet 1",nspangles=100,center_equ=[-5,0,0])
         sg1.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ICE,preset=True,scale=3)
         
-        sg2=Spangler(sphash="Planet 2",nspangles=100,center_equ=[+5,0,0])
+        sg2=Spangler(bhash="Planet 2",nspangles=100,center_equ=[+5,0,0])
         sg2.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,preset=True,scale=3)
         
         sg=Spangler(spanglers=[sg1,sg2])
 
         sg.set_observer([0,1,0])
-        sg.set_luz(nvec=[1,0,0],center=[0,0,0],sphash="Planet 1")
-        sg.set_luz(nvec=[-1,0,0],sphash="Planet 2")
+        sg.set_luz(nvec=[1,0,0],center=[0,0,0],bhash="Planet 1")
+        sg.set_luz(nvec=[-1,0,0],bhash="Planet 2")
         
         sg.plot3d()
         return
@@ -261,7 +286,7 @@ class Test(unittest.TestCase):
         Verbose.VERBOSITY=VERB_SIMPLE
         
         plt.close("all")
-        sg=Spangler(nspangles=2500,sphash="123",n_equ=[1,1,1],center_ecl=[0,0,2])
+        sg=Spangler(nspangles=2500,bhash="123",n_equ=[1,1,1],center_ecl=[0,0,2])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=2,seed=1,preset=True)
         #sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_GASEOUS,scale=2,seed=1,preset=True)
 
@@ -273,11 +298,13 @@ class Test(unittest.TestCase):
         sg.plot2d(coords="luz",fsize=fs)
         sg.plot2d(coords="obs",fsize=fs)
         
-        sg=Spangler(nspangles=200,sphash="123",n_equ=[1,1,1],center_ecl=[0,0,2])
+        sg=Spangler(nspangles=50,bhash="123",n_equ=[1,1,1],center_ecl=[0,1,0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=2,seed=1,preset=True)
         sg.set_observer(nvec=[1,0,0])
-        sg.set_luz(nvec=[1,1,1])
-        sg.plot2d(coords="obs",show_azim=True,fsize=5)
+        sg.set_luz(nvec=[0,1,0],center=[0,6,0])
+        sg.plot2d()
+        sg.plot2d(show_azim=True,fsize=5)
+        sg.plot3d(coords="luz",show_directions=True)
         
         Verbose.VERBOSITY=VERB_NONE
 
@@ -285,10 +312,10 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_SIMPLE
 
-        sg1=Spangler(nspangles=1000,sphash="Ring",n_equ=[1,0,5])
+        sg1=Spangler(nspangles=1000,bhash="Ring",n_equ=[1,0,5])
         sg1.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
 
-        sg2=Spangler(nspangles=1000,sphash="Planet",n_equ=[0,0,1])
+        sg2=Spangler(nspangles=1000,bhash="Planet",n_equ=[0,0,1])
         sg2.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=1,seed=1,preset=True)
 
         sgj=Spangler(spanglers=[sg1,sg2])
@@ -305,9 +332,9 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_SIMPLE
 
-        sg1=Spangler(nspangles=1000,sphash="Ring",n_equ=[1,0,5])
+        sg1=Spangler(nspangles=1000,bhash="Ring",n_equ=[1,0,5])
         sg1.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
-        sg2=Spangler(nspangles=1000,sphash="Planet",n_equ=[0,0,1])
+        sg2=Spangler(nspangles=1000,bhash="Planet",n_equ=[0,0,1])
         sg2.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
         sgj=Spangler(spanglers=[sg1,sg2])
         
@@ -346,17 +373,17 @@ class Test(unittest.TestCase):
         """
         nspangles=1000
         sps=[]
-        sg=Spangler(nspangles=nspangles,sphash="Star",n_equ=[0,0,1],center_equ=[-7,0,0])
+        sg=Spangler(nspangles=nspangles,bhash="Star",n_equ=[0,0,1],center_equ=[-7,0,0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_STELLAR,scale=3,seed=1,preset=1)
         sps+=[sg]
         nspangles=1000
-        sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
+        sg=Spangler(nspangles=nspangles,bhash="Planet",n_equ=[0,0,1])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
         sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=[1,0,-2])
+        sg=Spangler(nspangles=nspangles,bhash="Ring",n_equ=[1,0,-2])
         sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
         sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+4.0,0.0,0.0])
+        sg=Spangler(nspangles=nspangles,bhash="Moon",n_equ=[0,0,1],center_equ=[+4.0,0.0,0.0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=0.3,seed=1,preset=True)
         sps+=[sg]
 
@@ -379,35 +406,6 @@ class Test(unittest.TestCase):
         
         Verbose.VERBOSITY=VERB_NONE
 
-    def test_anim(self):
-        
-        Verbose.VERBOSITY=VERB_SIMPLE
-        
-        nspangles=500
-        sps=[]
-        sg=Spangler(nspangles=nspangles,sphash="Parent",n_equ=[0,0,1],center_equ=[-7,0,0])
-        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_STELLAR,scale=3,seed=1,preset=1)
-        sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Ring",n_equ=sci.direction(0,80))
-        sg.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
-        sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Planet",n_equ=[0,0,1])
-        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
-        sps+=[sg]
-        sg=Spangler(nspangles=nspangles,sphash="Moon",n_equ=[0,0,1],center_equ=[+3.0,0.0,0.0])
-        sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=0.3,seed=1,preset=True)
-        sps+=[sg]
-
-        sg=Spangler(spanglers=sps)
-
-        nobs=Plot.calc_flyby(normal=[0,0,1],start=0,stop=360,num=1,lat=30)
-        nluz=Plot.calc_flyby(normal=[0,0,1],start=0,stop=360,num=5,lat=20)
-
-        #anim,dirs=sg.animate_plot2d(nobs=nobs,nluz=nluz,interval=100,center_at="Ring",axis=False,not_plot=["Parent"])
-        anim,dirs=sg._animate_plot2d(filename="/tmp/flyby-plot2d-luz.gif",nobs=nobs,nluz=nluz,interval=500,center_at="Ring",axis=False)
-                
-        Verbose.VERBOSITY=VERB_NONE
-
     def test_muluz(self):
         
         Verbose.VERBOSITY=VERB_NONE
@@ -415,11 +413,11 @@ class Test(unittest.TestCase):
         nspangles=100
         sps=[]
 
-        sg=Spangler(nspangles=nspangles,sphash="Planet1",n_equ=[0,0,1],center_ecl=[0,0,0])
+        sg=Spangler(nspangles=nspangles,bhash="Planet1",n_equ=[0,0,1],center_ecl=[0,0,0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=1,seed=1,preset=True)
         sps+=[sg]
 
-        sg=Spangler(nspangles=nspangles,sphash="Moon1",n_equ=[0,0,1],center_ecl=[2,0,0])
+        sg=Spangler(nspangles=nspangles,bhash="Moon1",n_equ=[0,0,1],center_ecl=[2,0,0])
         sg.populate_spangler(shape="sphere",spangle_type=SPANGLE_SOLID_ROCK,scale=0.5,seed=1,preset=True)
         sps+=[sg]
 
@@ -428,13 +426,13 @@ class Test(unittest.TestCase):
         sg.set_observer([1,1,1])
         sg.update_visibility_state()
 
-        sphash="Planet1"
-        sg.set_luz(nvec=[1,0,0],sphash=sphash)
+        bhash="Planet1"
+        sg.set_luz(nvec=[1,0,0],bhash=bhash)
         sg.update_illumination_state()
 
         #"""
-        sphash="Moon1"
-        sg.set_luz(nvec=[-2,1,0],sphash=sphash)
+        bhash="Moon1"
+        sg.set_luz(nvec=[-2,1,0],bhash=bhash)
         sg.update_illumination_state()
         #"""
 
