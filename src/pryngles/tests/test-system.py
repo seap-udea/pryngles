@@ -96,15 +96,15 @@ class Test(unittest.TestCase):
         P=sys.add("Planet",primary=S,nspangles=nspangles,radius=0.2,x=2)
         
         #Test setting observer without spangling
-        self.assertRaises(AssertionError,lambda:sys.set_observer(nvec=[1,0,0]))
+        self.assertRaises(AssertionError,lambda:sys._set_observer(nvec=[1,0,0]))
         
         #Spangle system
         sys.spangle_system()
         
-        sys.set_observer(nvec=[-1,0,0])
+        sys._set_observer(nvec=[-1,0,0])
         sys.sg.plot3d()
         
-        sys.set_observer(nvec=[0,0,1])
+        sys._set_observer(nvec=[0,0,1])
         sys.sg.plot3d()
         
         Verbose.VERBOSITY=VERB_NONE
@@ -137,7 +137,6 @@ class Test(unittest.TestCase):
         
         nspangles=100
         sys=System(resetable=False)
-        S2=sys.add(bhash="Star2",nspangles=nspangles,m=8,radius=1,x=10,vy=-2)
         S1=sys.add(bhash="Star1",nspangles=nspangles,m=9,radius=1,x=0,vy=+2)
         P=sys.add("Planet",primary=S1,bhash="Planet",nspangles=nspangles,radius=0.2,x=2)
         M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,x=3)
@@ -194,7 +193,7 @@ class Test(unittest.TestCase):
 
         #All transformations from here are not stored
         sys.sg.plot3d()
-        sys.set_observer(nvec=[0,0,-1])
+        sys._set_observer(nvec=[0,0,-1])
         sys.sg.plot3d()
 
         #All transformations from here are not stored
@@ -221,36 +220,16 @@ class Test(unittest.TestCase):
 
         sys.integrate(1)
         
-        sys.set_observer([0,0,1])
-        sys.set_luz()
+        sys._set_observer([0,0,1])
+        sys._set_luz()
         
         sys.integrate(1)
         
-        sys.set_observer([0,0,1])
-        sys.set_luz()
+        sys._set_observer([0,0,1])
+        sys._set_luz()
 
         sys.sg.plot3d()
         sys.sg.plot3d(center_at="Ring")
-        
-        Verbose.VERBOSITY=VERB_NONE
-
-    def test_anim(self):
-        
-        global sys
-        
-        Verbose.VERBOSITY=VERB_NONE
-        
-        nspangles=100
-        sys=System()
-        S=sys.add("Star",bhash="Star",nspangles=nspangles,m=1,radius=1,x=0,y=0,vy=0)
-        P=sys.add("Planet",primary=S,bhash="Planet",nspangles=nspangles,radius=0.2,m=1e-3,
-                  x=2,vy=np.sqrt(sys.sim.G/2))
-        M=sys.add("Planet",primary=P,bhash="Moon",nspangles=nspangles,radius=0.1,m=1e-6,
-                  x=0,y=-3,vx=np.sqrt(sys.sim.G/3),vy=0)
-        R=sys.add("Ring",primary=P,bhash="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
-        sys.spangle_system()
-
-        sys.animate_integration(filename="/tmp/pryngles-dynamics.gif",tini=0,tend=10,interval=1000,nsnap=5,coords="ecl")
         
         Verbose.VERBOSITY=VERB_NONE
 

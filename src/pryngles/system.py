@@ -41,7 +41,7 @@ System_doc=f"""Creates a planetary system.
 
     Initialization attributes:
 
-        units: list of strings, default = ['au','msun','yr']:
+        units: list of strings, default = ['au','msun','yr2pi']:
             Units used in calculations following the conventions and signs of rebound.
             The order SHOULD always be MKS: length, mass, time (in that order)
 
@@ -102,7 +102,7 @@ class System(PrynglesCommon):
     
     def __init__(self,
                  filename=None,
-                 units=['au','msun','yr'],
+                 units=['au','msun','yr2pi'],
                  resetable=False
                 ):
         
@@ -639,45 +639,5 @@ def integrate(self,*args,**kwargs):
         raise AssertionError("You must first spangle system before setting positions.")
     
 System.integrate=integrate
-
-
-def animate_integration(self,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval=100,coords="obs"):
-
-    verbosity=Verbose.VERBOSITY
-    Verbose.VERBOSITY=VERB_NONE
-    
-    self.sg.fig2d=None
-    self.sg.plot2d(coords=coords,axis=False,newfig=False)
-    camera=Camera(self.sg.fig2d)
-    
-    for t in tqdm(np.linspace(tini,tend,nsnap)):
-        self.integrate(t)
-        self.set_observer(nvec=self.n_obs)
-        self.set_luz()
-        self.sg.plot2d(coords=coords,axis=False,newfig=False)
-        camera.snap()
-    
-    anim=camera.animate(interval=interval)
-    
-    Verbose.VERBOSITY=verbosity
-    
-    if filename is not None:
-        if 'gif' in filename:
-            anim.save(filename)
-            return anim
-        elif 'mp4' in filename:
-            ffmpeg=animation.writers["ffmpeg"]
-            metadata = dict(title='Pryngles Spangler Animation',
-                            artist='Matplotlib',
-                            comment='Movie')
-            w=ffmpeg(fps=15,metadata=metadata)
-            anim.save(filename,w)
-            return anim
-        else:
-            raise ValueError(f"Animation format '{filename}' not recognized")
-    else:
-        return anim
-    
-System.animate_integration=animate_integration
 
 

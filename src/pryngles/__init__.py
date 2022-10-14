@@ -31,6 +31,7 @@ import unittest
 import warnings
 import dill
 import inspect
+import sigfig
 from copy import deepcopy
 warnings.filterwarnings('ignore')
 
@@ -173,6 +174,7 @@ from pryngles.sampler import *
 from pryngles.spangler import *
 from pryngles.body import *
 from pryngles.system import *
+from pryngles.physics import *
 
 #Legacy modules
 from pryngles.legacy import *

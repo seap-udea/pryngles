@@ -1591,7 +1591,8 @@ def plot2d(self,
            axis=True,
            fsize=5,
            newfig=True,
-           show_azim=False
+           show_azim=False,
+           highlight=None,
           ):
     """
     Plot spangle.
@@ -1621,6 +1622,19 @@ def plot2d(self,
             
         show_azim: boolean, default = False:
             If True show azimuth of the observer and light source direction on each spangle.
+            
+        highlight: tuple, default = None:
+        
+            A tuple containing:
+    
+                1) A boolean mask telling which spangles to highlight
+                2) A dictionary with options for a scatter command
+                
+            Example:
+                
+                #Highlight all the spangles belonging to star which are visible
+                cond=(sys.data.sphash=="Star")&(sys.data.visible)
+                sys.sg.plot2d(highlight=(cond,dict(c='c')))
     """
     bgcolor='k'
     fig_factor=fsize/3.0
@@ -1659,7 +1673,7 @@ def plot2d(self,
     cond=cond if sum(cond)>0 else [True]*num_included        
     maxval=1.2*np.abs(np.array(data[cond][[f"x_{coords}",f"y_{coords}"]])-np.array([x_cen,y_cen])).max()
     
-    size_factor=10*fig_factor*maxval_full/maxval
+    size_factor=500*fig_factor #*maxval_full/maxval
         
     #Figure
     if "fig2d" not in self.__dict__ or newfig:
@@ -1745,9 +1759,6 @@ def plot2d(self,
         quiver_args=dict(scale=15,angles='xy',scale_units='width',
                          width=0.005,alpha=0.6,zorder=-100,headwidth=0)
         
-        
-        print(x_cen,y_cen)
-        
         #Quiver plot of azimuth for light
         azx=np.cos(self.data[cond].azim_luz)
         azy=np.sin(self.data[cond].azim_luz)
@@ -1774,7 +1785,18 @@ def plot2d(self,
         for text in leg.get_texts():
             text.set_color("w")
         axis=False
-
+        
+    if highlight:
+        if len(highlight)<2:
+            raise AssertionError("Highlight should include conditions and scatter options")
+        
+        def_args_scatter=dict(c='w',s=0.1,marker='*')
+        cond_highlight,args_scatter=highlight
+        def_args_scatter.update(args_scatter)
+        self.ax2d.scatter(self.data[cond_highlight&cond_included]["x_"+coords]-x_cen,
+                          self.data[cond_highlight&cond_included]["y_"+coords]-y_cen,
+                          **def_args_scatter)
+        
     #Axis
     if newfig and axis:
         self.ax2d.plot([xmin,xmax],[0,0],'w-',alpha=0.3)

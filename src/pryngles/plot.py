@@ -202,8 +202,10 @@ Plot.calc_flyby=calc_flyby
 
 # ## Animate rebound
 
-def animate_rebound(sim,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval=100):
-
+def animate_rebound(sim,filename=None,tini=0,tend=None,nsnap=None,interval=100,axis=False):
+    """Animate a rebound simulation.
+    """
+    
     verbosity=Verbose.VERBOSITY
     Verbose.VERBOSITY=VERB_NONE
     
@@ -211,21 +213,37 @@ def animate_rebound(sim,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval=100)
 
     camera=Camera(fig)
 
-    for t in tqdm(np.linspace(tini,tend,nsnap)):
+    #Get the period of the longest osculant orbit
+    P=-1
+    for p in sim.particles[1:]:
+        P=p.P if p.P>P else P
+    
+    #Choose properly tend and nsnap
+    tend=P if tend is None else tend
+    nsnap=int(tend/(P/100)) if nsnap is None else nsnap
+
+    #Simulate
+    for i,t in enumerate(tqdm(np.linspace(tini,tend,nsnap))):
         sim.integrate(t)
         sim.move_to_com()
         
         for p in sim.particles:
             xyz=p.xyz
             ax.plot(xyz[0],xyz[1],marker='o',color='r')
-        
+            
+        ax.text(0.5,1,f"t = {sigfig.round(t,3)} (snap {i+1}/{nsnap})",
+                transform=ax.transAxes,
+                ha='center',va='bottom')
+
         camera.snap()
     
+    if axis:
+        ax.grid()
+    else:
+        ax.axis("off")
     ax.axis("equal")
-    ax.grid()
     
-    anim=camera.animate(interval=interval)
-    
+    anim=camera.animate(interval=interval)    
     Verbose.VERBOSITY=verbosity
     
     if filename is not None:
@@ -244,7 +262,6 @@ def animate_rebound(sim,filename=None,tini=0,tend=2*np.pi,nsnap=10,interval=100)
             raise ValueError(f"Animation format '{filename}' not recognized")
     else:
         return anim
-
     
     return anim
 

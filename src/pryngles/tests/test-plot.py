@@ -74,7 +74,7 @@ class Test(unittest.TestCase):
         sim.add(m=mm,x=xp+xm,vy=vp+vm)
         P=sim.particles[1].P
 
-        anim=Plot.animate_rebound(sim,filename="/tmp/animate-rebound.gif",tend=P,nsnap=5,interval=20)
+        anim=Plot.animate_rebound(sim,filename="/tmp/animate-rebound.gif",interval=20)
         
         Verbose.VERBOSITY=VERB_NONE
 

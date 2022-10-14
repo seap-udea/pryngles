@@ -65,7 +65,7 @@ REBOUND_ORBITAL_PROPERTIES=dict(
     #Cartesian coordinates
     x=0,y=0,z=0,vx=0,vy=0,vz=0,
     #Semi major axis, true anomaly, eccentricity
-    a=0,f=0,e=0,
+    a=1,f=0,e=0,
     #Periapsis argument, inclination, longitude of the ascending node
     omega=0,inc=0,Omega=0,
     #Mean anomaly, eccentric anomaly, time of periapsis passage
