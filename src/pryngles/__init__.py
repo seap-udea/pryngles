@@ -6,26 +6,20 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
+
 # PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
+# License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-##################################################
-# PRELIMINARY INIT COMMANDS
-##################################################
-#--END OF TEMPLATE--#
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
+##################################################################
 
-#!/usr/bin/env python
-# coding: utf-8
 
-# # PlanetaRY spanGLES
-
-# This is the initialization file of the `Pryngles` package.
-
-# ## Packages common to all modules
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 import unittest
 import warnings
@@ -33,9 +27,18 @@ import dill
 import inspect
 import sigfig
 from copy import deepcopy
+import sys
+from collections import OrderedDict as odict
 warnings.filterwarnings('ignore')
 
-# ## Jupyter compatibilty
+#JupDev: Jupyter compatibility
+from IPython.display import HTML, Image, display
+import IPython.core.autocall as autocall
+from IPython import get_ipython
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Stand alone code of the module
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 """
 The purpose of the get_ipython class is to provide some response in the python 
@@ -50,11 +53,6 @@ For instance, the magic "%matplotlib nbagg" is converted into:
 
 So, the method "magic" should be add to the get_ipython() class.        
 """
-from IPython.display import HTML, Image, display
-import IPython.core.autocall as autocall
-from IPython import get_ipython
-import sys
-
 try:
     cfg=get_ipython().config
 except AttributeError:
@@ -68,19 +66,11 @@ except AttributeError:
         def magic(self,command,scope=globals()):
             pass
 
-#Magics can only be located from here
+#Magics can only be located starting from here
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
-# ## Verbosity
-
-"""Verbosity levels:
-SIMPLE: Simple messages.
-SYSTEM: System operations.
-VERIFY: Message to verify operations
-DEEP: Deep debugging messages
-ALL: All debugging messages
-"""
+#Verbosity levels: see help(Verbose)
 VERB_NONE=0
 VERB_SIMPLE=1
 VERB_SYSTEM=2
@@ -95,6 +85,13 @@ class Verbose(object):
         VERBOSITY: int, default = 0:
             Level of verbosity.
             
+            Verbosity levels:
+                SIMPLE: Simple messages.
+                SYSTEM: System operations.
+                VERIFY: Message to verify operations
+                DEEP: Deep debugging messages
+                ALL: All debugging messages
+                
     Methods:
         print(level,msg):
             Print a message if level<=VERBOSITY.
@@ -118,14 +115,17 @@ class Verbose(object):
     def print(level,*args):
         if level<=Verbose.VERBOSITY:
             print("  "*level+f"VERB{level}::{inspect.stack()[1][3]}::",*args)
-
+            
+#Alias
 verbose=Verbose.print
 
-# ## PrynglesCommon
-# 
-# Many of the classes in Pryngles inherite methods of this common class
-
 class PrynglesCommon(object):
+    """Base class of the package.
+    
+    All major classes are children of PrynglesCommon class.
+    """
+    def __init__(self):
+        pass
     
     def save_to(self,filename):
         """Save object to a binary file
@@ -133,9 +133,6 @@ class PrynglesCommon(object):
         Parameters:
             filename: string:
                 Name of the file where the object will be stored.
-                
-            compressed: boolean, default = False:
-                If True the file will be stored compressed.
         
         Notes:
             Based on https://betterprogramming.pub/load-fast-load-big-with-compressed-pickles-5f311584507e.
@@ -144,9 +141,14 @@ class PrynglesCommon(object):
         pikd = open(filename,"wb")
         dill.dump(self, pikd)
         pikd.close()
-        
             
-    def load_from(self,filename,compressed=False):
+    def load_from(self,filename):
+        """Read object from a binary file.
+        
+        Parameters:
+            filename: string:
+                Name of the file where the object is stored.        
+        """
         verbose(VERB_SYSTEM,f"Loading object from {filename}")
         pikd = open(filename,"rb")
         data = dill.load(pikd)
@@ -156,32 +158,39 @@ class PrynglesCommon(object):
         return data
     
     def __str__(self):
+        """Show content of an object
+        
+        This method determines the default behavior of the command:
+        
+            print(object)
+        """
         #Remove private attributes
         return str({k:v for k,v in self.__dict__.items() if k[0]!='_'})
 
-# ## Pryngles modules
-
 from pryngles.version import *
 
-#General modules
+#Utility modules
 from pryngles.consts import *
 from pryngles.misc import *
 from pryngles.science import *
+
+#Legacy module
+from pryngles.legacy import *
+
+#General modules
 from pryngles.plot import *
+from pryngles.orbit import *
 
 #Core modules
 from pryngles.sampler import *
 from pryngles.spangler import *
 from pryngles.body import *
 from pryngles.system import *
-from pryngles.physics import *
-
-#Legacy modules
-from pryngles.legacy import *
+from pryngles.optics import *
 
 #Reset verbosity
 Verbose.VERBOSITY=VERB_NONE
 
-# ## Tests
-
-
+#This aliases does not work in modules
+print_df=Misc.print_df
+sci=Science

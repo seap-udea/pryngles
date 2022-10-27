@@ -6,196 +6,175 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
-# PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
-#                                                                #
-##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
-##################################################################
-#!/usr/bin/env python
-# coding: utf-8
 
-# # Pryngles module: body 
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
+##################################################################
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 from pryngles import *
-
-# ## External modules
 
 import spiceypy as spy
 import numpy as np
 from copy import deepcopy
+from anytree import NodeMixin,RenderTree
 
-# ## Aliases
 
-sci=Science
-print_df=Misc.print_df
-
-# ## The body class
-# 
-# The Body class is one of the most important classes in the package. 
-
-Body_doc="""A general body.  This class is not intended to be used independently, just for inheritance purposes.
-    
-Initialization attributes:
-
-    kind : string:
-        One of the kind of bodies defined in the package (see _BODY_KINDS)
-        Defined objects are: "Star", "Planet", "Ring".
-
-    defaults : OrderedDict:
-        Dictionary with the properties of the object.
-
-    primary: Class Body:
-        Object in the center of the orbit of this body.
-
-    **properties: dicitionary:
-        Specification of the body properties.  All objects of the class Body has the following
-        properties by default:
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Body
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Body(Orbody):
+    """A general body.  This class is not intended to be used independently, just for inheritance purposes.
         
-        bhash: string, default = None:
-            Hash of the object, ie. a unique string identifying the object 
-            (see hash Python function)
-
-        orbital properties: 
-            Object with the orbital properties of the body (eg. orbit.m is the mass)
-            see each specific Body definition for attributes.
-            orbit must be compatible with rebound.
-
-                m: float [rebound mass units], default = 1:
-                    Mass of the body.  If m = 0 the body does not produce gravitation.
-
-        physical properties:
-
-            Object with the physical properties of the body (eg. physics.radius)
-            see each specific Body definition for attributes.
-
-                radius: float [rebound length units], default = 1:
-                    Radius of the body.
-
-                prot: float [ut], default = 1:
-                    Period of rotation of the star.
-
-                i: float [rad], default = 0:
-                    Inclination of the body equator with respect to the ecliptic plane.
-
-                roll: float [rad], default = 0:
-                    Roll angle.  This is the angle with respect to ecliptic x-axis in which 
-                    the normal to the object equatorial plane is rotated.
-
-                alpha_equ: float [rad], default = 0:
-                    Longitude of the zero meridian of the object.
-
-                q0: float [ut], default = 0:
-                    Initial longitude for zero meridian.
-
-        optical properties:
-
-            Object with the optical properties of the body (eg. physics.lamb_albedo)
-            see each specific Body definition for attributes.
-
-                nspangles: int, default = 1000:
-                    Number of spangles on which the object will be discretized.
-                    
-                spangle_type: int, default = SOLID_SPANGLE:
-                    Type of spangles of the body.
-                    
-                preset: boolean, default = True:
-                    If True spangle object from a preset.
-
-Derived attributes:
-
-        wrot: float [rad/ut]:
-            Rotational angular velocity.
-
-        n_equ: array(3):
-            Rotational axis vector in the ecliptic system.
+    Initialization attributes:
     
-Secondary attributes:
-
-    childs: list
-        List with child bodies (bodies which have this body) as the center.
-
-Public methods:
-
-    update_body(**props):
-        Update a given set of properties.
+        kind : string:
+            One of the kind of bodies defined in the package (see _BODY_KINDS)
+            Defined objects are: "Star", "Planet", "Ring".
+    
+        defaults : OrderedDict:
+            Dictionary with the properties of the object.
+    
+        parent: Class Body:
+            Object in the center of the orbit of this body.
+    
+        **properties: dicitionary:
+            Specification of the body properties.  All objects of the class Body has the following
+            properties by default:
+            
+            name: string, default = None:
+                Name of the object, ie. a unique string identifying the object.  It can be provided
+                by the user or automatically set by the initializer using a unique hash 
+                (see hash Python function).
+    
+            orbital properties: 
+                Object with the orbital properties of the body (eg. orbit.m is the mass)
+                see each specific Body definition for attributes.
+                orbit must be compatible with rebound.
+    
+                    m: float [rebound mass units], default = 1:
+                        Mass of the body.  If m = 0 the body does not produce gravitation.
+    
+            physical properties:
+    
+                Object with the physical properties of the body (eg. physics.radius)
+                see each specific Body definition for attributes.
+    
+                    radius: float [rebound length units], default = 1:
+                        Radius of the body.
+    
+                    prot: float [ut], default = 1:
+                        Period of rotation of the star.
+    
+                    i: float [rad], default = 0:
+                        Inclination of the body equator with respect to the ecliptic plane.
+    
+                    roll: float [rad], default = 0:
+                        Roll angle.  This is the angle with respect to ecliptic x-axis in which 
+                        the normal to the object equatorial plane is rotated.
+    
+                    alpha_equ: float [rad], default = 0:
+                        Longitude of the zero meridian of the object.
+    
+                    q0: float [ut], default = 0:
+                        Initial longitude for zero meridian.
+    
+            optical properties:
+    
+                Object with the optical properties of the body (eg. physics.lamb_albedo)
+                see each specific Body definition for attributes.
+    
+                    nspangles: int, default = 1000:
+                        Number of spangles on which the object will be discretized.
+                        
+                    spangle_type: int, default = SOLID_SPANGLE:
+                        Type of spangles of the body.
+                        
+                    preset: boolean, default = True:
+                        If True spangle object from a preset.
+    
+    Derived attributes:
+    
+            wrot: float [rad/ut]:
+                Rotational angular velocity.
+    
+            n_equ: array(3):
+                Rotational axis vector in the ecliptic system.
         
-Examples:
-
-    Create a body with None parent and hash = 'B':
+    Secondary attributes:
     
-        B=Body("Body",BODY_DEFAULTS,None,hash='B',m=2,c=2)
+        childs: list
+            List with child bodies (bodies which have this body) as the center.
+    
+    Public methods:
+    
+        update_body(**props):
+            Update a given set of properties.
+            
+    Examples:
+    
+        Create a body with None parent and name = 'B':
         
-    Create a body having parent the Body "B" defined before:
-         
-        C=Body("Body",BODY_DEFAULTS,B,hash="C")
-"""
-
-"""
-These are the default attributes for any body.
-"""
-BODY_DEFAULTS=dict()
-BODY_DEFAULTS.update(odict(
+            B=Body("Body",BODY_DEFAULTS,None,name='B',m=2,c=2)
+            
+        Create a body having parent the Body "B" defined before:
+             
+            C=Body("Body",BODY_DEFAULTS,B,name="C")
     
-    bhash=None,
-    hash_by_kind=False,
-    
-    #Orbit
-    m=1,
-    x=0,y=0,z=0,
-    vx=0,vy=0,vz=0,
+    """
 
-    #Physics
-    radius=1,
-    prot=1,
-    i=0, #Inclination of the rotational axis
-    roll=0,
-    alpha=0, #Zero meridian
-    q0=0,
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Bassic methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    #Optics
-    nspangles=1000,
-    spangle_type=SPANGLE_SOLID_ROCK,
-    shape="sphere",
-    geometry_args=dict(),
-    seed=0,
-    preset=True,
-))
+    def __init__(self,kind,defaults,parent,**props):
 
-BODY_KINDS=[]
-class Body(PrynglesCommon):
-    
-    def __init__(self,kind,defaults,primary,**props):
-
-        #Kind, primary and child attributes
+        #Kind, parent and child attributes
         self.kind=kind
         self.__defaults=defaults
 
-        #Hash object
-        if 'bhash' in props:
-            bhash=self.bhash=str(props["bhash"])
-        elif 'hash_by_kind' in props:
-            bhash=self.bhash=self.kind
+        #Name of the object
+        if 'name' in props:
+            name=self.name=str(props["name"])
+        elif 'name_by_kind' in props:
+            name=self.name=self.kind
         else:
-            bhash=self.bhash=str(hash(self))
-            
+            name=self.name=str(hash(self))
+
+        #Legacy
+        if 'primary' in props:
+            parent=props["primary"]
+        if 'optics' in props:
+            props.update(props["optics"])
+        if 'orbit' in props:
+            props.update(props["orbit"])
+        if 'physics' in props:
+            props.update(props["physics"])
 
         #Update childs and parent
-        if primary is not None:
-            if not isinstance(primary,Body):
-                raise AssertionError(f"Primary is not a valid Object: {type(primary)}, {isinstance(primary,Body)}")
+        if parent is not None:
+            if not isinstance(parent,Body):
+                raise AssertionError(f"Parent is not a valid Object: {type(parent)}, {isinstance(parent,Body)}")
             else:
-                primary._update_childs(self)
+                self.parent=parent
+                parent._update_childs(self)
 
-        #Update primary and childs        
-        self._update_primary(primary)
+        #Update parent and childs        
+        self._update_parent(parent)
         self._update_childs()
 
         #Update default properties
         self.__dict__.update(defaults)
-        #Recover hash
-        self.bhash=bhash
+        #Set name
+        self.name=name
         #Update body
         self.update_body(**props)
     
@@ -217,6 +196,8 @@ class Body(PrynglesCommon):
             else:
                 raise ValueError(f"Property {prop} not identified in object {self.kind}")
                 
+        self.elements={k:v for k,v in self.__dict__.items() if k in REBOUND_ORBITAL_PROPERTIES}
+        
         verbose(VERB_VERIFY,"Updating Body")
         self._update_properties()
     
@@ -224,17 +205,17 @@ class Body(PrynglesCommon):
         if 'childs' not in self.__dict__:
             self.childs=dict()
         if child is not None:
-            verbose(VERB_VERIFY,f"Add child {child.bhash} to body {self.kind} ({self.bhash})")
-            self.childs[child.bhash]=child
+            verbose(VERB_VERIFY,f"Add child {child.name} to body {self.kind} ({self.name})")
+            self.childs[child.name]=child
             
-    def _update_primary(self,primary=None):
-        if 'primary' not in self.__dict__:
-            if primary:
-                verbose(VERB_VERIFY,f"Add primary {primary.bhash} to body {self.kind} ({self.bhash})")
-            self.primary=primary
-        elif primary is not None:
-            verbose(VERB_VERIFY,f"Add parent {primary.bhash} to body {self.kind} ({self.bhash})")
-            self.primary=primary
+    def _update_parent(self,parent=None):
+        if 'parent' not in self.__dict__:
+            if parent:
+                verbose(VERB_VERIFY,f"Add parent {parent.name} to body {self.kind} ({self.name})")
+            self.parent=parent
+        elif parent is not None:
+            verbose(VERB_VERIFY,f"Add parent {parent.name} to body {self.kind} ({self.name})")
+            self.parent=parent
             parent._update_childs(self)
     
     def _update_properties(self):
@@ -243,75 +224,58 @@ class Body(PrynglesCommon):
         self.wrot=2*np.pi/self.prot
         #Rotation axis
         self.n_equ=sci.cartesian([1,self.roll,90*Consts.deg-self.i])
-
-Body.__doc__=Body_doc
-
-# ## Testing
-
-
-def spangle_body(self):
-    """
-    Spangle the surface of the body
-    """
     
-    #Create spangler
-    self.sg=Spangler(
-        nspangles=self.nspangles,
-        bhash=self.bhash,
-        n_equ=self.n_equ,
-        alpha_equ=self.alpha,
-        w=self.wrot,
-        q0=self.q0,
-    )
+    def show_tree(self):
+        print(RenderTree(self))
+        
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file body
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def spangle_body(self):
+        """
+        Spangle the surface of the body
+        """
+        
+        #Create spangler
+        self.sg=Spangler(
+            nspangles=self.nspangles,
+            name=self.name,
+            n_equ=self.n_equ,
+            alpha_equ=self.alpha,
+            w=self.wrot,
+            q0=self.q0,
+        )
+        
+        #Populate spangler
+        self.sg.populate_spangler(
+            shape=self.shape,
+            spangle_type=self.spangle_type,
+            scale=self.radius,
+            seed=self.seed,
+            preset=self.preset,
+            **self.geometry_args,
+        )
     
-    #Populate spangler
-    self.sg.populate_spangler(
-        shape=self.shape,
-        spangle_type=self.spangle_type,
-        scale=self.radius,
-        seed=self.seed,
-        preset=self.preset,
-        **self.geometry_args,
-    )
-
-    self.sg.set_observer()
-    self.sg.set_luz()
-
-Body.spangle_body=spangle_body
+        self.sg.set_observer()
+        self.sg.set_luz()
 
 
-# ## Star Class
-
-"""
-These are the default attributes for bodies of the kind 'Star'.
-"""
-STAR_DEFAULTS=deepcopy(BODY_DEFAULTS)
-STAR_DEFAULTS.update(odict(
-
-    #Orbit: update
-    #Same as Body
-    
-    #Physics: update
-    #Same as Body
-    
-    #Optical properties: update
-    limb_coeffs=[],
-    spangle_type=SPANGLE_STELLAR,
-    shape="sphere",
-))
-
-BODY_KINDS+=["Star"]
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Star
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Star(Body):
     """A star.
 
     Initialization attributes:
         
-        primary: Class Body, default = None:
+        parent: Class Body, default = None:
             Object in the center of the orbit of the star for specification purposes.
 
             If None the object is the center of the orbit specification for other objects.
             
-            Object primary for a star should be another star.
+            Object parent for a star should be another star.
         
         **props: dictionary:
             List of properties for star.  For the complete set of default values of the properties
@@ -342,18 +306,18 @@ class Star(Body):
     
     """
     def __init__(self,
-                 primary=None,
+                 parent=None,
                  **props
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,"Star",STAR_DEFAULTS,primary,**props)
+        Body.__init__(self,"Star",STAR_DEFAULTS,parent,**props)
 
-        #Check primary
-        if self.primary is not None:
-            if self.primary.kind!="Star":
-                raise ValueError(f"Only another Star can be the primary of a Star (you provided {self.primary.kind})")
+        #Check parent
+        if self.parent is not None:
+            if self.parent.kind!="Star":
+                raise ValueError(f"Only another Star can be the parent of a Star (you provided {self.parent.kind})")
 
         self._update_star_properties()
         
@@ -373,7 +337,7 @@ class Star(Body):
         sci.limb_darkening(0,self.limb_coeffs)
         
         #Store limb darkening normalization
-        self.norm_limb_darkening=Science.LIMB_NORMALIZATIONS[hash(tuple(self.limb_coeffs))]
+        self.norm_limb_darkening=SCIENCE_LIMB_NORMALIZATIONS[hash(tuple(self.limb_coeffs))]
         
     def update_star(self,**props):
         """General update propeties of the Star
@@ -384,34 +348,15 @@ class Star(Body):
         self._update_star_properties()
 
 
-# ## Planet class
-
-"""
-These are the default attributes for bodies of the kind 'Planet'.
-"""
-PLANET_DEFAULTS=deepcopy(BODY_DEFAULTS)
-PLANET_DEFAULTS.update(odict(
-    
-    #Orbit: update
-    #Same as Body
-    
-    #Physics: update
-    #Same as Body
-    
-    #Optical: update
-    spangle_type=SPANGLE_SOLID_ROCK,
-    geometry="sphere",
-    
-    albedo_gray_spherical=1,
-))
-
-BODY_KINDS+=["Planet"]
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Planet
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Planet(Body):
     """A planet.
 
     Initialization attributes:
         
-        primary: Class Body, default = None:
+        parent: Class Body, default = None:
             Object in the center of the orbit of the star for specification purposes.
             If None the object is the center of the orbit specification for other objects.
 
@@ -437,17 +382,17 @@ class Planet(Body):
     """
     
     def __init__(self,
-                 primary=None,
+                 parent=None,
                  **props
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,"Planet",PLANET_DEFAULTS,primary,**props)
+        Body.__init__(self,"Planet",PLANET_DEFAULTS,parent,**props)
         
-        #Check primary
-        if self.primary is None:
-            raise ValueError(f"Primary not provided and it is mandatory for {self.kind}.")
+        #Check parent
+        if self.parent is None:
+            raise ValueError(f"Parent not provided and it is mandatory for {self.kind}.")
         
         #Update properties
         self.update_planet(**props)
@@ -470,36 +415,15 @@ class Planet(Body):
         self._update_planet_properties()
 
 
-# ## Ring class
-
-RING_DEFAULTS=deepcopy(BODY_DEFAULTS)
-RING_DEFAULTS.update(odict(
-
-    #Orbit: update
-    #Same as Body altough ring has not orbit properties
-    
-    #Physics: update
-    #Same as Body
-    fi=1.0,
-    fe=2.0,
-    
-    #Optics: update
-    spangle_type=SPANGLE_GRANULAR,
-    shape="ring",
-    albedo_gray_normal=1,
-    tau_gray_optical=0,
-))
-
-# ## Ring Class
-
-BODY_KINDS+=["Ring"]
-
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Ring
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Ring(Body):
     """Class Ring.
     
 Initialization attributes:
         
-        primary: Class Body, default = None:
+        parent: Class Body, default = None:
             Object in the center of the orbit of the star for specification purposes.
             If None the object is the center of the orbit specification for other objects.
 
@@ -510,10 +434,10 @@ Initialization attributes:
             Additional properties:
 
             fi: float [adimensional], default = 1:
-                Fraction of the radius of the primary object where ring stars.
+                Fraction of the radius of the parent object where ring stars.
 
             fe: float [adimensional], default = 1:
-                Fraction of the radius of the primary object where ring ends.
+                Fraction of the radius of the parent object where ring ends.
 
             albedo_gray_normal: float. default = 1: 
                 Lambertian (normal) gray (wavelength indpendent) albedo of the spangle.
@@ -525,27 +449,27 @@ Initialization attributes:
     Derived attributes:
     
         ri: float:
-            Radius of the inner border of the ring in units of the primary radius.
+            Radius of the inner border of the ring in units of the parent radius.
 
         re: float:
-            Radius of the outer border of the ring in units of the primary radius.
+            Radius of the outer border of the ring in units of the parent radius.
             
     Notes:
 
         See Body class documentation.
     """
     def __init__(self,
-                 primary=None,
+                 parent=None,
                  **props
                 ):
         
         
         #Instantiate object with basic properties
-        Body.__init__(self,"Ring",RING_DEFAULTS,primary,**props)
+        Body.__init__(self,"Ring",RING_DEFAULTS,parent,**props)
         
-        #Check primary
-        if self.primary is None:
-            raise ValueError(f"Primary not provided and mandatory for {self.kind}.")
+        #Check parent
+        if self.parent is None:
+            raise ValueError(f"Parent not provided and mandatory for {self.kind}.")
         
         #Update properties
         self.update_ring(**props)
@@ -556,7 +480,7 @@ Initialization attributes:
         Properties to update:
         
             ri, re: float:
-                Radius of the inner (outer) border of the ring in units of the primary radius.
+                Radius of the inner (outer) border of the ring in units of the parent radius.
                 Requires: limb_coefs.
                 
             radius: float:
@@ -568,8 +492,8 @@ Initialization attributes:
         verbose(VERB_VERIFY,"Updating Ring properties")
     
         #Update radius
-        self.ri=self.fi*self.primary.radius
-        self.re=self.fe*self.primary.radius
+        self.ri=self.fi*self.parent.radius
+        self.re=self.fe*self.parent.radius
         self.radius=self.re
         
         #Update geometry args for spangling purposes
@@ -581,3 +505,15 @@ Initialization attributes:
         self._update_ring_properties()   
 
 
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Observer
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Observer(Body):
+    """This class is intended only for legacy purposes.
+    """
+    def __init__(self,
+                 parent=None,
+                 **props
+                ):
+        Body.__init__(self,"Observer",OBSERVER_DEFAULTS,parent,**props)

@@ -6,24 +6,33 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
+
 # PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 #!/bin/bash
 . .pack/packrc
 
+##################################################################
+# Preliminary
+##################################################################
 if [ "x$1" = "x" ];then 
     echo "You must provide at least one .ipynb file"
 fi
+
 GIT=0
 if [ -d .git ];then
     GIT=1
 fi
 
+##################################################################
+# Routines
+##################################################################
 function newer()
 {
     file1=$1;shift
@@ -57,15 +66,17 @@ function convert()
     sed -ie "s/get_ipython().magic('timeit\(.*\))$/get_ipython().magic('timeit\1,scope=globals())/" /tmp/convert.py
 
     echo -e "\tTriming end..."
-    nlines=$(cat -n /tmp/convert.py | grep -e "--End--" | cut -f 1 )
+    nlines=$(cat -n /tmp/convert.py | grep -e "#@end:module" | cut -f 1 )
     if [ "x$nlines" = "x" ];then
 	nlines=$(cat /tmp/convert.py|wc -l)
     else
 	((nlines--))
     fi
 
+    #Deprecated
     echo -e "\tTriming test..."
     ntlines=$(cat -n /tmp/convert.py | grep -e "--Test--" | cut -f 1 )
+
     if [ "x$nlines" = "x" ];then
 	ntlines=$(cat /tmp/convert.py|wc -l)
     else
@@ -85,24 +96,32 @@ function convert()
     fi
     echo -e "\tUsing as template src/$filename.temp"
     
-    (cat header.py;cat src/$filename.temp;head -n $tlines /tmp/convert.py) > $target
+    (cat src/header.py;cat src/$filename.temp;head -n $tlines /tmp/convert.py) > $target
     #(head -n $tlines /tmp/convert.py) > $target
 
     if [ $ntlines -gt 0 ];then
 	alines=$(cat /tmp/convert.py|wc -l)
 	elines=$((alines-ntlines))
 	rlines=$((nlines-ntlines))
-	(cat header.py;tail -n $elines /tmp/convert.py | head -n $rlines) > $test
+	(cat src/header.py;tail -n $elines /tmp/convert.py | head -n $rlines) > $test
 	#(tail -n $elines /tmp/convert.py | head -n $rlines) > $test
 	echo -e "\tCreating test file $test..."
     fi
     
 }
 
+##################################################################
+# Convert
+##################################################################
+forced=0
 for notebook in $@
 do
-    if [ ! -e $notebook ];then 
-	echo "Notebook $notebook does not exist. Skipping."
+    if [ ! -e $notebook ];then
+	if [ $notebook == "forced" ];then
+	    forced=1
+	else
+	    echo "Notebook $notebook does not exist. Skipping."
+	fi
 	continue
     fi
 
@@ -133,7 +152,7 @@ do
     fi
 
     # Check if notebook is more recent than target file
-    if [ $1 != "force" ];then 
+    if [ $forced -lt 1 ];then 
 	if [ $(newer $notebook $target) -lt 0 ];then continue;fi
     fi
 
@@ -151,7 +170,7 @@ do
 
     # Parsing inline test code
     echo -e "\tParsing python file $target"
-    ntests=$(python parse.py $target)
+    ntests=$(python bin/test-parse.py $target)
     if [ $ntests -gt 0 ];then
 	echo -e "\tParsing tests from inline code"
 	cp -rf /tmp/test-$filebase.py $targetdir/tests/
@@ -159,6 +178,10 @@ do
     else
 	echo -e "\tNo inline test code"
     fi
+
+    #Save source file
+    source=src/$PACKNAME/.build/$filebase.src
+    cp -rf $target $source    
 
     # Add new package file into git repository
     if [[ $notebook == *"$PACKNAME-"* ]]
@@ -168,5 +191,6 @@ do
 	    git add -f $targetdir/tests/test-$filebase.py
 	fi
     fi
+
 done
 echo "Completed."

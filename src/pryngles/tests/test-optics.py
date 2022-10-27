@@ -18,11 +18,11 @@
 import unittest
 from pryngles import *
 class Test(unittest.TestCase):
-	def test_fun(self):
-	    p=Consts.ppm
-	    self.assertEqual([p],[1e6],[True]*1)
-	    print(Consts.get_all())
-	    print(Consts.get_physical())
+	def test_scatterer(self):
+	
+	    Verbose.VERBOSITY=VERB_ALL
+	
+	    Verbose.VERBOSITY=VERB_NONE
 	
 if __name__=="__main__":
     unittest.main(argv=['first-arg-is-ignored'],exit=False)

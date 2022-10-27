@@ -22,11 +22,11 @@ There are two types of conversion:
   conditional.  All code after a cell including the "--End--" string
   is ignored in simple conversion.
 
-- **Advanced conversion**: Also called `xconvert`.  In the first stage
-  of this procedure a simple conversion is performed.  Then the
-  resulting python module files are parsed searching comments of the
-  form "#@command" instructing the script to separate componentes by
-  classes and constants.
+- **Advanced conversion**: Also called `xconvert`.  See *JupDev*
+  section below. In the first stage of this procedure a simple
+  conversion is performed.  Then the resulting python module files are
+  parsed searching comments of the form "#@command" instructing the
+  script to separate componentes by classes and constants.
 
   All classes in a file are first located in a `<module>-<class>.temp`
   file.
@@ -46,9 +46,8 @@ There are two types of conversion:
 
   Constants of the modules are all gathered in the `consts.py` module.
 
-  In all cases the `#@end` comment are used to delimitate block of
+  In all cases the `#@end:<section>` comment are used to delimitate block of
   code.
-
 
 JupDev
 ------
@@ -65,11 +64,13 @@ titles and text.
 Special comments helps to identify which code will be included in the
 final version of the production files:
 
-- `#@end`: marks the end of a code selection.
-
 - `#@external`: show the beginning of the external packages required
   for the specific modules.  All the packages will be compiled in a
   file __packages.temp.
+
+- `#@end:<section>`: marks the end of a code selection.
+
+  NOTE: The end of a module is marked by `#@end:module`.
 
 - `#@consts:<Module>`: show the beginning of constants associated to a
   module __packages.temp.
@@ -78,6 +79,7 @@ final version of the production files:
   class.
 
 - `#@standalone`: marks the begining of standalone code in a module.
+  The standalone code is always at the end of the final realease code.
 
 - `#@data`: marks the beginning of data.
 

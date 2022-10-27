@@ -69,6 +69,7 @@ echo "Success. Package ready to be released."
 # Update setup.py file
 ##################################################################
 sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py 
+mv setup.py.bak tmp/
 
 ##################################################################
 # Remove previous versions
@@ -80,7 +81,7 @@ rm -rf dist/*
 # Report version
 ##################################################################
 echo $version >> .versions
-cp src/$PACKNAME/version.py src/$PACKNAME/version.py.bak
+cp src/$PACKNAME/version.py tmp/version.py.bak
 echo "version='$version'" > src/$PACKNAME/version.py
 
 ##################################################################

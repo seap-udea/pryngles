@@ -6,20 +6,17 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
+
 # PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
+# License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-# --Test--
-
-# ### Test
-
-from pryngles import *
-from pryngles.legacy import *
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
+##################################################################
 import unittest
+from pryngles import *
 class Test(unittest.TestCase):
 
     ##############################################################################
@@ -48,9 +45,9 @@ class Test(unittest.TestCase):
     def test_system_ensamble(self):
 
             sys=System()
-            S=sys.add("Star",bhash="Star",radius=Const.Rsun/Const.au)
-            P=sys.add("Planet",bhash="Planet",primary=S,a=0.2,e=0.0,radius=Const.Rsat/Const.au)
-            R=sys.add("Ring",bhash="Ring",primary=P,fi=1.5,fe=2.5,i=30*DEG)
+            S=sys.add("Star",name="Star",radius=Const.Rsun/Const.au)
+            P=sys.add("Planet",name="Planet",parent=S,a=0.2,e=0.0,radius=Const.Rsat/Const.au)
+            R=sys.add("Ring",name="Ring",parent=P,fi=1.5,fe=2.5,i=30*DEG)
 
             P=sys.ensamble_system(beta=30*DEG,lamb=90*DEG)
             fig1,fig2,fig3=P.plotRingedPlanet(showfig=0)
@@ -800,4 +797,6 @@ class Test(unittest.TestCase):
 
 if __name__=="__main__":
     unittest.main(argv=['first-arg-is-ignored'],exit=False)
+
+# ### The End
 

@@ -6,39 +6,44 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
-# PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
-#                                                                #
-##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
-##################################################################
-#!/usr/bin/env python
-# coding: utf-8
 
-# # Pryngles module: Miscellaneous
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
+##################################################################
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 from pryngles import *
-
-# ## External modules
-
 from collections import OrderedDict as odict
 from collections.abc import Iterable
 import inspect
+import os
 
-# ## Miscelaneous Class
 
-Misc_doc="""
-Miscelaneous routines.
-
-This is a set of util routines intended for a diversity of purposes.
-
-Routines included:
-
-    get_data(file)
-""";
-
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Misc
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Misc(object):
+    """
+    Miscelaneous routines.
+    
+    This is a set of util routines intended for a diversity of purposes.
+    
+    Routines included:
+    
+        get_data(file)
+    """
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Bassic methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     def get_data(path):
         """
@@ -82,7 +87,4 @@ class Misc(object):
         """Get a list of the methods for class my_class
         """
         return sorted([member[0] for member in inspect.getmembers(my_class) if '__' not in member[0]])
-                
-Misc.__doc__=Misc_doc
-
 

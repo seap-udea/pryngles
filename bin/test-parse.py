@@ -7,12 +7,14 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
+
 # PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 """This file parses the python code of a module searching for "inline"
 test code.
@@ -35,7 +37,6 @@ Example:
     Test.test_body=test_body
     unittest.main(argv=['first-arg-is-ignored'],exit=False)
 """
-
 from sys import argv
 import os
 
@@ -55,7 +56,7 @@ if os.path.exists(filesrc):
     os.system(f"rm {filesrc}")
 
 #Create
-os.system(f"cat header.py > {filetest}")
+os.system(f"cat src/header.py > {filetest}")
 
 fp=open(filepath,"r")
 fo=open(filesrc,"w")
@@ -67,30 +68,44 @@ class Test(unittest.TestCase):
 """)
 
 qtest=False
+qfulltest=False
 qcont=False
+qfullcont=False
 ntest=0
 for line in fp:
-    if "if IN_JUPYTER" in line:
+    if "#@test:" in line:
         ntest+=1
         qtest=True
+
+    if "#@fulltest" in line:
+        qfulltest=True
+        ntest=1
+
     if qtest:
-        if "def test_" in line:
+        if ("def test_" in line):
             qcont=True
-        if "class Test" in line:
+        if ("class Test" in line):
             qcont=False
         if qcont:
+            ft.write("\t"+line)
+    elif qfulltest:
+        if ("class Test" in line) or ("@fulltest" in line) or ("@end:fulltest" in line):
+            qfullcont=False
+        else:
+            qfullcont=True
+        if qfullcont:
             ft.write(line)
     else:
         fo.write(line)
 
-    if "unittest.main" in line:
+    if "@end:test" in line:
         qtest=False
 
-
-ft.write("""
+if not qfulltest:
+    ft.write("""\
 if __name__=="__main__":
-        unittest.main(argv=['first-arg-is-ignored'],exit=False)
-""")
+    unittest.main(argv=['first-arg-is-ignored'],exit=False)
+    """)
 
 fp.close()
 fo.close()

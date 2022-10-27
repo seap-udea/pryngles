@@ -6,25 +6,40 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
+
 # PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 
 ##################################################################
 #VARIABLES
 ##################################################################
 SHELL:=/bin/bash
+
+#Package information
 PACKDIR=.pack/
 include $(PACKDIR)/packrc
-DEVFILES=$(shell ls dev/$(PACKNAME)-*.ipynb)
+
+#Github specifics
 BRANCH=$(shell bash .getbranch.sh)
 VERSION=$(shell tail -n 1 .versions)
+
+#JupDev files
+DEVFILES=$(shell ls dev/$(PACKNAME)-*.ipynb)
+
+#Public repo
 PUBLIC=../$(PACKNAME)-public/
+
+#Module to convert
 MOD=None
+
+#Enforce conversion.  Use make convert ENFORCE=forced
+ENFORCE=
 
 show:
 	@echo "Development files:" $(DEVFILES)
@@ -87,6 +102,13 @@ cleandist:
 	@-rm -rf dist/
 	@-rm -rf build/
 
+cleanpack:
+	@-cp src/$(PACKNAME)/version.py tmp/
+	@-rm -rf src/$(PACKNAME)/*.py
+	@-cp tmp/version.py src/$(PACKNAME)/version.py
+	@-rm -rf src/$(PACKNAME)/tests/*.py
+	@-rm -rf src/$(PACKNAME)/.build/*
+
 ##################################################################
 #GIT
 ##################################################################
@@ -117,7 +139,11 @@ unpack:
 
 convert:
 	@echo "Converting iPython Notebooks $(DEVFILES)..."
-	@bash convert.sh $(DEVFILES)
+	@bash bin/convert.sh $(ENFORCE) $(DEVFILES)
+
+xconvert:convert
+	@echo "Converting iPython Notebooks $(DEVFILES)..."
+	@bash bin/xconvert.sh $(DEVFILES)
 
 #Example: make release RELMODE=release VERSION=0.2.0.2 
 release:
@@ -130,7 +156,7 @@ install:
 	@echo "Installing locally..."
 	@$(PIP) install -e .
 
-test:convert
+test:
 	@echo "Testing package..."
 ifeq ($(MOD),None)
 	@$(NOSETESTS) 2> >(tee -a /tmp/$(PACKNAME)-test-errors.log >&2)
@@ -147,7 +173,7 @@ public:
 	@cp src/pryngles/tests/*.py $(PUBLIC)/src/pryngles/tests
 	@cp -rf src/pryngles/data $(PUBLIC)/src/pryngles
 	@cp examples/pryngles-tutorial-quickstart.ipynb $(PUBLIC)/
-	@cp examples/pryngles-tutorial-developers.ipynb $(PUBLIC)/
+	@cp examples/pryngles-dev*-tutorial.ipynb $(PUBLIC)/
 	@cp papers/bright-side/pryngles-paper-figures.ipynb examples/pryngles-examples-exploration.ipynb
 	@cp examples/pryngles-examples-exploration.ipynb $(PUBLIC)/
 	@cp README.md LICENSE $(PUBLIC)/

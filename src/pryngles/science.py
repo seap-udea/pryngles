@@ -6,22 +6,21 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-#                                                                #
-# PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
-#                                                                #
-##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
-##################################################################
-#!/usr/bin/env python
-# coding: utf-8
 
-# # Pryngles module: Science
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+# Main contributors:                                             #
+#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
+##################################################################
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 from pryngles import *
-
-# ## External modules
-
 import numpy as np
 import math as mh
 import spiceypy as spy
@@ -31,305 +30,291 @@ from celluloid import Camera # getting the camera
 import rebound as rb
 import matplotlib.pyplot as plt
 
-# ## The Science class
-# 
-# The Science class is a class with routines intended to perform a wide diversity of mathematical, physical and astronomical calculations.
 
-class Science(PrynglesCommon):pass
-
-# ### Cartesian to spherical
-
-def spherical(xyz):
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Science
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Science(PrynglesCommon):
+    """Science utility Class
     """
-    Transform cartesian coordinates into spherical coordinates
 
-    Parameters:
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file science
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        xyz: array (3):
-            Cartesian coordinates
-
-    Return:
-
-        rqf: array (3):
-            Spherical coordinates (r, theta, phi) where theta is azimutal angle and phi is 
-            elevation (complement of polar angle).                
-
-            Notice that this convention is different than that of regular vectorial calculus
-            where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
-            the ezimutal one.
-
-    """
-    r,theta,phi=spy.reclat(np.array(xyz))
-    theta=2*mh.pi+theta if theta<0 else theta
-
-    return np.array([r,theta,phi])
-
-def cospherical(xyz):
-    """Transform cartesian coordinates into cosine/sine of spherical angles
+    def spherical(xyz):
+        """
+        Transform cartesian coordinates into spherical coordinates
     
-    Parameters:
-
-        xyz: array (3):
-            Cartesian coordinates
-            
-    Return:
-
-        cqsqcf: array (3):
-            Cosine/sine of spherical angles (cos theta, sin theta, cos phi) where theta is 
-            azimutal angle and phi is elevation (complement of polar angle).         
-    """
-    rho=(xyz[0]**2+xyz[1]**2)**0.5
-    sf=xyz[2]/(rho**2+xyz[2]**2)**0.5
-    cq=xyz[0]/rho if not mh.isclose(rho,0) else 1
-    sq=xyz[1]/rho if not mh.isclose(rho,0) else 0
-    return np.array([cq,sq,sf])
-
-def pcylindrical(xyz):
-    """Transform cartesian coordinates into pseudo cylindrical coordinates
+        Parameters:
     
-    Parameters:
-
-        xyz: array (3):
-            Cartesian coordinates
-            
-    Return:
-
-        rhoazcf: array (3):
-            Cylindrical coordinates expresed as rho, phi (azimutal angle) and cos(theta) (cosine
-            of polar angle).    
-    """
-    rho=(xyz[0]**2+xyz[1]**2)**0.5
-    r=(xyz[2]**2+rho**2)**0.5
-    phi=mh.atan2(xyz[1],xyz[0])
-    phi=phi if phi>0 else 2*np.pi+phi
-    cost=xyz[2]/r if not mh.isclose(r,0) else mh.copysign(1,xyz[2])
-    return np.array([rho,phi,cost])
-
-def cartesian(rqf):
-    """
-    Transform cartesian coordinates into spherical coordinates
-
-    Parameters:
-
-        xyz: array (3):
-            Cartesian coordinates
-
-    Return:
-
-        rqf: array (3):
-            Spherical coordinates (r, theta, phi) where theta is azimutal angle and phi is 
-            elevation (complement of polar angle).                
-
-            Notice that this convention is different than that of regular vectorial calculus
-            where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
-            the ezimutal one.
-
-    """
-    return spy.latrec(rqf[0],rqf[1],rqf[2])
-
-def direction(*args):
-    """Calculate the direction on which a vector is pointing
+            xyz: array (3):
+                Cartesian coordinates
     
-    Parameters:
-        args: array:
-            If len(args)==2, components are longitude and latitude of the direction (in degrees).
-            If len(args)==3, components are cartisian coordinates of the vector n.
-            
-    Return:
-
-        If len(args)==2:
+        Return:
+    
+            rqf: array (3):
+                Spherical coordinates (r, theta, phi) where theta is azimutal angle and phi is 
+                elevation (complement of polar angle).                
+    
+                Notice that this convention is different than that of regular vectorial calculus
+                where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
+                the ezimutal one.
+    
+        """
+        r,theta,phi=spy.reclat(np.array(xyz))
+        theta=2*mh.pi+theta if theta<0 else theta
+    
+        return np.array([r,theta,phi])
+    
+    def cospherical(xyz):
+        """Transform cartesian coordinates into cosine/sine of spherical angles
         
-            vx,vy,vz: float:
-                Cartesian components of the vector.
-
-        If len(args)==2:
+        Parameters:
     
-            lamb: float [degrees]:
-                Longitude (angle with respect to x-axis).
-
-            beta: float [degrees]:
-                Latitude (elevation angle with respect to xy-plane).
-    """
-    if len(args)==3:
-        rqf=spherical(list(args))
-        return rqf[1]*Consts.rad,rqf[2]*Consts.rad
-    elif len(args)==2:
-        if abs(args[1])>90:
-            raise ValueError("Elevation angle should be in the interval [-90,90]")
-        nvec=cartesian([1,args[0]*Consts.deg,args[1]*Consts.deg])
-        return nvec
-    else:
-        raise ValueError("You provided a wrong number of arguments '{args}'.  It should be 2 or 3'")
+            xyz: array (3):
+                Cartesian coordinates
+                
+        Return:
     
-Science.spherical=spherical
-Science.cospherical=cospherical
-Science.pcylindrical=pcylindrical
-Science.cartesian=cartesian
-Science.direction=direction
-
-
-def rotation_matrix(ez,alpha):
-    """
-    Set a rotation matrix from the direction of the ez vector and a rotation angle alpha
+            cqsqcf: array (3):
+                Cosine/sine of spherical angles (cos theta, sin theta, cos phi) where theta is 
+                azimutal angle and phi is elevation (complement of polar angle).         
+        """
+        rho=(xyz[0]**2+xyz[1]**2)**0.5
+        sf=xyz[2]/(rho**2+xyz[2]**2)**0.5
+        cq=xyz[0]/rho if not mh.isclose(rho,0) else 1
+        sq=xyz[1]/rho if not mh.isclose(rho,0) else 0
+        return np.array([cq,sq,sf])
     
-    Parameter:
-        ez: array (3)
-            vector in the direction of the z-axis. 
+    def pcylindrical(xyz):
+        """Transform cartesian coordinates into pseudo cylindrical coordinates
+        
+        Parameters:
+    
+            xyz: array (3):
+                Cartesian coordinates
+                
+        Return:
+    
+            rhoazcf: array (3):
+                Cylindrical coordinates expresed as rho, phi (azimutal angle) and cos(theta) (cosine
+                of polar angle).    
+        """
+        rho=(xyz[0]**2+xyz[1]**2)**0.5
+        r=(xyz[2]**2+rho**2)**0.5
+        phi=mh.atan2(xyz[1],xyz[0])
+        phi=phi if phi>0 else 2*np.pi+phi
+        cost=xyz[2]/r if not mh.isclose(r,0) else mh.copysign(1,xyz[2])
+        return np.array([rho,phi,cost])
+    
+    def cartesian(rqf):
+        """
+        Transform cartesian coordinates into spherical coordinates
+    
+        Parameters:
+    
+            xyz: array (3):
+                Cartesian coordinates
+    
+        Return:
+    
+            rqf: array (3):
+                Spherical coordinates (r, theta, phi) where theta is azimutal angle and phi is 
+                elevation (complement of polar angle).                
+    
+                Notice that this convention is different than that of regular vectorial calculus
+                where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
+                the ezimutal one.
+    
+        """
+        return spy.latrec(rqf[0],rqf[1],rqf[2])
+    
+    def direction(*args):
+        """Calculate the direction on which a vector is pointing
+        
+        Parameters:
+            args: array:
+                If len(args)==2, components are longitude and latitude of the direction (in degrees).
+                If len(args)==3, components are cartisian coordinates of the vector n.
+                
+        Return:
+    
+            If len(args)==2:
             
-        alpha: float (3) [rad]
-            Rotation angle of the x-axis around z-axis (clockwise)
-            
-    Return:
-        Msys2uni: float (3x3)
-            Rotation matrix from the system defined by ez and the universal system.
-            
-        Muni2sys: float (3x3)
-            Rotation matrix from the universal system to the system defined by ez
-    """
-    ez,one=spy.unorm(ez)
-    ex=spy.ucrss([0,0,1],ez) #Spice is 5 faster for vcrss
-    if spy.vnorm(ex)==0:
-        ex=np.array([1,0,0]) if np.sum(ez)>0 else np.array([-1,0,0])
-    ey=spy.ucrss(ez,ex)
-    Msys2uni=np.array(list(np.vstack((ex,ey,ez)).transpose())).reshape((3,3))
-    Muni2sys=spy.invert(Msys2uni)
-    verbose(VERB_VERIFY,"Rotation axis:",ex,ey,ez)
-    return Msys2uni,Muni2sys
-
-Science.rotation_matrix=rotation_matrix
-
-
-Science.LIMB_NORMALIZATIONS=dict()
-
-def limb_darkening(rho,cs=[0.6562],N=None):
-    """Limb darkening computation
+                vx,vy,vz: float:
+                    Cartesian components of the vector.
     
-    Parameters:
-        rho: float:
-            Distance to center of the star in units of stellar radius.
-            
-        cs: list, default = [0.6562]:
-            List of limb darkening coefficients.
-            
-        N: float, default = 1:
-            Normalization constant.
-            
-    Return:
-        I: float:
-            Normalized intensity of the star at rho.
+            If len(args)==2:
+        
+                lamb: float [degrees]:
+                    Longitude (angle with respect to x-axis).
     
-    Notes: 
-        Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
-        Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
-
-    Test code:
-    
-        fig=plt.figure()
-        ax=fig.gca()
-        rhos=np.linspace(0,1,100)
-        Rs=1
-        coefs=[0.6550]
-        N=Util.limbDarkeningNormalization(coefs)
-        ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
-        coefs=[0.6022,0.0654]
-        N=Util.limbDarkeningNormalization(coefs)
-        ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
-        coefs=[0.9724,-0.4962,0.2029]
-        N=Util.limbDarkeningNormalization(coefs)
-        ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))        
-    """
-    mu=(1-rho**2)**0.5
-    order=len(cs)
-    
-    #Calculate normalization constant
-    if N is None:
-        chash=hash(tuple(cs))
-        if chash in Science.LIMB_NORMALIZATIONS:
-            N=Science.LIMB_NORMALIZATIONS[chash]
+                beta: float [degrees]:
+                    Latitude (elevation angle with respect to xy-plane).
+        """
+        if len(args)==3:
+            rqf=Science.spherical(list(args))
+            return rqf[1]*Consts.rad,rqf[2]*Consts.rad
+        elif len(args)==2:
+            if abs(args[1])>90:
+                raise ValueError("Elevation angle should be in the interval [-90,90]")
+            nvec=Science.cartesian([1,args[0]*Consts.deg,args[1]*Consts.deg])
+            return nvec
         else:
-            integrand=lambda rho:Science.limb_darkening(rho,cs,N=1)*2*np.pi*rho
-            N=quad(integrand,0.0,1.0,epsrel=1e-5)[0]
-            verbose(VERB_VERIFY,f"Normalization of limb darkening function for cs = {cs}, N = {N}")
-            Science.LIMB_NORMALIZATIONS[chash]=N
-            
-    if order==0:
-        I=np.ones_like(rho)
-    elif order==1:
-        I=1-cs[0]*(1-mu)
-    elif order==2:
-        I=1-cs[0]*(1-mu)-cs[1]*(1-mu)**2
-    elif order==3:
-        I=1-cs[0]*(1-mu)-cs[1]*(1-mu**1.5)-cs[2]*(1-mu**2)
-    elif order==4:
-        I=1-cs[0]*(1-mu**0.5)-cs[1]*(1-mu)-cs[2]*(1-mu**1.5)-cs[3]*(1-mu**2)
-    else:
-        raise ValueError(f"Limb darkening not implemented for order {order}")
-    return I/N
-
-Science.limb_darkening=limb_darkening
-
-
-def get_convexhull(data):
-    if len(data)>0:
-        try:
-            qhull=ConvexHull(data)
-        except:
+            raise ValueError("You provided a wrong number of arguments '{args}'.  It should be 2 or 3'")
+    
+    def rotation_matrix(ez,alpha):
+        """
+        Set a rotation matrix from the direction of the ez vector and a rotation angle alpha
+        
+        Parameter:
+            ez: array (3)
+                vector in the direction of the z-axis. 
+                
+            alpha: float (3) [rad]
+                Rotation angle of the x-axis around z-axis (clockwise)
+                
+        Return:
+            Msys2uni: float (3x3)
+                Rotation matrix from the system defined by ez and the universal system.
+                
+            Muni2sys: float (3x3)
+                Rotation matrix from the universal system to the system defined by ez
+        """
+        ez,one=spy.unorm(ez)
+        ex=spy.ucrss([0,0,1],ez) #Spice is 5 faster for vcrss
+        if spy.vnorm(ex)==0:
+            ex=np.array([1,0,0]) if np.sum(ez)>0 else np.array([-1,0,0])
+        ey=spy.ucrss(ez,ex)
+        Msys2uni=np.array(list(np.vstack((ex,ey,ez)).transpose())).reshape((3,3))
+        Muni2sys=spy.invert(Msys2uni)
+        verbose(VERB_VERIFY,"Rotation axis:",ex,ey,ez)
+        return Msys2uni,Muni2sys
+    
+    def limb_darkening(rho,cs=[0.6562],N=None):
+        """Limb darkening computation
+        
+        Parameters:
+            rho: float:
+                Distance to center of the star in units of stellar radius.
+                
+            cs: list, default = [0.6562]:
+                List of limb darkening coefficients.
+                
+            N: float, default = 1:
+                Normalization constant.
+                
+        Return:
+            I: float:
+                Normalized intensity of the star at rho.
+        
+        Notes: 
+            Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
+            Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
+    
+        Test code:
+        
+            fig=plt.figure()
+            ax=fig.gca()
+            rhos=np.linspace(0,1,100)
+            Rs=1
+            coefs=[0.6550]
+            N=Util.limbDarkeningNormalization(coefs)
+            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
+            coefs=[0.6022,0.0654]
+            N=Util.limbDarkeningNormalization(coefs)
+            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
+            coefs=[0.9724,-0.4962,0.2029]
+            N=Util.limbDarkeningNormalization(coefs)
+            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))        
+        """
+        mu=(1-rho**2)**0.5
+        order=len(cs)
+        
+        #Calculate normalization constant
+        if N is None:
+            chash=hash(tuple(cs))
+            if chash in SCIENCE_LIMB_NORMALIZATIONS:
+                N=SCIENCE_LIMB_NORMALIZATIONS[chash]
+            else:
+                integrand=lambda rho:Science.limb_darkening(rho,cs,N=1)*2*np.pi*rho
+                N=quad(integrand,0.0,1.0,epsrel=1e-5)[0]
+                verbose(VERB_VERIFY,f"Normalization of limb darkening function for cs = {cs}, N = {N}")
+                SCIENCE_LIMB_NORMALIZATIONS[chash]=N
+                
+        if order==0:
+            I=np.ones_like(rho)
+        elif order==1:
+            I=1-cs[0]*(1-mu)
+        elif order==2:
+            I=1-cs[0]*(1-mu)-cs[1]*(1-mu)**2
+        elif order==3:
+            I=1-cs[0]*(1-mu)-cs[1]*(1-mu**1.5)-cs[2]*(1-mu**2)
+        elif order==4:
+            I=1-cs[0]*(1-mu**0.5)-cs[1]*(1-mu)-cs[2]*(1-mu**1.5)-cs[3]*(1-mu**2)
+        else:
+            raise ValueError(f"Limb darkening not implemented for order {order}")
+        return I/N
+    
+    def get_convexhull(data):
+        if len(data)>0:
+            try:
+                qhull=ConvexHull(data)
+            except:
+                qhull=None
+        else:
             qhull=None
-    else:
-        qhull=None
-    return qhull
-    
-Science.get_convexhull=get_convexhull
-
-def points_in_hull(p, hull, tol=1e-12):
-    """Determine if a set of points are inside a convex hull.
-    
-    Parameters:
+        return qhull
         
-        p: numpy array (Nx2):
-            Set of coordinates for points to evaluate.
-    
-        hull: ConvexHull:
-            Convex hull to evaluate.
+    def points_in_hull(p, hull, tol=1e-12):
+        """Determine if a set of points are inside a convex hull.
+        
+        Parameters:
             
-    Return:
+            p: numpy array (Nx2):
+                Set of coordinates for points to evaluate.
+        
+            hull: ConvexHull:
+                Convex hull to evaluate.
+                
+        Return:
+        
+            inside: boolean array (N):
+                Boolean array telling if points are inside the convex hull.
+                
+        Examples:
+            
+            import numpy as np
+            
+            rng = np.random.default_rng()
+            points = rng.random((30, 2))
+            hull = ConvexHull(points)
+            
+            ps = rng.random((30, 2))-0.5
+            cond=points_in_hull(ps,hull)
     
-        inside: boolean array (N):
-            Boolean array telling if points are inside the convex hull.
+            import matplotlib.pyplot as plt
             
-    Examples:
-        
-        import numpy as np
-        
-        rng = np.random.default_rng()
-        points = rng.random((30, 2))
-        hull = ConvexHull(points)
-        
-        ps = rng.random((30, 2))-0.5
-        cond=points_in_hull(ps,hull)
-
-        import matplotlib.pyplot as plt
-        
-        for simplex in hull.simplices:
-            plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
-
-        for p in ps[cond]:
-            plt.plot(p[0],p[1],'r*')
-
-        for p in ps[~cond]:
-            plt.plot(p[0],p[1],'co')
-            
-            
-    Notes:
-        Taken from https://stackoverflow.com/a/72483841
-    """
-    return np.all(hull.equations[:,:-1] @ p.T + np.repeat(hull.equations[:,-1][None,:], len(p), axis=0).T <= tol, 0)
-
-Science.points_in_hull=points_in_hull
+            for simplex in hull.simplices:
+                plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+    
+            for p in ps[cond]:
+                plt.plot(p[0],p[1],'r*')
+    
+            for p in ps[~cond]:
+                plt.plot(p[0],p[1],'co')
+                
+                
+        Notes:
+            Taken from https://stackoverflow.com/a/72483841
+        """
+        return np.all(hull.equations[:,:-1] @ p.T + np.repeat(hull.equations[:,-1][None,:], len(p), axis=0).T <= tol, 0)
 
 
-# ## Plane
-
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Plane
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Plane(PrynglesCommon):
     """A plane in 3d.
     
@@ -483,7 +468,3 @@ class Plane(PrynglesCommon):
         ax.set_xlim(-f*maxval,+f*maxval)
         ax.set_ylim(-f*maxval,+f*maxval)
         ax.set_zlim(-f*maxval,+f*maxval)
-
-Science.Plane=Plane
-
-

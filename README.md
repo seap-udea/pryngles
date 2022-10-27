@@ -58,7 +58,7 @@ For the science behind the model please refer to the following papers:
   Society: Letters, 496(1), L85-L90.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/ecliptic-i_3.0e%2B01-lambobs_9.0e%2B01-betaobs_9.0e%2B01.gif" alt="Animation" width="400"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif" alt="Animation" width="400"/>
 </p>
 
 ## Download and install
@@ -93,25 +93,16 @@ Any calculation in `Pryngles` starts by creating a planetary system:
 
 ```python
 sys=pr.System()
+S=sys.add(kind="Star",radius=Consts.rsun/sys.ul,limb_coeffs=[0.65])
+P=sys.add(kind="Planet",parent=S,a=0.2,e=0.0,radius=Consts.rsaturn/sys.ul)
+R=sys.add(kind="Ring",parent=P,fi=1.5,fe=2.5,i=30*Consts.deg)
+RP=sys.ensamble_system(lamb=90*Consts.deg,beta=90*Consts.deg)
 ```
 
 Then we add objects to the planetary system using:
 
 ```python
-S=sys.add(kind="Star",
-          physics=dict(radius=Consts.rsun/sys.ul),
-          optics=dict(limb_coeffs=[0.65])
-         )
-P=sys.add(kind="Planet",primary=S,
-          orbit=dict(a=0.2,e=0.0),
-          physics=dict(radius=Consts.rsaturn/sys.ul)
-         )
-R=sys.add(kind="Ring",primary=P,
-          physics=dict(fi=1.5,fe=2.5,i=30*Consts.deg)
-         )
-O=sys.add(kind="Observer",
-          optics=dict(lamb=90*Consts.deg,beta=90*Consts.deg)
-         )
+
 ```
 
 In the example before the planet has a ring extending from 1.5 to 2.5
