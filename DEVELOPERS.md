@@ -209,21 +209,29 @@ Tasks:
    workon pryngles-lab
    ```
 
-4. Update the local version:
+4. Install all new dependencies. Example:
+
+   ```
+   python -m pip install anytree celluloid
+   ```
+
+5. Update the local version:
 
    ```
    python -m pip install --index-url https://test.pypi.org/simple/ pryngles==x.y.z.w
    ```
 
-4. Open `Jupyter`:
+6. Open `Jupyter`:
 
    ```
    jupyter-notebook
    ```
 
-5. Execute all notebooks:
+7. Execute all notebooks:
    - `examples/pryngles-tutorial-quickstart.ipynb`
    - `papers/bright-side/pryngles-paper-figures.ipynb`
+
+
 
 ### Release and test a production version
 

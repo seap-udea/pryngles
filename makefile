@@ -148,7 +148,7 @@ xconvert:convert
 #Example: make release RELMODE=release VERSION=0.2.0.2 
 release:
 	@echo "Releasing a new version..."
-	@bash release.sh $(RELMODE) $(VERSION)
+	@bash bin/release.sh $(RELMODE) $(VERSION)
 
 install:
 	@echo "Installing system dependencies..."

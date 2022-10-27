@@ -57,9 +57,9 @@ For the science behind the model please refer to the following papers:
   ringed exoplanets**. Monthly Notices of the Royal Astronomical
   Society: Letters, 496(1), L85-L90.
 
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif" alt="Animation" width="400"/>
-</p>
+<p align="center"> <img
+src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif"
+alt="Animation" width="400"/> </p>
 
 ## Download and install
 
@@ -97,12 +97,6 @@ S=sys.add(kind="Star",radius=Consts.rsun/sys.ul,limb_coeffs=[0.65])
 P=sys.add(kind="Planet",parent=S,a=0.2,e=0.0,radius=Consts.rsaturn/sys.ul)
 R=sys.add(kind="Ring",parent=P,fi=1.5,fe=2.5,i=30*Consts.deg)
 RP=sys.ensamble_system(lamb=90*Consts.deg,beta=90*Consts.deg)
-```
-
-Then we add objects to the planetary system using:
-
-```python
-
 ```
 
 In the example before the planet has a ring extending from 1.5 to 2.5
@@ -215,6 +209,17 @@ This is the *disco* version of Pryngles.  We are improving resolution,
 performance, modularity and programming standards for future releases.
 
 ## What's new
+
+- **0.9.x versions**:
+  - Brand new modular structure of the package.
+  - Arbitrary number of bodies.
+  - Illuminations and visibility computed numerically.
+  - N-body problem orbital calculations (Rebound).
+  - Spangles info stored in Pandas DataFrames.
+  - Azimuths and further information on spangles.
+  - Many modules with a more friendly interface.
+  - Contribution and extension made easy.
+  - Realistic previsualization.
 
 - **0.7.x versions**:
 
