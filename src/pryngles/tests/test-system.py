@@ -48,38 +48,12 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_ALL
 	
 	    sys=System()
-	    S=sys.add(m=8,radius=4,x=5,vy=2)
-	    P=sys.add("Planet",parent=S,radius=2,x=1)
-	    M=sys.add("Planet",name="Moon",parent=P,radius=2,x=2)
+	    S=sys.add(m=8,radius=4)
+	    P=sys.add("Planet",parent=S,radius=2,a=10,source=S)
+	    M=sys.add("Planet",name="Moon",parent=P,radius=2,a=1)
 	    R=sys.add("Ring",parent=P,fi=1.3,fe=2.3)
 	    print(sys)
 	    print(sys.root)
-	
-	    """
-	    for particle in sys.sim.particles:
-	        print(particle)
-	
-	    print(len(sys.bodies),len(sys.sim.particles))
-	    """
-	
-	    Verbose.VERBOSITY=VERB_NONE
-	
-	def test_system_remove(self):
-	
-	    Verbose.VERBOSITY=VERB_ALL
-	
-	    sys=System()
-	    S=sys.add(name="Star",m=8,radius=4,x=5,vy=2)
-	    P=sys.add("Planet",parent=S,name="Planet",radius=2,x=2)
-	    M=sys.add("Planet",parent=P,name="Moon",radius=2,x=2)
-	    R=sys.add("Ring",parent=P,name="Ring",fi=1.3,fe=2.3)
-	    print(sys.bodies)
-	    sys.remove("Ring")
-	    print(sys.bodies)
-	    sys.remove("Planet")
-	    print(sys.bodies)
-	    sys.remove("Star")
-	    print(sys.bodies)
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
@@ -112,6 +86,28 @@ class Test(unittest.TestCase):
 	    #Animate
 	    Plot.animate_rebound(sys.sim)
 	    
+	    Verbose.VERBOSITY=VERB_NONE
+	
+	def test_system_remove(self):
+	    
+	    global sys
+	
+	    Verbose.VERBOSITY=VERB_ALL
+	
+	    sys=System()
+	    S=sys.add(name="Star",m=8,radius=4)
+	    P=sys.add("Planet",parent=S,name="Planet",radius=2,a=10)
+	    M=sys.add("Planet",parent=P,name="Moon",radius=2,a=1)
+	    R=sys.add("Ring",parent=P,name="Ring",fi=1.3,fe=2.3)
+	    sys.initialize_simulation()
+	    print(sys.bodies)
+	    sys.remove("Ring")
+	    print(sys.bodies)
+	    sys.remove("Planet")
+	    print(sys.bodies)
+	    sys.remove("Star")
+	    print(sys.bodies)
+	
 	    Verbose.VERBOSITY=VERB_NONE
 	
 	def test_obs(self):
