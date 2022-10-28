@@ -1109,6 +1109,9 @@ class Spangler(PrynglesCommon):
         #Conditions
         self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
         
+        #Set relative azimuth
+        self.data.loc[cond,"azim_obs_luz"]=self.data.loc[cond,"azim_obs"]-self.data.loc[cond,"azim_luz"]
+        
         #Update states
         self.data.loc[cond,"unset"]=False
         

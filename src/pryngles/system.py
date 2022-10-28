@@ -119,7 +119,7 @@ class System(PrynglesCommon):
         
         #Center of the light-source in the system
         self.source=None
-        self.center_source=np.array([0,0,0])
+        self.center_root=np.array([0,0,0])
         
         #Orbital configuration
         self.orbital_configuration=None
@@ -313,6 +313,12 @@ class System(PrynglesCommon):
         if kind not in BODY_KINDS:
             raise ValueError(f"Object kind '{kind}' is not recognized.")
     
+        #Legacy
+        if 'primary' in props:
+            parent=props["primary"]
+        if kind=="Observer":
+            parent=self.root
+        
         #Create body
         props.update(dict(name_by_kind=True))
         self.__body=eval(f"{kind}(parent=parent,**props)")
@@ -320,17 +326,38 @@ class System(PrynglesCommon):
         if self.__body.name in self.bodies:
             raise ValueError(f"An object with name '{self.__body.name}' has been already added.")
         
+        #If we have a root object and no parent has been provided
+        if not parent:
+            if self.root:
+                raise ValueError(f"A root object alread exist in the system ({self.root.name}) and you do not provided a parent body for {self.__body.name}.")
+            else:
+                self.root=self.__body
+                verbose(VERB_SIMPLE,f"Setting the root object as {self.root.name}")
+            
         self.bodies[self.__body.name]=self.__body
         
         #Update system
         self._update_system()
         
-        #Get the common ancestors or the root of the system
-        root=commonancestors(self.__body)
-        if len(root)>0:
-            self.root=root[0]
-            verbose(VERB_SIMPLE,f"Setting the root object as {self.root.name}")
-    
+        #Set the source of the object
+        if self.__body.source:
+            #Check that the source is a body
+            if not isinstance(self.__body.source,Body):
+                raise ValueError(f"The source of body must be an actual Body.")        
+            #Check that the source is among the bodies
+            if self.__body.source.name not in self.bodies:
+                raise ValueError(f"The source of body {self.__body.name} is not among system bodies {list(self.bodies.keys())}.")
+            #Check that the source be a star
+            if self.__body.source.kind!="Star":
+                raise ValueError(f"The source of body {self.__body.name} must be a Star.  You set {self.__body.source.name} which is a {self.__body.source.kind}.")
+        else:
+            if self.__body.kind=="Star":
+                self.__body.source=self.__body
+            elif self.__body.parent==self.root:
+                self.__body.source=self.root
+            else:
+                self.__body.source=self.__body.parent.source
+            
         verbose(VERB_SIMPLE,f"Object '{kind}' with name '{self.__body.name}' has been added.")
         return self.__body
     
@@ -504,12 +531,13 @@ class System(PrynglesCommon):
             #Center object around its position according to rebound
             body.center_ecl=np.array(self.sim.particles[body.rbhash].xyz)
             body.sg.set_positions(center_ecl=body.center_ecl)
-                
             self._spanglers[name]=body.sg
             
+        #Set the center of the source of light for each body
+        for name,body in self.bodies.items():
+            body.center_source=body.source.center_ecl
             if body==self.root:
-                self.source=body
-                self.center_source=body.center_ecl
+                self.center_root=body.source.center_ecl
                 
         #Join spanglers
         self.sg=Spangler(spanglers=list(self._spanglers.values()))
@@ -556,9 +584,9 @@ class System(PrynglesCommon):
     def _set_luz_recursive(self,name,nluz):
         """Set light source for body and 
         """
-        verbose(VERB_SIMPLE,f"Illuminating body {name}, with {nluz} and {self.center_source}")
         body=self.bodies[name]
-        self.sg.set_luz(nvec=nluz,center=self.center_source,name=name)
+        verbose(VERB_SIMPLE,f"Illuminating body {name}, with {nluz} and {body.center_source}")
+        self.sg.set_luz(nvec=nluz,center=body.center_source,name=name)
         if body.childs:
             verbose(VERB_SIMPLE,f"Object {name} has childs!")
             for child_name in body.childs:
@@ -590,12 +618,12 @@ class System(PrynglesCommon):
                 center=body.center_ecl
                         
                 #Get source and center
-                verbose(VERB_SIMPLE,f"Calculating illumination for '{name}' coming from '{self.source.name}' @ {self.center_source}")            
-                nluz=self.center_source-center
+                verbose(VERB_SIMPLE,f"Calculating illumination for '{name}' coming from '{body.source.name}' @ {body.center_source}")            
+                nluz=body.center_source-center
                         
                 if body.kind == "Ring" and body.parent.kind == "Star":
                     verbose(VERB_SIMPLE,f"Parent body of ring, {body.parent.name} is a star. All spangles will be illuminated")
-                    self.sg.set_luz(nvec=nluz,center=self.center_source,name=name)
+                    self.sg.set_luz(nvec=nluz,center=body.center_source,name=name)
                     cond=(self.sg.data.name==name)
                     self.sg.data.loc[cond,"unset"]=False
                     self.sg.data.loc[cond,"illuminated"]=True                    

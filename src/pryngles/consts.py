@@ -280,7 +280,7 @@ SPANGLER_COLUMNS=odict({
     "transit_over_luz":"", #Which body is intersected by the Spangle (is transiting over)
     
     #Azimutal angles
-    "azim_obs_luz":0,#Difference between the azimuth of the light-source and the observer over the spangle
+    "azim_obs_luz":0,#Difference between the azimuth of the observer over the spangle and that of light-source
 
     #Geometrical parameters
     "asp":1.0, #Effective area of the spangle in 3D 

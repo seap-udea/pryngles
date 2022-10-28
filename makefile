@@ -156,13 +156,16 @@ install:
 	@echo "Installing locally..."
 	@$(PIP) install -e .
 
-test:
+import:
+	@python -c "from pryngles import *;print(version)"
+
+test:import
 ifeq ($(MOD),None)
 	@echo "Testing all packages..."
 	@$(NOSETESTS) 2> >(tee -a /tmp/$(PACKNAME)-test-errors.log >&2)
 else
 	@echo "Testing module(s) $(MOD)..."
-	@for mod in $(shell echo $(MOD) | sed 's/,/ /'); do echo "Testing $$mod";$(NOSETESTS) src/pryngles/tests/test-$${mod}.py 2> >(tee -a /tmp/$(PACKNAME)-test-errors-$${mod}.log >&2);done
+	@for mod in $(shell echo $(MOD) | sed 's/,/ /'); do echo "Testing $$mod";$(NOSETESTS) src/pryngles/tests/test-$${mod}.py 2> >(tee /tmp/$(PACKNAME)-test-errors-$${mod}.log >&2);done
 endif
 
 version:

@@ -45,16 +45,35 @@ class Test(unittest.TestCase):
 	def test_system_add(self):
 	    global sys
 	
-	    Verbose.VERBOSITY=VERB_ALL
+	    Verbose.VERBOSITY=VERB_SIMPLE
 	
+	    #Add to a system
 	    sys=System()
 	    S=sys.add(m=8,radius=4)
-	    P=sys.add("Planet",parent=S,radius=2,a=10,source=S)
+	    P=sys.add("Planet",parent=S,radius=2,a=10)
 	    M=sys.add("Planet",name="Moon",parent=P,radius=2,a=1)
 	    R=sys.add("Ring",parent=P,fi=1.3,fe=2.3)
 	    print(sys)
 	    print(sys.root)
 	
+	    #Error
+	    O=Star()
+	    self.assertRaises(ValueError,lambda:sys.add("Planet",name="Error1",parent=S,radius=2,a=10,source=1))
+	    self.assertRaises(ValueError,lambda:sys.add("Planet",name="Error2",parent=P,radius=2,a=1,source=P))
+	    self.assertRaises(ValueError,lambda:sys.add("Planet",name="Error3",parent=P,radius=2,a=1,source=O))
+	
+	    #Several sources in a system
+	    sys=System()
+	    S1=sys.add(name="Star1",m=8,radius=4)
+	    S2=sys.add(name="Star2",parent=S1,m=8,radius=4,a=30)
+	    PS1=sys.add("Planet",name="PlanetS1",parent=S1,radius=2,a=10)
+	    MPS1=sys.add("Planet",name="Moon",parent=PS1,radius=2,a=1)
+	    RPS1=sys.add("Ring",parent=PS1,fi=1.3,fe=2.3)
+	    PS2=sys.add("Planet",name="PlanetS2",parent=S2,radius=2,a=10)
+	    
+	    for name in sys.bodies:
+	        print(name,sys.bodies[name].source.name)
+	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
 	def test_sim(self):
@@ -110,7 +129,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	def test_obs(self):
+	def test_spangleobs(self):
 	
 	    global sys
 	    plt.close("all")
@@ -138,6 +157,28 @@ class Test(unittest.TestCase):
 	
 	    sys._set_observer(nvec=[0,0,1])
 	    sys.sg.plot3d()
+	    
+	    #Spangle with light
+	    nspangles=100
+	    sys=System(resetable=False)
+	    S=sys.add(name="Star",nspangles=nspangles,m=9,radius=1)
+	    P=sys.add("Planet",parent=S,name="Planet",nspangles=nspangles,radius=0.2,a=2)
+	    M=sys.add("Planet",parent=P,name="Moon",nspangles=nspangles,radius=0.1,a=1)
+	    R=sys.add("Ring",parent=P,name="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
+	
+	    sys.initialize_simulation()
+	    sys.spangle_system()
+	
+	    #Check addition columns
+	    print(sys.source)
+	    print(sys.sg.data.columns)
+	
+	    #Check save
+	    sys.save_to("/tmp/system.pkl")
+	
+	    #Check plot
+	    #sys.sp.plot3d(center_at="Ring",not_plot=["Star1","Star2"])
+	    sys.sg.plot3d()
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
@@ -159,40 +200,11 @@ class Test(unittest.TestCase):
 	    sys.initialize_simulation()
 	    sys.spangle_system()
 	    
-	    #sys.sg.plot3d(center_at="Ring",not_plot=["Disk"])
+	    sys.sg.plot3d(center_at="Ring",not_plot=["Disk"])
 	    #sys.sg.plot3d(center_at="Ring")
-	    sys.sg.plot3d()
+	    #sys.sg.plot3d()
 	    cond=(sys.sg.data.name=="Moon")&(sys.sg.data.hidden_by_luz!="")
 	    print_df(sys.sg.data.loc[cond,["hidden_by_luz"]].head(10))
-	
-	    Verbose.VERBOSITY=VERB_NONE
-	
-	def test_spangle(self):
-	
-	    global sys
-	
-	    Verbose.VERBOSITY=VERB_NONE
-	
-	    nspangles=100
-	    sys=System(resetable=False)
-	    S=sys.add(name="Star",nspangles=nspangles,m=9,radius=1)
-	    P=sys.add("Planet",parent=S,name="Planet",nspangles=nspangles,radius=0.2,a=2)
-	    M=sys.add("Planet",parent=P,name="Moon",nspangles=nspangles,radius=0.1,a=1)
-	    R=sys.add("Ring",parent=P,name="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=90*Consts.deg)
-	
-	    sys.initialize_simulation()
-	    sys.spangle_system()
-	
-	    #Check addition columns
-	    print(sys.source)
-	    print(sys.sg.data.columns)
-	
-	    #Check save
-	    sys.save_to("/tmp/system.pkl")
-	
-	    #Check plot
-	    #sys.sp.plot3d(center_at="Ring",not_plot=["Star1","Star2"])
-	    sys.sg.plot3d()
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
@@ -247,6 +259,7 @@ class Test(unittest.TestCase):
 	def test_int(self):
 	
 	    global sys
+	    plt.close("all")
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
@@ -257,15 +270,10 @@ class Test(unittest.TestCase):
 	    P=sys.add("Planet",parent=S,name="Planet",nspangles=nspangles,radius=0.2,m=1e-3,a=5)
 	    R=sys.add("Ring",parent=P,name="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=20*Consts.deg)
 	    
-	    sys.initialize_simulation()
+	    sys.initialize_simulation([[S,M],P])
 	    sys.spangle_system()
 	
-	    sys.integrate(1)
-	
-	    sys._set_observer([0,0,1])
-	    sys._set_luz()
-	
-	    sys.integrate(1)
+	    sys.integrate(10)
 	
 	    sys._set_observer([0,0,1])
 	    sys._set_luz()

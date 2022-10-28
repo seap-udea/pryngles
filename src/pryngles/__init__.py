@@ -173,13 +173,11 @@ from pryngles.version import *
 from pryngles.consts import *
 from pryngles.misc import *
 from pryngles.science import *
+from pryngles.plot import *
+from pryngles.orbit import *
 
 #Legacy module
 from pryngles.legacy import *
-
-#General modules
-from pryngles.plot import *
-from pryngles.orbit import *
 
 #Core modules
 from pryngles.sampler import *
