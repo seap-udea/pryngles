@@ -157,11 +157,12 @@ install:
 	@$(PIP) install -e .
 
 test:
-	@echo "Testing package..."
 ifeq ($(MOD),None)
+	@echo "Testing all packages..."
 	@$(NOSETESTS) 2> >(tee -a /tmp/$(PACKNAME)-test-errors.log >&2)
 else
-	@$(NOSETESTS) src/pryngles/tests/test-$(MOD).py 2> >(tee -a /tmp/$(PACKNAME)-test-errors-$(MOD).log >&2)
+	@echo "Testing module(s) $(MOD)..."
+	@for mod in $(shell echo $(MOD) | sed 's/,/ /'); do echo "Testing $$mod";$(NOSETESTS) src/pryngles/tests/test-$${mod}.py 2> >(tee -a /tmp/$(PACKNAME)-test-errors-$${mod}.log >&2);done
 endif
 
 version:

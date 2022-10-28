@@ -231,8 +231,6 @@ Tasks:
    - `examples/pryngles-tutorial-quickstart.ipynb`
    - `papers/bright-side/pryngles-paper-figures.ipynb`
 
-
-
 ### Release and test a production version
 
 1. Check the latest version: `tail .versions`

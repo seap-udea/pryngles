@@ -108,6 +108,11 @@ REBOUND_ORBITAL_PROPERTIES=dict(
     theta=0,l=0,
 )
 
+REBOUND_CARTESIAN_PROPERTIES=dict(
+    #Cartesian coordinates
+    x=0,y=0,z=0,vx=0,vy=0,vz=0,    
+)
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants of module $sampler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -562,6 +567,7 @@ BODY_DEFAULTS.update(odict(
     
     name=None,
     name_by_kind=False,
+    source=None,
     
     #Orbit
     m=1,

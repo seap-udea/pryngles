@@ -322,77 +322,18 @@ class System(PrynglesCommon):
         
         self.bodies[self.__body.name]=self.__body
         
-        #Set the root body in the system.  The observer part of the conditional is for legacy purposes
-        if (self.__body.parent is None) and (self.__body.kind is not "Observer"):
-            if self.root:
-                raise AssertionError(f"A root body has been already set in {self.root}")
-            self.root=self.__body
-        
-        #Set the rebound hash according to type of object
-        if kind == "Ring":        
-            self.__body.rbhash=self.__body.parent.name
-        else:
-            self.__body.rbhash=self.__body.name
-    
         #Update system
         self._update_system()
         
-        #Get the common ancestor
+        #Get the common ancestors or the root of the system
         root=commonancestors(self.__body)
         if len(root)>0:
             self.root=root[0]
+            verbose(VERB_SIMPLE,f"Setting the root object as {self.root.name}")
     
         verbose(VERB_SIMPLE,f"Object '{kind}' with name '{self.__body.name}' has been added.")
         return self.__body
     
-    
-    def remove(self,name):
-        """Remove a body from a system.
-    
-        Parameters:
-            name: string
-                Hash of the body to remove
-        
-        Notes: 
-            Remove eliminate body and all the childs and the childs of the childs.
-    
-        Example:
-            sys=System()
-            S=sys.add(m=2)
-            sys.remove(name=S.name)
-        """
-        
-        if name in self.bodies:
-            verbose(VERB_SIMPLE,f"Removing object {name} from system")
-    
-            obj=self.bodies[name]
-    
-            #Get the list of child hashes before removing (it changes during for)
-            child_hashes=list(obj.childs.keys())
-            
-            #Remove child objects
-            for child_hash in child_hashes:
-                if child_hash in self.bodies:
-                    self.remove(child_hash)
-                    
-            #Remove object from Rebound simulation
-            if obj.kind != "Ring":
-                if self._simulated:
-                    if self.nparticles:
-                        verbose(VERB_SIMPLE,f"Removing particle {name} from simulation")
-                        self.sim.remove(hash=name)
-            
-            #Remove object from childs of its parent
-            if obj.parent:
-                del obj.parent.childs[name]
-            
-            #Remove object from bodies
-            del self.bodies[name]
-    
-            #Update system
-            self._update_system()
-        else:
-            raise ValueError(f"No object with hash '{name}' in the system")
     
     def initialize_simulation(self,orbital_tree=None,**rebound_options):
         """Initialize rebound simulation using a given orbital tree.
@@ -447,7 +388,14 @@ class System(PrynglesCommon):
             self.orbital_tree=[self.root,self.orbital_tree]
         else:
             self.orbital_tree=orbital_tree
-               
+        
+        #Set the rebound hash of all bodies
+        for name,body in self.bodies.items():
+            if body.kind=="Ring":
+                body.rbhash=body.parent.name
+            else:
+                body.rbhash=body.name
+        
         #Check that all bodies in system is in the orbital tree
         bodies=list(Misc.flatten(self.orbital_tree))
         for name,body in self.bodies.items():
@@ -477,6 +425,54 @@ class System(PrynglesCommon):
         self._update_system()
         
         return orbit
+    
+    def remove(self,name):
+        """Remove a body from a system.
+    
+        Parameters:
+            name: string
+                Hash of the body to remove
+        
+        Notes: 
+            Remove eliminate body and all the childs and the childs of the childs.
+    
+        Example:
+            sys=System()
+            S=sys.add(m=2)
+            sys.remove(name=S.name)
+        """
+        
+        if name in self.bodies:
+            verbose(VERB_SIMPLE,f"Removing object {name} from system")
+    
+            obj=self.bodies[name]
+    
+            #Get the list of child hashes before removing (it changes during for)
+            child_hashes=list(obj.childs.keys())
+            
+            #Remove child objects
+            for child_hash in child_hashes:
+                if child_hash in self.bodies:
+                    self.remove(child_hash)
+                    
+            #Remove object from Rebound simulation
+            if obj.kind != "Ring":
+                if self._simulated:
+                    if self.nparticles:
+                        verbose(VERB_SIMPLE,f"Removing particle {name} from simulation")
+                        self.sim.remove(hash=name)
+            
+            #Remove object from childs of its parent
+            if obj.parent:
+                del obj.parent.childs[name]
+            
+            #Remove object from bodies
+            del self.bodies[name]
+    
+            #Update system
+            self._update_system()
+        else:
+            raise ValueError(f"No object with hash '{name}' in the system")
     
     def spangle_system(self):
         """Generate the spangles of the objects in the system
@@ -512,7 +508,6 @@ class System(PrynglesCommon):
             self._spanglers[name]=body.sg
             
             if body==self.root:
-                body.sg.data.source=True
                 self.source=body
                 self.center_source=body.center_ecl
                 
