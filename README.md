@@ -204,6 +204,9 @@ performance, modularity and programming standards for future releases.
 
 ## What's new
 
+For a detailed list of the newest features introduced in the latest
+releases pleas check [What's new](WHATSNEW.md).
+
 - **0.9.x versions**:
   - New scatterer module.
   - Scatterers introduced: LambertianGraySurface,
