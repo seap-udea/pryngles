@@ -180,7 +180,7 @@ public:
 	@cp examples/pryngles-dev*-tutorial.ipynb $(PUBLIC)/
 	@cp papers/bright-side/pryngles-paper-figures.ipynb examples/pryngles-examples-exploration.ipynb
 	@cp examples/pryngles-examples-exploration.ipynb $(PUBLIC)/
-	@cp README.md LICENSE $(PUBLIC)/
+	@cp README.md LICENSE WHATSNEW.md $(PUBLIC)/
 	@make -C $(PUBLIC) commit
 
 prueba:
