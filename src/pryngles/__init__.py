@@ -175,6 +175,7 @@ from pryngles.misc import *
 from pryngles.science import *
 from pryngles.plot import *
 from pryngles.orbit import *
+from pryngles.scatterer import *
 
 #Legacy module
 from pryngles.legacy import *
@@ -184,7 +185,6 @@ from pryngles.sampler import *
 from pryngles.spangler import *
 from pryngles.body import *
 from pryngles.system import *
-from pryngles.optics import *
 
 #Reset verbosity
 Verbose.VERBOSITY=VERB_NONE

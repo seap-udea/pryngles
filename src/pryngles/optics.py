@@ -15,17 +15,29 @@
 # Main contributors:                                             #
 #   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
+#!/usr/bin/env python
+# coding: utf-8
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# External required packages
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# # Pryngles module: optics
+# 
+# Template of a module
 
+# ## External modules
+
+#@external
 from pryngles import *
+#@end:external
 
+Scatterer_doc="""This is the basic class of a scatterer
+"""
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class Scatterer
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# ## Class: Scatterer
+
+#General modules
+from pryngles.plot import *
+from pryngles.orbit import *
+
+#@class
 class Scatterer(PrynglesCommon):
     
     def __init__(self,system):
@@ -89,3 +101,10 @@ class Scatterer(PrynglesCommon):
         Rm = np.array([[np.cos(angle), -np.sin(angle),0],[np.sin(angle),np.cos(angle),0],[0,0,1]])
         return Rm
         
+#@end:class        
+
+Scatterer.__doc__=Scatterer_doc
+
+
+# ### The end
+

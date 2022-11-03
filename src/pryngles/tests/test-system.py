@@ -19,6 +19,8 @@ import unittest
 from pryngles import *
 class Test(unittest.TestCase):
 	def test_system_init(self):
+	    
+	    global sys
 	
 	    Verbose.VERBOSITY=VERB_ALL
 	
@@ -43,10 +45,17 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	
 	def test_system_add(self):
+	
 	    global sys
 	
 	    Verbose.VERBOSITY=VERB_SIMPLE
-	
+	    #Default behavior
+	    sys=System()
+	    S=sys.add()
+	    P=sys.add("Planet")
+	    M=sys.add("Planet",name="Moon",parent=P)
+	    print(sys)
+	    
 	    #Add to a system
 	    sys=System()
 	    S=sys.add(m=8,radius=4)
@@ -73,6 +82,7 @@ class Test(unittest.TestCase):
 	    
 	    for name in sys.bodies:
 	        print(name,sys.bodies[name].source.name)
+	        print(f"Body {name}:",sys.bodies[name].scatterer)
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
@@ -208,6 +218,40 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	def test_setmultiple(self):
+	
+	    global sys
+	    plt.close("all")
+	
+	    Verbose.VERBOSITY=VERB_NONE
+	
+	    nspangles=500
+	    sys=System(resetable=False)
+	
+	    S=sys.add(name="Star",nspangles=nspangles,m=9,radius=1)
+	    P=sys.add("Planet",parent=S,name="Planet",nspangles=nspangles,radius=0.2,a=3)
+	    M=sys.add("Planet",parent=P,name="Moon",nspangles=nspangles,m=1e-3,radius=0.1,a=1,M=90*Consts.deg)
+	    R=sys.add("Ring",parent=P,name="Ring",nspangles=nspangles,fi=1.3,fe=2.3,i=60*Consts.deg)
+	
+	    S2=sys.add(name="Star2",parent=S,nspangles=nspangles,m=9,radius=1,a=10)
+	    P2=sys.add("Planet",parent=S2,name="Planet S2",nspangles=nspangles,radius=0.2,a=2,M=180*Consts.deg)
+	    R2=sys.add("Ring",parent=P2,name="Ring2",nspangles=nspangles,fi=1.3,fe=2.3,i=30*Consts.deg)
+	    M2=sys.add("Planet",parent=P2,name="Moon PS2",nspangles=nspangles,m=1e-3,radius=0.1,a=1,M=205*Consts.deg)
+	
+	    orbital_tree=[[S,[P,M]],[S2,[P2,M2]]]
+	
+	    sys.initialize_simulation(orbital_tree)
+	    sys.spangle_system()
+	
+	    #Show system from above
+	    sys.sg.plot2d()
+	
+	    #Show only Star 2 system
+	    sys.update_perspective(n_obs=[1,-1,0])
+	    sys.sg.plot2d(include=["Planet S2","Ring2","Moon PS2"])
+	    
+	    Verbose.VERBOSITY=VERB_NONE
+	
 	def test_update(self):
 	
 	    Verbose.VERBOSITY=VERB_NONE
@@ -285,10 +329,10 @@ class Test(unittest.TestCase):
 	
 	def test_legacy(self):
 	
-	    global sys
+	    global sys,RP
 	
 	    Verbose.VERBOSITY=VERB_NONE
-	    #"""
+	    """
 	    sys=System()
 	    S=sys.add(kind="Star",
 	              physics=dict(radius=Consts.rsun/sys.ul),
@@ -301,11 +345,55 @@ class Test(unittest.TestCase):
 	    R=sys.add(kind="Ring",primary=P,
 	              physics=dict(fi=1.5,fe=2.5,i=30*Consts.deg)
 	             )
-	    O=sys.add(kind="Observer",
-	              optics=dict(lamb=90*Consts.deg,beta=90*Consts.deg)
-	             )
+	    #""";
+	    
+	    #"""
+	    sys=System()
+	    S=sys.add(kind="Star",radius=Consts.rsun/sys.ul,limb_coeffs=[0.65])
+	    P=sys.add(kind="Planet",parent=S,a=0.2,e=0.0,radius=Consts.rsaturn/sys.ul)
+	    R=sys.add(kind="Ring",parent=P,fi=1.5,fe=2.5,i=30*Consts.deg)
+	    RP=sys.ensamble_system(lamb=90*Consts.deg,beta=90*Consts.deg)
+	    O=sys.add(kind="Observer",optics=dict(lamb=90*Consts.deg,beta=90*Consts.deg))
+	    #""";
+	    
 	    RP=sys.ensamble_system()
 	    ecliptic,observer,star=RP.plotRingedPlanet(showfig=1)
+	    
+	    RP.changeObserver([90*Consts.deg,30*Consts.deg])
+	
+	    lamb_initial=+0.0*Consts.deg
+	    lamb_final=+360*Consts.deg
+	    lambs=np.linspace(lamb_initial,lamb_final,100)
+	    Rps=[]
+	    Rrs=[]
+	    ts=[]
+	    for lamb in lambs:
+	        RP.changeStellarPosition(lamb)
+	        ts+=[RP.t*RP.CU.UT]
+	        RP.updateOpticalFactors()
+	        RP.updateDiffuseReflection()
+	        Rps+=[RP.Rip.sum()]
+	        Rrs+=[RP.Rir.sum()]
+	
+	    ts=np.array(ts)
+	    Rps=np.array(Rps)
+	    Rrs=np.array(Rrs)
+	
+	    #Middle transit
+	    ts=(ts-ts[0])/Consts.day
+	
+	    #Plot
+	    fig=plt.figure()
+	    ax=fig.gca()    
+	    ax.plot(ts,1e6*Rps,label="Planet")
+	    ax.plot(ts,1e6*Rrs,label="Ring")
+	    ax.plot(ts,1e6*(Rps+Rrs),label="Planet+Ring")
+	
+	    ax.set_xlabel("Time since VE [days]")
+	    ax.set_ylabel("Flux anomaly [ppm]")
+	    Extra.prynglesMark(ax)
+	
+	    ax.legend();
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	

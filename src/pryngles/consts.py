@@ -588,6 +588,10 @@ BODY_DEFAULTS.update(odict(
     seed=0,
     preset=True,
     
+    albedo_gray_spherical=1,
+    albedo_gray_normal=1,
+    tau_gray_optical=0,
+    
     #Legacy
     primary=None,
     optics=dict(),
@@ -605,6 +609,7 @@ STAR_DEFAULTS.update(odict(
 
     #Orbit: update
     #Same as body
+    radius=0.1,
     
     #Physics: update
     #Same as Body
@@ -627,12 +632,11 @@ PLANET_DEFAULTS.update(odict(
     
     #Physics: update
     #Same as Body
+    radius=0.1,
     
     #Optical: update
     spangle_type=SPANGLE_SOLID_ROCK,
     geometry="sphere",
-    
-    albedo_gray_spherical=1,
 ))
 BODY_KINDS+=["Planet"]
 
@@ -644,14 +648,12 @@ RING_DEFAULTS.update(odict(
     
     #Physics: update
     #Same as Body
-    fi=1.0,
+    fi=1.5,
     fe=2.0,
     
     #Optics: update
     spangle_type=SPANGLE_GRANULAR,
     shape="ring",
-    albedo_gray_normal=1,
-    tau_gray_optical=0,
 ))
 
 BODY_KINDS+=["Ring"]
@@ -662,3 +664,22 @@ OBSERVER_DEFAULTS.update(odict(
     beta=0,
 ))
 BODY_KINDS+=["Observer"]
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module $system
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+LEGACY_PHYSICAL_PROPERTIES=dict(
+    #Albedos
+    AS=1,AL=1,
+    #Ring geometrical opacity
+    taug=1.0, #Geometrical opacity
+    diffeff=1.0, #Diffraction efficiency
+    #Law of diffuse reflection on ring surface
+    reflection_rings_law=lambda x,y:x,
+    #Observations wavelength
+    wavelength=550e-9,
+    #Ring particle propeties (see French & Nicholson, 2000)
+    particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
+    #Stellar limb darkening
+    limb_cs=[],
+)

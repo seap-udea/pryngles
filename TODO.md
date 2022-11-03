@@ -4,21 +4,13 @@ To Do List
 - Use automatic archive of rebound:
   https://rebound.readthedocs.io/en/latest/ipython_examples/SimulationArchiveRestart/
 
-- Use already store sampling sets for spangling objects.
-
-- For intersections, transit and occult use the shape of the figure
-  for defining the region on which this intersections occur. Use
-  ConvexHull.
-
 - Create spherical shell type of object.
 
 - Simulate different transit depths superposing spherical shells
   responding differently to wavelengths.
 
-- REBOUND integration [PARTIALLY DONE].
-
 - Create an animation showing how the appearance of the object change
-  as the observer, the star or the orientation of the body change.
+  as the observer, the star or the orientation of the body change [DONE].
 
 - When purging points in Spangler calculate distances using the arc
   distance instead of the cartesian (euclidean) distance.
@@ -30,21 +22,14 @@ To Do List
   velocities could be calculated for individual spangles so we can
   simulate spectra modifications due for instance to stellar rotation.
 
-- Animation command using animated gif instead of ffmpeg.
-
 - Make code Python PEP8 compliant:
   https://ellibrodepython.com/python-pep8#:~:text=La%20PEP8%20es%20una%20gu%C3%ADa,que%20una%20l%C3%ADnea%20debe%20tener.
   https://peps.python.org/pep-0008/
-
-- Use snake_case naming convention.
 
 - Use standard docstring conventions:
   https://peps.python.org/pep-0257/
   https://numpydoc.readthedocs.io/en/latest/format.html
   https://www.datacamp.com/tutorial/docstrings-python
-
-- Allow to change dynamically the orientation of the ring. Create an
-  interact notebook to show orientation of the ring.
 
 - Include photomeric filters, http://svo2.cab.inta-csic.es/theory/fps/
 
@@ -73,6 +58,19 @@ To Do List
 
 Done
 ====
+
+- For intersections, transit and occult use the shape of the figure
+  for defining the region on which this intersections occur. Use
+  ConvexHull [DONE].
+
+- REBOUND integration [DONE].
+
+- Animation command using animated gif instead of ffmpeg [DONE].
+
+- Use snake_case naming convention [DONE]
+
+- Allow to change dynamically the orientation of the ring. Create an
+  interact notebook to show orientation of the ring [DONE].
 
 - Create a spangle class to describe the properties of each spangle
   [DONE].
@@ -110,3 +108,6 @@ Done
     python -m twine upload --repository testpypi dist/* --verbose
 
 - [DONE] Disable showing figure when plotting with showfig=0 in Google Colab.
+
+- Use already store sampling sets for spangling objects [DONE]
+
