@@ -14,11 +14,22 @@
 # Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
 ##################################################################
 import setuptools
+from numpy.distutils.core import setup, Extension
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+pixx = Extension(name="pryngles.pixx",
+                        sources=["src/pryngles/pixx_sig.pyf",
+                                 "src/pryngles/pixx/reflection.f",
+                                 "src/pryngles/pixx/rdfous_planet.f",
+                                 "src/pryngles/pixx/rdfous_ring.f",
+                                 "src/pryngles/pixx/bracks.f",
+                                 "src/pryngles/pixx/spline.f",
+                                 "src/pryngles/pixx/splint.f",
+                                 ])
+
+setup(
     # ######################################################################
     # BASIC DESCRIPTION
     # ######################################################################
@@ -45,9 +56,15 @@ setuptools.setup(
     # ######################################################################
     # FILES
     # ######################################################################
+#    packages=["src"],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-
+    
+    # ######################################################################
+    # EXTENSIONS
+    # ######################################################################
+    ext_modules=[pixx],
+    
     # ######################################################################
     # ENTRY POINTS
     # ######################################################################
