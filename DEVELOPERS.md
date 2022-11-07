@@ -6,6 +6,63 @@ In this guide you will find common procedures for developers.
 NOTE:
 - You will need /bin/bash installed for Makefile properly works.
 
+Contribute
+----------
+
+For the contributor:
+
+- Fork. Creata fork of the repository.
+
+- Clone. Clone the repository locally.
+
+- Contribute. Change the files you need to change.
+
+- Stash. Create a copy of the files you have changed.
+  ```
+  git stash
+  ```
+
+- Pull from master.
+  ```
+  git pull upstream <branch>
+  ```
+
+- Pop.
+  ```
+  git stash pop
+  ```
+
+- Commit and push.
+  ```
+  git commit -am "Message"
+  ```
+
+- Pull request.
+
+For the main developer:
+
+- Accept pull request.
+
+- Stash.
+  ```
+  git stash
+  ```
+
+- Pull.
+  ```
+  git pull
+  ```
+
+- Pop.
+  ```
+  git stash pop
+  ```
+
+- Commit and push.
+  ```
+  git commit -am "Message"
+  ```
+
 Convert 
 -------
 
@@ -230,8 +287,6 @@ Tasks:
 7. Execute all notebooks:
    - `examples/pryngles-tutorial-quickstart.ipynb`
    - `papers/bright-side/pryngles-paper-figures.ipynb`
-
-
 
 ### Release and test a production version
 

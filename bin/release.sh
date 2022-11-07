@@ -100,6 +100,6 @@ then
     python -m twine upload --repository testpypi dist/* --verbose
 else
     echo "Uploading to PyPI (use your username and password)..."
-    python -m twine upload dist/*
+    python -m twine upload dist/* --verbose
 fi
 
