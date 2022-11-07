@@ -1,6 +1,6 @@
 # Pryngles
 
-## Hola spaNGLES
+## PlanetaRY spaNGLES
 
 <!--[![PyPi version](https://pypip.in/v/pryngles/badge.png)](https://crate.io/packages/pryngles/)-->
 <!--[![PyPi downloads](https://pypip.in/d/pryngles/badge.png)](https://crate.io/packages/pryngles/)-->
