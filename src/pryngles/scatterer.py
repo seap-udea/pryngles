@@ -195,6 +195,8 @@ class LambertianGraySurface(Scatterer):
 
         
         if self.register(self,params):
+            verbose(VERB_SIMPLE,f"Initializing {self.params['name']} with hash {self.hash}")
+            
             #Phase law
             if "phase_law" in params:
                 self.phase_law=params["phase_law"]
@@ -245,8 +247,9 @@ class LambertianGrayAtmosphere(Scatterer):
     
     def __init__(self,**params):
 
-        if self.register(self,params):
-        
+        if self.register(self,params):        
+            verbose(VERB_SIMPLE,f"Initializing {self.params['name']} with hash {self.hash}")
+            
             #Gray albedo
             self.AS=params["AS"]
 

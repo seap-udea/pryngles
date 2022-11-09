@@ -21,11 +21,12 @@ class Test(unittest.TestCase):
 	def test_interface(self):
 	    
 	    global MySurface
-	    Verbose.VERBOSITY=VERB_NONE
+	    Verbose.VERBOSITY=VERB_ALL
 	    
 	    class MySurface(Scatterer):
 	        def __init__(self,**params):
 	            if self.register(self,params):
+	                verbose(VERB_SIMPLE,f"Initializing {self.params['name']} with hash {self.hash}")
 	                #Read parameters of the scatterer
 	                self.A=params["A"]
 	                #Initialize scatterer
@@ -44,6 +45,9 @@ class Test(unittest.TestCase):
 	    S=MySurface(A=1)
 	    print(S.hash)
 	    print(S.get_albedo(0.5,0,0,0))
+	    S=MySurface(A=1)
+	    print(S.hash)
+	    print(S.get_albedo(0.5,0,0,0))
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
@@ -51,7 +55,7 @@ class Test(unittest.TestCase):
 	    
 	    global LA
 	    
-	    Verbose.VERBOSITY=VERB_NONE
+	    Verbose.VERBOSITY=VERB_ALL
 	    
 	    print(NeutralSurface().get_albedo(0,0,0,0))
 	    print(BlackBodySurface().get_albedo(0,0,0,0))
@@ -62,7 +66,7 @@ class Test(unittest.TestCase):
 	    
 	    global LA
 	    
-	    Verbose.VERBOSITY=VERB_NONE
+	    Verbose.VERBOSITY=VERB_ALL
 	    
 	    LA=LambertianGraySurface(AL=0.5)
 	    etas=np.linspace(0,1,1000)
@@ -81,7 +85,7 @@ class Test(unittest.TestCase):
 	    
 	    global LA
 	    
-	    Verbose.VERBOSITY=VERB_NONE
+	    Verbose.VERBOSITY=VERB_ALL
 	    
 	    LA=LambertianGrayAtmosphere(AS=0.5)
 	    etas=np.linspace(0,1,1000)
