@@ -25,6 +25,7 @@ from collections import OrderedDict as odict
 from collections.abc import Iterable
 import inspect
 import os
+from sys import maxsize as HASH_MAXSIZE
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,4 +88,12 @@ class Misc(object):
         """Get a list of the methods for class my_class
         """
         return sorted([member[0] for member in inspect.getmembers(my_class) if '__' not in member[0]])
+    
+    def calc_hash(obj):
+        if type(obj) is dict:
+            hash_obj=frozenset(obj.items())
+        else:
+            hash_obj=obj
+        hash_val=str(hash(hash_obj)%((HASH_MAXSIZE+1)*2))
+        return hash_val
 

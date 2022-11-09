@@ -82,7 +82,7 @@ class Test(unittest.TestCase):
 	    
 	    for name in sys.bodies:
 	        print(name,sys.bodies[name].source.name)
-	        print(f"Body {name}:",sys.bodies[name].scatterer)
+	        #print(f"Body {name}:",sys.bodies[name].scatterer)
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
@@ -113,7 +113,7 @@ class Test(unittest.TestCase):
 	    sys.sim.status()
 	    
 	    #Animate
-	    Plot.animate_rebound(sys.sim)
+	    Plot.animate_rebound(sys.sim,traces=True,axis=True)
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
