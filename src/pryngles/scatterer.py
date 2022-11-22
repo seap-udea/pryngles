@@ -12,9 +12,6 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
-##################################################################
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # External required packages
@@ -124,7 +121,8 @@ class NeutralSurface(Scatterer):
     """Neutral surface.
     """
     def __init__(self,**params):
-        self.register(self,params)
+        if self.register(self,params):
+            pass
     
     def get_albedo(self,eta,zeta,delta,lamb,**params):
         return 1
@@ -138,7 +136,8 @@ class BlackBodySurface(Scatterer):
     """Black body surface
     """
     def __init__(self,**params):
-        self.register(self,params)
+        if self.register(self,params):
+            pass
     
     def get_albedo(self,eta,zeta,delta,lamb,**params):
         return 0

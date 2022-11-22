@@ -12,9 +12,6 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
-##################################################################
 import unittest
 from pryngles import *
 class Test(unittest.TestCase):
@@ -109,6 +106,36 @@ class Test(unittest.TestCase):
 	    for key,item in SCATTERERS_CATALOGUE.items():
 	        print(f"{key}: {item}")
 	
+	    Verbose.VERBOSITY=VERB_NONE
+	
+	def test_upscat(self):
+	    
+	    global sys
+	    
+	    Verbose.VERBOSITY=VERB_NONE
+	    
+	    nspangles=50
+	    sys=System()
+	    S=sys.add(kind="Star",nspangles=nspangles,
+	              radius=Consts.rsun/sys.ul,limb_coeffs=[0.65])
+	    P=sys.add(kind="Planet",parent=S,nspangles=nspangles,
+	              a=0.2,e=0.0,radius=Consts.rsaturn/sys.ul,spangle_type=SPANGLE_ATMOSPHERIC)
+	    R=sys.add(kind="Ring",parent=P,nspangles=nspangles,
+	              fi=1.5,fe=2.5,i=30*Consts.deg,roll=-90*Consts.deg)
+	    
+	    
+	    #Prepare system
+	    sys.initialize_simulation()
+	    sys.spangle_system()    
+	    sys.update_scatterers()
+	    
+	    #Show scatterers
+	    for key,item in SCATTERERS_CATALOGUE.items():
+	        print(f"{key}: {item.params['name']}")
+	        
+	    #Show scatterers
+	    print(sys.data.scatterer.unique())
+	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
 if __name__=="__main__":
