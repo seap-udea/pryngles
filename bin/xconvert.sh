@@ -126,7 +126,7 @@ do
     # Parse source file
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     source=$buildpath/$filename.src
-    python bin/jupdev-parse.py $source
+    $PYTHON bin/jupdev-parse.py $source
     
 done
 

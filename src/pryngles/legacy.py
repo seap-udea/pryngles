@@ -1126,8 +1126,8 @@ class RingedPlanet(object):
                  #Physical properties
                  physics=dict(),
                  #Fourier coefficient files
-                 fname_planet = "fou_gasplanet.dat",
-                 fname_ring = "fou_ring_0_4_0_8.dat"
+                 fname_planet = Misc.get_data("fou_gasplanet.dat"),
+                 fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
                 ):
         """
         The initialization routine only sets the basic geometric properties of the ring
@@ -2733,10 +2733,14 @@ class RingedPlanet(object):
         
         if cond.sum() > 0:
             planet_used = True
-            self.Stokesp[cond,:] = pixx.reflection(cond.sum(), self.phidiffps[cond], self.betaps[cond],
+            print(cond.sum(), self.phidiffps[cond], self.betaps[cond],
                                                     abs(self.etaps[cond]), abs(self.zetaps[cond]),
                                                     self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
-                                                    self.normp*self.afp)
+                                                    self.normp*self.afps)
+            self.Stokesp[cond,:] = pixx.reflection(cond.sum(), self.phidiffps[cond], self.betaps[cond],
+                                                    abs(self.etaps[cond]), abs(self.zetaps[cond]),
+                                                    self.nmugsp,self.nmatp,self.nfoup,self.xmup,1*self.rfoup,
+                                                    self.normp*self.afps)
                                                    
             # Check if the rings are seen edge-on and illuminated edge-on
             vcheck = abs(np.arccos(self.cosio)*180/np.pi - 90.0) > angle_eps # seen
@@ -2793,12 +2797,12 @@ class RingedPlanet(object):
                 self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
-                                                        self.normr*self.afr)
+                                                        self.normr*self.afrs)
             else:
                 self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
-                                                        self.normr*self.afr)
+                                                        self.normr*self.afrs)
                            
             Sr = self.Stokesr[:,:-1]
             Pr = self.Stokesr[:,-1]
