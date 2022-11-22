@@ -12,12 +12,3 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Pryngles module: optics
-# 
-# Template of a module
-
-# ## External modules
-
