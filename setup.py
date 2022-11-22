@@ -84,7 +84,7 @@ setup(
     install_requires=[
         'rebound', 'scipy', 'ipython', 'matplotlib', 'tqdm',
         'dill', 'spiceypy', 'cmasher','pandas','celluloid',
-        'sigfig','anytree'
+        'sigfig','anytree', 'ipywidgets'
     ],
 
     # ######################################################################

@@ -36,6 +36,13 @@ class Test(unittest.TestCase):
 	
 	    #Get methods
 	    print(Misc.get_methods(Misc))
+	    
+	    #Hash
+	    d=dict(a=1,b=3,c=np)
+	    print(Misc.calc_hash(d))
+	    P=PrynglesCommon()
+	    print(Misc.calc_hash(P))
+	    print(Misc.calc_hash(PrynglesCommon))
 	
 if __name__=="__main__":
     unittest.main(argv=['first-arg-is-ignored'],exit=False)

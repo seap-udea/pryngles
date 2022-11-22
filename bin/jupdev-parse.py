@@ -183,7 +183,7 @@ for modulename,constcontent in consts.items():
     consts_file=f"{basepath}_{modulename}.consts"
     print(f"Saving constants for {modulename} into {consts_file}...")
     fm=open(consts_file,"w")
-    fm.write(f"""\n{COMBAR}\n# Constants of module ${modulename}\n{COMBAR}\n""")
+    fm.write(f"""\n{COMBAR}\n# Constants of module {modulename}\n{COMBAR}\n""")
     for line in constcontent:
         fm.write(f"{line}")
     fm.close()
