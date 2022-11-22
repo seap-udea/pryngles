@@ -6,6 +6,44 @@ In this guide you will find common procedures for developers.
 NOTE:
 - You will need /bin/bash installed for Makefile properly works.
 
+Run pixx on mac:
+---------------
+
+- Install intel homebrew:
+
+  ```
+  mkdir homebrew
+  curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
+  mv homebrew /usr/local
+  ```
+
+- Add `/usr/local/bin` to $PATH in `.bashrc`.
+
+- Create an alias:
+
+  ```
+  alias axbrew='arch -x86_64 /usr/local/homebrew/bin/brew'
+  ```
+
+- Uninstall llvm from the current homebrew:
+
+  ```
+  brew uninstall llvm
+  ```
+
+- Install llvm from the current homebrew:
+
+  ```
+  axbrew uninstall llvm
+  ```
+
+- Check architecture:
+
+  ```
+  lipo -info src/pryngles/pixx.cpython-39-darwin.so
+  ```
+
+
 Contribute
 ----------
 
@@ -277,6 +315,10 @@ Tasks:
    ```
    python -m pip install --index-url https://test.pypi.org/simple/ pryngles==x.y.z.w
    ```
+   
+   A more complete version is:
+
+   
 
 6. Open `Jupyter`:
 

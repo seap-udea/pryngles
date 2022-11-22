@@ -12,9 +12,6 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
-##################################################################
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # External required packages
@@ -264,6 +261,8 @@ SPANGLER_COLUMNS=odict({
     "z_cen_obs":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_obs":"", #Which body intersect the observer or light coming to a Spangle
     "transit_over_obs":"", #Which body is intersected by the Spangle (is transiting over)
+    "beta_loc":0, #Beta angle rotates the local scattering plane to the planetary scattering plane
+    
     
     #Coordinates of the spangle (cartesian and spherical) in the light-source system
     "center_luz":[0,0,0],#Center of the body
@@ -291,6 +290,9 @@ SPANGLER_COLUMNS=odict({
     "albedo_gray_normal":1.0,#Wavelength-independent normal albedo
     "albedo_gray_spherical":1.0,#Wavelength-independent spherical albedo
     "tau_gray_optical":0.0,#Wavelength-independent optical depth
+    
+    #Polarization parameters
+    "F":0,"Q":0,"U":0,"V":0,"P":0, #Stokes vector components
     
     #Thermal characteristics
     "emmitter":"",#Hash (identifier) of the emmitter used for this spangle
@@ -328,12 +330,13 @@ SPANGLER_KEY_ORDERING=[
     #Coordinates
     'x_ecl', 'y_ecl', 'z_ecl', 'ns_ecl',
     #Orientation
-    'azim_obs', 'n_obs', 'd_obs', 'asp_obs', 'cos_obs', 'hidden_by_obs', 'transit_over_obs', 
+    'azim_obs', 'n_obs', 'd_obs', 'asp_obs', 'cos_obs', 'hidden_by_obs', 'transit_over_obs', 'beta_loc',
     'azim_luz', 'n_luz', 'd_luz', 'asp_luz', 'cos_luz', 'hidden_by_luz', 'transit_over_luz',
     #Geometrical bulk properties
     'asp', 
     #Physical bulk properties
     'albedo_gray_normal', 'albedo_gray_spherical', 'tau_gray_optical', 
+    'F','Q','U','V','P',
     'Teq', 'Tem', 'emmisivity', 
     #State
     'visible', 'shadow', 'indirect', 'emit', 

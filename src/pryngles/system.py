@@ -12,9 +12,6 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
-##################################################################
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # External required packages
@@ -301,6 +298,31 @@ class System(PrynglesCommon):
         else:
             print(f"Simulation for this system has not been yet initialized. Use System.initialize_simulation()")
 
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file scatterer
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def update_scatterers(self):
+        """Update the scatterers of the spangles
+        """
+        if not self._spangled:
+            raise AssertionError("You need to spangle the system before updating the scatterers.")
+        
+        #Update scatterer only for the non-assigned one
+        cond=(self.data.scatterer=="")
+        for index in self.data[cond].index:
+            #Get spangle
+            spangle=self.data.loc[index]
+            #Get spangle sype
+            spangle_type=spangle["spangle_type"]
+            #Get scatterer class and options description
+            spangle_scatterer,spangle_options=self.spangle_scatterers[spangle_type]
+            #Build options of scatterers from options description
+            scatterer_options={**dict(zip(spangle_options.keys(),spangle[list(spangle_options.values())]))}
+            #Instantiate object of scatterer and save hash into DataFrame
+            self.data.loc[index,"scatterer"]=spangle_scatterer(**scatterer_options).hash
+    
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Tested methods from module file system
