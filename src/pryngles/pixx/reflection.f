@@ -20,116 +20,116 @@
 
       INCLUDE 'max_incl'
 
-      INTEGER i,l,nmat,nmugs,nfou,npix,ki,m,k,n
-      INTEGER j1(npix)
+      INTEGER i,j,nmat,nmugs,nfou,npix,ki,m,k,n
 
-      DOUBLE PRECISION fac,mu,mu0,be,rf3,SVR2,SvR3
+      DOUBLE PRECISION fac,mu,mu0,mu0old,muold,
+     .                 be,rf3,apix,SVR2,SvR3
 
       DOUBLE PRECISION xmu(nmugs),
      .                 phi(npix),
      .                 beta(npix),
      .                 theta0(npix),
      .                 theta(npix),
-     .                 apix(npix),
      .                 rfou(nmat*nmugs,nmugs,0:nfou),
-     .                 rfm(nmat),Bplus(4),
-     .                 rfj(nmugs,nmat),rf2(nmugs),rf(nmugs),
-     .                 SvR(nmat),RM(nmat),
-     .                 P,
-     .                 Sarr(npix,nmat+1)
+     .                 rf(nmat,nmugs,nmugs),rfsec(nmat,nmugs,nmugs),
+     .                 rftemp(nmugs),rfmu0(nmat,nmugs),
+     .                 rfsecmu0(nmugs),     
+     .                 Bplus(4),SvR(nmat),RM(npix,nmat),rf3save(nmat),
+     .                 P,Sarr(npix,nmat+1)
 
 Cf2py intent(in) npix, phi, beta, theta0, theta, apix, trans
 Cf2py intent(in) nmugs, nmat, nfou, xmu, rfou
 Cf2py intent(out) Sarr
-Cf2py depend(npix) phi, beta, theta0, theta, Sarr, apix
+Cf2py depend(npix) phi, beta, theta0, theta, Sarr
 Cf2py depend(nmat) rfou, Sarr
 Cf2py depend(nfou) rfou
 Cf2py depend(nmugs) rfou, xmu
 
 *----------------------------------------------------------------------------
-*     Find the locations in array xmu where the mu-values are:
-*----------------------------------------------------------------------------
-      CALL bracks(theta,npix,xmu,nmugs,j1)
-
-*----------------------------------------------------------------------------
-*     Loop over the pixels:
+*     Initialize the storage matrix and values:
 *----------------------------------------------------------------------------
       DO i=1,npix
-
-*----------------------------------------------------------------------------
-*     Initialize the reflected light vector for this pixel:
-*----------------------------------------------------------------------------
         DO k=1,nmat
-           RM(k)= 0.D0
-           SvR(k)= 0.D0
+            RM(i,k) = 0.D0
         ENDDO
-
-*       Get the cosines of the angles:
-        mu= theta(i)
-        mu0=theta0(i)
-
+      ENDDO
+      muold=1.D0
+      mu0old=1.D0
 *----------------------------------------------------------------------------
-*       Loop over the Fourier coefficients:
+*     Loop over the Fourier coefficients:
 *----------------------------------------------------------------------------
-        DO m=0,nfou
-
-           fac=1.D0
-           IF (m.EQ.0) fac=0.5D0
-
-           IF (j1(i).NE.0) THEN
-              DO k=1,nmat
-                 ki= (j1(i)-1)*nmat+k 
-                 DO n=1,nmugs
-                    rf(n)= rfou(ki,n,m)
-                 ENDDO
-                 CALL spline(xmu,rf,nmugs,rf2)
-                 CALL splint(xmu,rf,rf2,nmugs,mu0,rf3)
-                 rfm(k)= rf3
-              ENDDO
-           ELSE
-              DO n=1,nmugs
-                 DO k=1,nmat
-                    ki= (n-1)*nmat+k 
-                    DO l=1,nmugs
-                       rf(l)= rfou(ki,l,m)
+      DO m=0,nfou
+      
+        fac=1.D0
+        IF (m.EQ.0) fac=0.5D0
+          
+*------------------------------------------------------------------------------
+*     Initialize the interpolation matrix for the current fourier coefficient:
+*------------------------------------------------------------------------------
+        DO j=1,nmugs
+            DO k=1,nmat
+                ki = (j-1)*nmat + k
+                DO n=1,nmugs
+                    rf(k,j,n) = rfou(ki,n,m)
+                ENDDO
+                CALL spline(xmu,rf(k,j,:),nmugs,rftemp)
+                rfsec(k,j,:) = rftemp
+            ENDDO
+        ENDDO
+        
+*----------------------------------------------------------------------------
+*     Loop over the pixels:
+*       If the input angles are (very) similar to a previously calculated case
+*       use those values.
+*       To obtain obtain the fourier coefficient at (mu,mu0) spline has to be
+*       called a second time.
+*----------------------------------------------------------------------------      
+        DO i=1,npix
+            mu = theta(i)
+            mu0 = theta0(i)
+            Bplus(1)= DCOS(m*phi(i))
+            Bplus(2)= DCOS(m*phi(i))
+            Bplus(3)= DSIN(m*phi(i))
+            Bplus(4)= DSIN(m*phi(i))
+            
+            IF ((i.GT.1).AND.
+     .          (ABS(mu-muold).LT.1.D-6).AND.
+     .          (ABS(mu0-mu0old).LT.1.D-6)) THEN
+                DO k=1,nmat 
+                    RM(i,k)=RM(i,k)+ 2.D0*Bplus(k)*fac*rf3save(k)
+                ENDDO
+            ELSE
+                DO j=1,nmugs
+                    DO k=1,nmat
+                        CALL splint(xmu,rf(k,j,:),
+     .                              rfsec(k,j,:),
+     .                              nmugs,mu0,rf3)
+                        rfmu0(k,j) = rf3
                     ENDDO
-                    CALL spline(xmu,rf,nmugs,rf2)
-                    CALL splint(xmu,rf,rf2,nmugs,mu0,rf3)
-                    rfj(n,k)= rf3
-                 ENDDO
-              ENDDO
-              DO k=1,nmat
-                 DO n=1,nmugs
-                    rf(n)= rfj(n,k)
-                 ENDDO
-                 CALL spline(xmu,rf,nmugs,rf2)
-                 CALL splint(xmu,rf,rf2,nmugs,mu,rf3)
-                 rfm(k)= rf3
-              ENDDO
-           ENDIF
-
-*----------------------------------------------------------------------------
-*          Calculate the 1st column of the local reflection matrix: 
-*----------------------------------------------------------------------------
-           Bplus(1)= DCOS(m*phi(i))
-           Bplus(2)= DCOS(m*phi(i))
-           Bplus(3)= DSIN(m*phi(i))
-           Bplus(4)= DSIN(m*phi(i))
-
-           DO k=1,nmat
-              RM(k)= RM(k) + 2.D0*Bplus(k)*fac*rfm(k)
-           ENDDO
-
+                ENDDO                    
+                DO k=1,nmat
+                    CALL spline(xmu,rfmu0(k,:),nmugs,rfsecmu0)
+                    CALL splint(xmu,rfmu0(k,:),rfsecmu0,nmugs,mu,rf3)
+                    rf3save(k) = rf3
+                    muold = mu
+                    mu0old = mu0
+                    RM(i,k) = RM(i,k) + 2.D0*Bplus(k)*fac*rf3
+                ENDDO
+            ENDIF
         ENDDO
-
+      ENDDO
+*----------------------------------------------------------------------------
+*     Loop again over the pixels to rotate Stokes vector:
+*----------------------------------------------------------------------------    
+      DO i=1,npix
+        mu = theta(i)
+        mu0 = theta0(i)
+        
 *----------------------------------------------------------------------------
 *       Calculate the locally reflected Stokes vector:
-*       apix is the surface area of the pixel (the same for all pixels)
-*       apix is initially assumed to be a piece of the illuminated circle 
-*       with radius 1
 *----------------------------------------------------------------------------
         DO k=1,nmat
-           SvR(k)= mu0*RM(k) 
+           SvR(k)= mu0*RM(i,k) 
         ENDDO
 
 *----------------------------------------------------------------------------
@@ -144,8 +144,6 @@ Cf2py depend(nmugs) rfou, xmu
 *----------------------------------------------------------------------------
 *       Compute the local degree of polarisation P:
 *----------------------------------------------------------------------------
-*        IF (DABS(SvR(2)).LT.1.D-6) SvR(2)=0.D0
-*        IF (DABS(SvR(3)).LT.1.D-6) SvR(3)=0.D0
         IF (DABS(Svr(1)).LT.1.D-6) THEN
            P=0.D0
         ELSEIF (DABS(SvR(3)).LT.1.D-6) THEN
@@ -160,7 +158,7 @@ Cf2py depend(nmugs) rfou, xmu
 *       Multiply with mu and the actual pixel area to obtain stokes elements
 *----------------------------------------------------------------------------
         DO k=1,nmat
-            Sarr(i,k) = SvR(k)*mu * apix(i)
+            Sarr(i,k) = SvR(k)*mu * apix
         ENDDO
         
         Sarr(i,nmat+1) = P
