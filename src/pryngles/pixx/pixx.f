@@ -208,22 +208,20 @@ Cf2py depend(nmugs) xmu
 *----------------------------------------------------------------------------
       IMPLICIT NONE
 
-      DOUBLE PRECISION eps
-      PARAMETER (eps=1.D-10)
-
       DOUBLE PRECISION pi,radfac
       PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
-      
+
       INTEGER i,j,nmat,nmugs,nfou,npix,ki,m,k,n
 
       DOUBLE PRECISION fac,mu,mu0,mu0old,muold,
-     .                 be,rf3,apix,SVR2,SvR3
+     .                 be,rf3,SVR2,SvR3
 
       DOUBLE PRECISION xmu(nmugs),
      .                 phi(npix),
      .                 beta(npix),
      .                 theta0(npix),
      .                 theta(npix),
+     .                 apix(npix),
      .                 rfou(nmat*nmugs,nmugs,0:nfou),
      .                 rf(nmat,nmugs,nmugs),rfsec(nmat,nmugs,nmugs),
      .                 rftemp(nmugs),rfmu0(nmat,nmugs),
@@ -234,7 +232,7 @@ Cf2py depend(nmugs) xmu
 Cf2py intent(in) npix, phi, beta, theta0, theta, apix, trans
 Cf2py intent(in) nmugs, nmat, nfou, xmu, rfou
 Cf2py intent(out) Sarr
-Cf2py depend(npix) phi, beta, theta0, theta, Sarr
+Cf2py depend(npix) phi, beta, theta0, theta, apix, Sarr
 Cf2py depend(nmat) rfou, Sarr
 Cf2py depend(nfou) rfou
 Cf2py depend(nmugs) rfou, xmu
@@ -352,7 +350,7 @@ Cf2py depend(nmugs) rfou, xmu
 *       Multiply with mu and the actual pixel area to obtain stokes elements
 *----------------------------------------------------------------------------
         DO k=1,nmat
-            Sarr(i,k) = SvR(k)*mu * apix
+            Sarr(i,k) = SvR(k)*mu * apix(i)
         ENDDO
         
         Sarr(i,nmat+1) = P
