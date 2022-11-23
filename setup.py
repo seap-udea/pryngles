@@ -98,5 +98,5 @@ setup(
     # OPTIONS
     # ######################################################################
     include_package_data=True,
-    package_data={"": ["data/*.*", "tests/*.*"]},
+    package_data={"": ["*.c","data/*.*", "tests/*.*"]},
 )
