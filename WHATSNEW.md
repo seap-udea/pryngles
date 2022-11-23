@@ -15,6 +15,7 @@ list of the features introduced in each version family of the package.
     ring/disk).
   - Scattering is calculated from Fourier coefficients as calculated
     by PyMieDap.
+  - Solved some problems with Pandas in the new versions.
   - New scatterer module.
   - Scatterers introduced: LambertianGraySurface,
     LambertianGrayAtmosphere, BlackBody, Neutral
