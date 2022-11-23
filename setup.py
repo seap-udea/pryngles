@@ -55,7 +55,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         ],
-    version='0.9.0.8',
+    version='0.9.1.1',
 
     # ######################################################################
     # FILES
