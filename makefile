@@ -180,11 +180,17 @@ version:
 
 public:
 	@echo "Updating public github repo..."
+	@make -C $(PUBLIC) pull
 	@cp src/pryngles/*.py $(PUBLIC)/src/pryngles
 	@cp src/pryngles/tests/*.py $(PUBLIC)/src/pryngles/tests
 	@cp -rf src/pryngles/data $(PUBLIC)/src/pryngles
 	@cp examples/pryngles-tutorial-quickstart.ipynb $(PUBLIC)/
 	@cp examples/pryngles-dev*-tutorial.ipynb $(PUBLIC)/
+	@cd $(PUBLIC);git add *-dev*.ipynb
+	@cd $(PUBLIC);git add gallery/*.*
+	@cd $(PUBLIC);git add src/pryngles/*.*
+	@cd $(PUBLIC);git add src/pryngles/tests/*.*
+	@cd $(PUBLIC);git add src/pryngles/data/*.*
 	@cp examples/gallery/* $(PUBLIC)/gallery/
 	@cp papers/bright-side/pryngles-paper-figures.ipynb examples/pryngles-examples-exploration.ipynb
 	@cp examples/pryngles-examples-exploration.ipynb $(PUBLIC)/
