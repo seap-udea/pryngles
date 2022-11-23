@@ -188,6 +188,7 @@ public:
 	@cp -rf src/pryngles/data $(PUBLIC)/src/pryngles
 	@cp examples/pryngles-tutorial-quickstart.ipynb $(PUBLIC)/
 	@cp examples/pryngles-dev*-tutorial.ipynb $(PUBLIC)/
+	@cp examples/gallery/* $(PUBLIC)/gallery/
 	@cp papers/bright-side/pryngles-paper-figures.ipynb examples/pryngles-examples-exploration.ipynb
 	@cp examples/pryngles-examples-exploration.ipynb $(PUBLIC)/
 	@cp README.md LICENSE WHATSNEW.md $(PUBLIC)/
