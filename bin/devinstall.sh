@@ -8,10 +8,9 @@
 #................................................................#
 #                                                                #
 # PlanetaRY spanGLES                                             #
-# The bright-side of the light-curve of (ringed) exoplanets      #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
+# License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 #!/bin/bash
 function extract()
@@ -93,11 +92,10 @@ echo "
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
 #                                                                #
-# PlanetaRY spanGLES:                                            #
-# The bright-side of the light-curve of (ringed) exoplanets      #
+# PlanetaRY spanGLES                                             #
 #                                                                #
 ##################################################################
-# Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
+# License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 #Pthon binaries. In Linux is preferrable python3, nosetests3
 PYTHON=$PYTHON
