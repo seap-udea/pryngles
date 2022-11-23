@@ -210,6 +210,12 @@ Cf2py depend(nmugs) xmu
 
       INCLUDE 'max_incl'
 
+<<<<<<< HEAD
+=======
+      DOUBLE PRECISION pi,radfac
+      PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
+      
+>>>>>>> 0adeb08bf70f7e723c186c8bef57fa9a82efb070
       INTEGER i,j,nmat,nmugs,nfou,npix,ki,m,k,n
 
       DOUBLE PRECISION fac,mu,mu0,mu0old,muold,

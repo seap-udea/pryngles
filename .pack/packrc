@@ -14,9 +14,9 @@
 # Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado (C) 2022  #
 ##################################################################
 #Pthon binaries. In Linux is preferrable python3, nosetests3
-PYTHON=python
-NOSETESTS=nosetests
-PIP=pip
+PYTHON=python3
+NOSETESTS=nosetests3
+PIP=pip3
 
 #Directories
 STOREDIR=.store

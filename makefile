@@ -163,7 +163,7 @@ pipinstall:
 	@$(PIP) install -e .
 
 import:
-	@python -c "from pryngles import *;print(version)"
+	@$(PYTHON) -c "from pryngles import *;print(version)"
 
 test:import
 ifeq ($(MOD),None)
