@@ -2736,7 +2736,7 @@ class RingedPlanet(object):
             self.Stokesp[cond,:] = pixx.reflection(cond.sum(), self.phidiffps[cond], self.betaps[cond],
                                                     abs(self.etaps[cond]), abs(self.zetaps[cond]),
                                                     self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
-                                                    self.afps[cond])
+                                                    np.ones(cond.sum())*self.normp*self.afp)
                                                    
             # Check if the rings are seen edge-on and illuminated edge-on
             vcheck = abs(np.arccos(self.cosio)*180/np.pi - 90.0) > angle_eps # seen
@@ -2793,12 +2793,12 @@ class RingedPlanet(object):
                 self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
-                                                        self.afrs[cond])
+                                                        np.ones(cond.sum())*self.normr*self.afr)
             else:
                 self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
-                                                        self.afrs[cond])
+                                                        np.ones(cond.sum())*self.normr*self.afr)
                            
             Sr = self.Stokesr[:,:-1]
             Pr = self.Stokesr[:,-1]
