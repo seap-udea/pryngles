@@ -119,4 +119,4 @@ PACKNAME=pryngles
 
 #Default mode of release
 RELMODE=test
-"
+" > .pack/packrc
