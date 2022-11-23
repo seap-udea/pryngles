@@ -77,6 +77,7 @@ fi
 deps_setup=$(extract setup.py "install_requires" "]")
 deps_pyproj=$(extract pyproject.toml "requires" "]")
 
+echo $PYTHON -m pip install -q $deps_setup $deps_pyproj
 $PYTHON -m pip install -q $deps_setup $deps_pyproj
 
 ####################################################################
