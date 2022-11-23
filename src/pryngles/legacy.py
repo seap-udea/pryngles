@@ -2733,14 +2733,10 @@ class RingedPlanet(object):
         
         if cond.sum() > 0:
             planet_used = True
-            print(cond.sum(), self.phidiffps[cond], self.betaps[cond],
-                                                    abs(self.etaps[cond]), abs(self.zetaps[cond]),
-                                                    self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
-                                                    self.normp*self.afps)
             self.Stokesp[cond,:] = pixx.reflection(cond.sum(), self.phidiffps[cond], self.betaps[cond],
                                                     abs(self.etaps[cond]), abs(self.zetaps[cond]),
-                                                    self.nmugsp,self.nmatp,self.nfoup,self.xmup,1*self.rfoup,
-                                                    self.normp*self.afps)
+                                                    self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
+                                                    self.normp*self.afps[cond])
                                                    
             # Check if the rings are seen edge-on and illuminated edge-on
             vcheck = abs(np.arccos(self.cosio)*180/np.pi - 90.0) > angle_eps # seen
@@ -2779,7 +2775,7 @@ class RingedPlanet(object):
             self.Stotp = Stotp
             self.Ptotp = Ptotp
 
-            print("Ftot planet: ", Stotp[0], ",  Ptot planet: ", Ptotp)
+            verbose(VERB_DEEP,"Ftot planet: ", Stotp[0], ",  Ptot planet: ", Ptotp)
         
         #Ring conditions
         cond=(self.ar)*(self.ir)
@@ -2789,7 +2785,7 @@ class RingedPlanet(object):
         if np.inner(self.nstar_equ,self.nr_equ) < 0:
             back = True
             cond = (self.fr)
-            print("Back: ", back) 
+            verbose(VERB_DEEP,"Back: ", back) 
        
         if cond.sum() > 0:
             ring_used = True
@@ -2797,12 +2793,12 @@ class RingedPlanet(object):
                 self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
-                                                        self.normr*self.afrs)
+                                                        self.normr*self.afrs[cond])
             else:
                 self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
-                                                        self.normr*self.afrs)
+                                                        self.normr*self.afrs[cond])
                            
             Sr = self.Stokesr[:,:-1]
             Pr = self.Stokesr[:,-1]
@@ -2828,7 +2824,7 @@ class RingedPlanet(object):
             self.Stotr = Stotr 
             self.Ptotr = Ptotr
 
-            print("Ftot ring: ", Stotr[0], ",  Ptot ring: ", Ptotr)
+            verbose(VERB_DEEP,"Ftot ring: ", Stotr[0], ",  Ptot ring: ", Ptotr)
         
         # Calculate total flux and total degree of polarization
         if ring_used and planet_used:
