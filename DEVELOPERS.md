@@ -473,12 +473,23 @@ To create a virtual environment use:
 
 ```
 mkvirtualenv pryngles-lab
+workon pryngles-lab
+```
+
+Alternatively, you can work with venv of python:
+
+```
+python3 -m venv pryngles-lab
+```
+
+Activate it:
+```
+source pryngles-lab/bin/activate
 ```
 
 Install Jupyter in the new virtual environment:
 
 ```
-workon pryngles-lab
 python -m pip install jupyter
 ```
 

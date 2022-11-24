@@ -30,7 +30,6 @@ https://stackoverflow.com/a/55358607
 
 """
 
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
@@ -56,7 +55,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         ],
-    version='0.9.0.7',
+    version='0.9.0.8',
 
     # ######################################################################
     # FILES
@@ -70,13 +69,7 @@ setup(
     ext_modules=[
         Extension(name="pryngles.pixx",
                   sources=["src/pryngles/pixx_sig.pyf",
-                           "src/pryngles/pixx/reflection.f",
-                           "src/pryngles/pixx/rdfous_planet.f",
-                           "src/pryngles/pixx/rdfous_ring.f",
-                           "src/pryngles/pixx/bracks.f",
-                           "src/pryngles/pixx/spline.f",
-                           "src/pryngles/pixx/splint.f",
-                           "src/pryngles/pixx/max_incl.f",
+                           "src/pryngles/pixx/pixx.f",
                            ])
     ],
     
@@ -105,5 +98,5 @@ setup(
     # OPTIONS
     # ######################################################################
     include_package_data=True,
-    package_data={"": ["data/*.*", "tests/*.*"]},
+    package_data={"": ["*.c","data/*.*", "tests/*.*"]},
 )

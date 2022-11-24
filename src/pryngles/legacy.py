@@ -6,7 +6,7 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-
+#                                                                #
 # PlanetaRY spanGLES                                             #
 #                                                                #
 ##################################################################
@@ -19,6 +19,7 @@
 
 from pryngles import *
 
+import pickle
 import unittest
 import spiceypy as spy
 import numpy as np
@@ -1132,6 +1133,9 @@ class RingedPlanet(object):
         """
         The initialization routine only sets the basic geometric properties of the ring
         """
+        #Save values for debugging purposes
+        self.save_values=[]
+        
         #Behavior
         self.behavior=deepcopy(self._behavior)
         self.behavior.update(behavior)
@@ -2737,6 +2741,21 @@ class RingedPlanet(object):
                                                     abs(self.etaps[cond]), abs(self.zetaps[cond]),
                                                     self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
                                                     np.ones(cond.sum())*self.normp*self.afp)
+<<<<<<< HEAD
+=======
+            self.save_values+=[
+                        dict(
+                            obj="planet",
+                            args=[
+                                cond.sum(), self.phidiffps[cond], self.betaps[cond],
+                                abs(self.etaps[cond]), abs(self.zetaps[cond]),
+                                self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
+                                np.ones(cond.sum())*self.normp*self.afp
+                            ],
+                            stokes=self.Stokesp[cond,:],
+                        )
+                    ]
+>>>>>>> 7aba83f788ea38ee675c4a06ecd5ba20968cef8d
                                                    
             # Check if the rings are seen edge-on and illuminated edge-on
             vcheck = abs(np.arccos(self.cosio)*180/np.pi - 90.0) > angle_eps # seen
@@ -2794,11 +2813,42 @@ class RingedPlanet(object):
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
                                                         np.ones(cond.sum())*self.normr*self.afr)
+<<<<<<< HEAD
+=======
+                self.save_values+=[
+                        dict(
+                            obj="ring back",
+                            args=[
+                                cond.sum(),self.phidiffrs[cond], self.betars[cond],
+                                abs(self.etars[cond]), abs(self.zetars[cond]),
+                                self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
+                                np.ones(cond.sum())*self.normr*self.afr
+                            ],
+                            stokes=self.Stokesr[cond,:],
+                        )
+                    ]
+                
+>>>>>>> 7aba83f788ea38ee675c4a06ecd5ba20968cef8d
             else:
                 self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
                                                         abs(self.etars[cond]), abs(self.zetars[cond]),
                                                         self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
                                                         np.ones(cond.sum())*self.normr*self.afr)
+<<<<<<< HEAD
+=======
+                self.save_values+=[
+                        dict(
+                            obj="ring forward",
+                            args=[
+                                cond.sum(), self.phidiffrs[cond], self.betars[cond],
+                                abs(self.etars[cond]), abs(self.zetars[cond]),
+                                self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
+                                np.ones(cond.sum())*self.normr*self.afr
+                            ],
+                            stokes=self.Stokesr[cond,:],
+                        )
+                    ]
+>>>>>>> 7aba83f788ea38ee675c4a06ecd5ba20968cef8d
                            
             Sr = self.Stokesr[:,:-1]
             Pr = self.Stokesr[:,-1]
@@ -2844,6 +2894,12 @@ class RingedPlanet(object):
             Ptot = np.sqrt(Stot[1]**2 + Stot[2]**2)/Stot[0]
         self.Stot = Stot
         self.Ptot = Ptot
+        
+    def _save_reflection_values(self):
+        f=open("/tmp/reflection-test.pkl","wb")
+        pickle.dump(self.save_values,f)
+        f.close()
+        print("Saving reflection values in /tmp/reflection-test.pkl")
         
     def updateTransit(self):
         """

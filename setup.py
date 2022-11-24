@@ -38,7 +38,7 @@ setup(
     # BASIC DESCRIPTION
     # ######################################################################
     name='pryngles',
-    author="Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado",
+    author="Jorge I. Zuluaga, Allard Veenstra, Jaime A. Alvarado, Mario Sucerquia",
     author_email="jorge.zuluaga@udea.edu.co",
     description="PlanetaRY spanGLES: general photometry of planets, rings and shadows",
     long_description=long_description,
@@ -55,7 +55,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         ],
-    version='0.9.0.8',
+    version='0.9.1.1',
 
     # ######################################################################
     # FILES
@@ -92,11 +92,11 @@ setup(
     install_requires=['rebound','scipy','ipython',
 	              'matplotlib','tqdm','dill',
 	              'spiceypy','cmasher','pandas','celluloid',
-	              'sigfig','anytree'],
-    
+	              'sigfig','anytree','ipywidgets'],
+
     # ######################################################################
     # OPTIONS
     # ######################################################################
     include_package_data=True,
-    package_data={"": ["data/*.*", "tests/*.*"]},
+    package_data={"": ["*.c","data/*.*", "tests/*.*"]},
 )

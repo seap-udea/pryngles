@@ -16,6 +16,6 @@
 requires = ['setuptools','rebound','scipy','ipython',
 	    'matplotlib','tqdm','dill',
 	    'spiceypy','cmasher','pandas','celluloid',
-	    'sigfig','anytree'
+	    'sigfig','anytree','ipywidgets'
 	    ]
 build-backend = "setuptools.build_meta"
