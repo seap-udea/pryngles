@@ -1,0 +1,70 @@
+##################################################################
+#                                                                #
+# #####...#####...##..##..##..##...####...##......######...####..#
+# ##..##..##..##...####...###.##..##......##......##......##.....#
+# #####...#####.....##....##.###..##.###..##......####.....####..#
+# ##......##..##....##....##..##..##..##..##......##..........##.#
+# ##......##..##....##....##..##...####...######..######...####..#
+# ...............................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+python module pixx ! in 
+    interface  ! in :pixx
+        subroutine bracks(theta,npix,xmu,nmugs,j1) ! in :pixx:./pixx/pixx.f
+            double precision dimension(npix),intent(in),depend(npix) :: theta
+            integer intent(in) :: npix
+            double precision dimension(nmugs),intent(in),depend(nmugs) :: xmu
+            integer intent(in) :: nmugs
+            integer dimension(npix),intent(out),depend(npix) :: j1
+        end subroutine bracks
+        subroutine rdfous_planet(foufile,nfou,nmat,nmugs,xmu,rfou) ! in :pixx:./pixx/pixx.f
+            character*100 intent(in) :: foufile
+            integer intent(in) :: nfou
+            integer intent(in) :: nmat
+            integer intent(in) :: nmugs
+            double precision dimension(nmugs),intent(out),depend(nmugs) :: xmu
+            double precision dimension(nmat*nmugs,nmugs,nfou + 1),intent(out),depend(nmugs,nfou,nmat) :: rfou
+        end subroutine rdfous_planet
+        subroutine rdfous_ring(foufile,trans,nfou,nmat,nmugs,xmu,rfou) ! in :pixx:./pixx/pixx.f
+            character*100 intent(in) :: foufile
+            logical intent(in) :: trans
+            integer intent(in) :: nfou
+            integer intent(in) :: nmat
+            integer intent(in) :: nmugs
+            double precision dimension(nmugs),intent(out),depend(nmugs) :: xmu
+            double precision dimension(nmat*nmugs,nmugs,nfou + 1),intent(out),depend(nmugs,nfou,nmat) :: rfou
+        end subroutine rdfous_ring
+        subroutine reflection(npix,phi,beta,theta0,theta,nmugs,nmat,nfou,xmu,rfou,apix,sarr) ! in :pixx:./pixx/pixx.f
+            integer intent(in) :: npix
+            double precision dimension(npix),intent(in),depend(npix) :: phi
+            double precision dimension(npix),intent(in),depend(npix) :: beta
+            double precision dimension(npix),intent(in),depend(npix) :: theta0
+            double precision dimension(npix),intent(in),depend(npix) :: theta
+            integer intent(in) :: nmugs
+            integer intent(in) :: nmat
+            integer intent(in) :: nfou
+            double precision dimension(nmugs),intent(in),depend(nmugs) :: xmu
+            double precision dimension(nmat*nmugs,nmugs,nfou + 1),intent(in),depend(nmugs,nfou,nmat) :: rfou
+            double precision dimension(npix),intent(in),depend(npix) :: apix
+            double precision dimension(npix,nmat + 1),intent(out),depend(nmat,npix) :: sarr
+        end subroutine reflection
+        subroutine spline(x,y,n,y2) ! in :pixx:./pixx/pixx.f
+            double precision dimension(n),intent(in),depend(n) :: x
+            double precision dimension(n),intent(in),depend(n) :: y
+            integer intent(in) :: n
+            double precision dimension(n),intent(out),depend(n) :: y2
+        end subroutine spline
+        subroutine splint(xa,ya,y2a,n,x,y) ! in :pixx:./pixx/pixx.f
+            double precision dimension(n),intent(in),depend(n) :: xa
+            double precision dimension(n),intent(in),depend(n) :: ya
+            double precision dimension(n),intent(in),depend(n) :: y2a
+            integer intent(in) :: n
+            double precision intent(in) :: x
+            double precision intent(out) :: y
+        end subroutine splint
+    end interface 
+end python module pixx

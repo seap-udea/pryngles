@@ -6,14 +6,11 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-
+#                                                                #
 # PlanetaRY spanGLES                                             #
 #                                                                #
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
-##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,8 +31,6 @@ from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection
 from matplotlib import animation
 from celluloid import Camera # getting the camera
-from IPython.display import Image
-from ipywidgets import interact,fixed,widgets
 import itertools
 from tqdm import tqdm
 
@@ -906,7 +901,8 @@ class Spangler(PrynglesCommon):
         else:
             #Distance to origin of coordinates in the int system where the center is located
             lista=[spy.unorm(list(-r)) for r in np.array(self.data[cond][["x_int","y_int","z_int"]])]
-            self.data.loc[cond,["n_int","d_int"]]=pd.DataFrame(lista).values
+            self.data.loc[cond,["n_int","d_int"]]=pd.DataFrame(lista,columns=["n_int","d_int"],
+                                                               index=self.data[cond].index)
             n_int_ecl=[spy.mxv(M_int2ecl,n_int) for n_int in self.data.n_int[cond]]
             self.data.loc[cond,"n_int_ecl"]=pd.Series(n_int_ecl,dtype=object)
             
@@ -1005,35 +1001,7 @@ class Spangler(PrynglesCommon):
                     vhull=vhull,
                     plane=plane
                 )]
-    
-    def _plot_qhulls(self):
-        """Plot the convex hulls 
-        """
-        
-        if not self.qhulls:
-            raise AssertionError("You cannot plot convex hulls because none has been yet calculated.")
-        
-        fig,ax=plt.subplots()
-    
-        for name,sphull in self.qhulls.items():
-            for qhull in sphull:
-                chull=qhull["qhull"]
-                if chull:
-                    f=convex_hull_plot_2d(chull,ax)
-                
-        #Remove points corresponding to qhull
-        for l in fig.axes[0].get_children():
-            if type(l) is Line2D:
-                plt.setp(l,ms=0,zorder=100)
-    
-        ax.scatter(self.data.x_int,self.data.y_int,color='r',s=65,fc="None",alpha=0.5,zorder=100)        
-        
-        ax.set_xlabel(r"$x_{int}$")
-        ax.set_ylabel(r"$y_{int}$")
-        ax.grid()
-        
-        ax.axis("equal")
-                
+               
     
     def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
         """Set the positions and orientation of spanglers in the observer system.
@@ -1061,7 +1029,14 @@ class Spangler(PrynglesCommon):
         self.center_obs=center.copy() if center else center
         
         self.data.loc[cond,"visible"]=False
-        self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT].values
+        #self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT].values
+        #"""
+        self.data.loc[cond,SPANGLER_COL_OBS]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
+                                                          columns=SPANGLER_COL_OBS,
+                                                          index=self.data[cond].index)
+        #"""
+        #self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT]
+        
         
         #Update states
         self.data.unset=False
@@ -1123,7 +1098,10 @@ class Spangler(PrynglesCommon):
         self.data.loc[cond,"transmit"]=False
         
         #Conditions
-        self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
+        #self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
+        self.data.loc[cond,SPANGLER_COL_LUZ]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
+                                                          columns=SPANGLER_COL_LUZ,
+                                                          index=self.data[cond].index)
         
         #Set relative azimuth
         self.data.loc[cond,"azim_obs_luz"]=self.data.loc[cond,"azim_obs"]-self.data.loc[cond,"azim_luz"]
@@ -1375,24 +1353,26 @@ class Spangler(PrynglesCommon):
             cond=(self.data["cos_"+coords]>=0)&(~self.data.hidden)&(cond_included)&(self.data["spangle_type"]!=SPANGLE_STELLAR)
     
             #Options of arrows showing direction
-            quiver_args=dict(scale=15,angles='xy',scale_units='width',
-                             width=0.005,alpha=0.6,zorder=-100,headwidth=0)
+            quiver_args=dict(scale=15,scale_units='width',
+                             width=0.005,alpha=0.6,zorder=+1000,headwidth=0)
             
             #Quiver plot of azimuth for light
-            azx=np.cos(self.data[cond].azim_luz)
-            azy=np.sin(self.data[cond].azim_luz)
+            azx=[mh.cos(x) for x in self.data[cond].azim_luz]
+            azy=[mh.sin(x) for x in self.data[cond].azim_luz]
+            
+            
             self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
                              azx,azy,color='m',label="Az.luz",**quiver_args)
     
             #Quiver plot of azimuth for observer
-            azx=np.cos(self.data[cond].azim_obs)
-            azy=np.sin(self.data[cond].azim_obs)
+            azx=[mh.cos(x) for x in self.data[cond].azim_luz]
+            azy=[mh.sin(x) for x in self.data[cond].azim_luz]
             self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
                              azx,azy,color='w',label="Az.obs",**quiver_args)
     
             #Quiver plot of elevation for light
-            tx=np.sqrt(1-self.data[cond].cos_int**2)
-            ty=self.data[cond].cos_int
+            tx=np.sqrt(1-self.data[cond].cos_int**2).values
+            ty=self.data[cond].cos_int.values
             self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
                              tx,ty,color='c',label="Elev.luz",**quiver_args)
     
@@ -1630,7 +1610,7 @@ class Spangler(PrynglesCommon):
         """Update states and variables related to visibility
         """
         self.update_intersection_state()
-        self.data[SPANGLER_COL_OBS]=self.data[SPANGLER_COL_INT].values
+        self.data[SPANGLER_COL_OBS]=self.data[SPANGLER_COL_INT]
         
         self.data.hidden_by_obs=self.data.hidden_by_obs+self.data.hidden_by_int
         self.data.transit_over_obs=self.data.transit_over_obs+self.data.transit_over_int
@@ -1640,7 +1620,7 @@ class Spangler(PrynglesCommon):
         """Update states and variables related to illumination
         """
         self.update_intersection_state(excluded,included)
-        self.data[SPANGLER_COL_LUZ]=self.data[SPANGLER_COL_INT].values
+        self.data[SPANGLER_COL_LUZ]=self.data[SPANGLER_COL_INT]
         
         self.data.hidden_by_luz=self.data.hidden_by_luz+self.data.hidden_by_int
         self.data.transit_over_luz=self.data.transit_over_luz+self.data.transit_over_int

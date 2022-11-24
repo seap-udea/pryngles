@@ -6,14 +6,11 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-
+#                                                                #
 # PlanetaRY spanGLES                                             #
 #                                                                #
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
-##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 #!/bin/bash
 . .pack/packrc
@@ -170,7 +167,7 @@ do
 
     # Parsing inline test code
     echo -e "\tParsing python file $target"
-    ntests=$(python bin/test-parse.py $target)
+    ntests=$($PYTHON bin/test-parse.py $target)
     if [ $ntests -gt 0 ];then
 	echo -e "\tParsing tests from inline code"
 	cp -rf /tmp/test-$filebase.py $targetdir/tests/

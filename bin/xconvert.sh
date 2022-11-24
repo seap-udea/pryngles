@@ -6,14 +6,11 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-
+#                                                                #
 # PlanetaRY spanGLES                                             #
 #                                                                #
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
-##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 #!/bin/bash
 . .pack/packrc
@@ -126,7 +123,7 @@ do
     # Parse source file
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     source=$buildpath/$filename.src
-    python bin/jupdev-parse.py $source
+    $PYTHON bin/jupdev-parse.py $source
     
 done
 

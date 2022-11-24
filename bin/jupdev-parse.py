@@ -7,14 +7,11 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-
+#                                                                #
 # PlanetaRY spanGLES                                             #
 #                                                                #
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
-##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 """This file parses all the package code and creates a final release
 version of the package.
@@ -183,7 +180,7 @@ for modulename,constcontent in consts.items():
     consts_file=f"{basepath}_{modulename}.consts"
     print(f"Saving constants for {modulename} into {consts_file}...")
     fm=open(consts_file,"w")
-    fm.write(f"""\n{COMBAR}\n# Constants of module ${modulename}\n{COMBAR}\n""")
+    fm.write(f"""\n{COMBAR}\n# Constants of module {modulename}\n{COMBAR}\n""")
     for line in constcontent:
         fm.write(f"{line}")
     fm.close()

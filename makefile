@@ -6,14 +6,11 @@
 #.##......##..##....##....##..##..##..##..##......##..........##.#
 #.##......##..##....##....##..##...####...######..######...####..#
 #................................................................#
-
+#                                                                #
 # PlanetaRY spanGLES                                             #
 #                                                                #
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
-##################################################################
-# Main contributors:                                             #
-#   Jorge I. Zuluaga, Mario Sucerquia, Jaime A. Alvarado         #
 ##################################################################
 
 ##################################################################
@@ -37,6 +34,9 @@ PUBLIC=../$(PACKNAME)-public/
 
 #Module to convert
 MOD=None
+
+#Modules
+MODULES=$(shell cat src/modules)
 
 #Enforce conversion.  Use make convert ENFORCE=forced
 ENFORCE=
@@ -95,7 +95,7 @@ cleanout:
 	@-find . -name "*.info" -delete
 	@-find . -name "*.out" -delete
 	@-find . -name "*.tout" -delete
-	@-find . -name "*.pyc" -delete
+	@-find . -name "*.so" -delete
 	@-find . -name '__pycache__' -type d | xargs rm -fr
 
 cleandist:
@@ -156,31 +156,43 @@ install:
 	@echo "Installing locally..."
 	@$(PIP) install -e .
 
+pipinstall:
+	@$(PIP) install -e .
+
 import:
-	@python -c "from pryngles import *;print(version)"
+	@$(PYTHON) -c "from pryngles import *;print(version)"
 
 test:import
 ifeq ($(MOD),None)
-	@echo "Testing all packages..."
+	@echo "Testing all modules..."
 	@$(NOSETESTS) 2> >(tee -a /tmp/$(PACKNAME)-test-errors.log >&2)
 else
 	@echo "Testing module(s) $(MOD)..."
 	@for mod in $(shell echo $(MOD) | sed 's/,/ /'); do echo "Testing $$mod";$(NOSETESTS) src/pryngles/tests/test-$${mod}.py 2> >(tee /tmp/$(PACKNAME)-test-errors-$${mod}.log >&2);done
 endif
 
+testdet:
+	@echo "Testing module by module..."
+	@for module in $(MODULES);do make test MOD=$$module;done
+
 version:
 	@pip show $(PACKNAME)
 
 public:
 	@echo "Updating public github repo..."
+	@make -C $(PUBLIC) pull
 	@cp src/pryngles/*.py $(PUBLIC)/src/pryngles
 	@cp src/pryngles/tests/*.py $(PUBLIC)/src/pryngles/tests
 	@cp -rf src/pryngles/data $(PUBLIC)/src/pryngles
 	@cp examples/pryngles-tutorial-quickstart.ipynb $(PUBLIC)/
 	@cp examples/pryngles-dev*-tutorial.ipynb $(PUBLIC)/
+	@cd $(PUBLIC);git add *-dev*.ipynb
+	@cd $(PUBLIC);git add gallery/*.*
+	@cd $(PUBLIC);git add src/pryngles/*.*
+	@cd $(PUBLIC);git add src/pryngles/tests/*.*
+	@cd $(PUBLIC);git add src/pryngles/data/*.*
+	@cp examples/gallery/* $(PUBLIC)/gallery/
 	@cp papers/bright-side/pryngles-paper-figures.ipynb examples/pryngles-examples-exploration.ipynb
 	@cp examples/pryngles-examples-exploration.ipynb $(PUBLIC)/
 	@cp README.md LICENSE WHATSNEW.md $(PUBLIC)/
 	@make -C $(PUBLIC) commit
-
-prueba:
