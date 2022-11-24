@@ -15,7 +15,7 @@
 ##################################################################
 #Pthon binaries. In Linux is preferrable python3, nosetests3
 PYTHON=python3
-NOSETESTS=nosetests3
+NOSETESTS=nosetests
 PIP=pip3
 
 #Directories
