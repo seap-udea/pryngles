@@ -70,7 +70,10 @@ setup(
         Extension(name="pryngles.pixx",
                   sources=["src/pryngles/pixx_sig.pyf",
                            "src/pryngles/pixx/pixx.f",
-                           ])
+                           ]),
+        Extension(name="pryngles.cpixx",
+                  sources=["src/pryngles/cpixx/cpixx.c",
+                           ]),
     ],
     
     # ######################################################################

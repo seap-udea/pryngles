@@ -2,11 +2,11 @@ FC=gfortran
 FFLAGS=
 FLFLAGS=
 CC=gcc
-CFLAGS=
+CFLAGS=-I. -I/usr/include/python3.10
 CLFLAGS=-lm
 
 clean:
-	rm -rf *.o *.out *.fo *.fout *~ 
+	rm -rf *.o *.out *.fo *.fout *~
 
 #############################################################
 # FORTRAN COMPILING RULES
@@ -23,6 +23,5 @@ clean:
 %.o:%.c
 	$(CC) $(CFLAGS) -c $^ -o $@ 
 
-%.out:%.o cpixx.o 
+%.out:%.o
 	$(CC) $(CLFLAGS) $^ -o $@
-
