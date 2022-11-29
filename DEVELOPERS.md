@@ -6,6 +6,25 @@ In this guide you will find common procedures for developers.
 NOTE:
 - You will need /bin/bash installed for Makefile properly works.
 
+Ctypes
+------
+
+In order to call C routines in python use ctypes: https://coderslegacy.com/python/ctypes-tutorial/
+
+Useful documentation:
+- https://docs.python.org/3/library/ctypes.html#module-ctypes
+
+The alternative is to use Python:
+
+- https://www.tutorialspoint.com/python/python_further_extensions.htm
+- https://book.pythontips.com/en/latest/python_c_extension.html
+- https://realpython.com/build-python-c-extension-module/
+- https://docs.python.org/3/extending/extending.html
+
+Fortran tutorials:
+- https://www.tutorialspoint.com/fortran/fortran_strings.htm
+- https://www.famaf.unc.edu.ar/~vmarconi/numerico1/FortranTutorial.pdf
+
 Run pixx on mac:
 ---------------
 
