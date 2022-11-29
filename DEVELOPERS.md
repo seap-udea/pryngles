@@ -48,7 +48,7 @@ Here it is a description on how to add an extension to the package.
       printf("%lf\n",sum);
       return sum;
    }      
-   ```C
+   ```
 
 2. Add the extension to the `setup.py`:
 
