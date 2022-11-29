@@ -4,6 +4,7 @@ FLFLAGS=
 CC=gcc
 CFLAGS=-I. -I/usr/include/python3.10
 CLFLAGS=-lm
+CLIBFLAGS=-fPIC -shared $(CFLAGS) 
 
 clean:
 	rm -rf *.o *.out *.fo *.fout *~
@@ -25,3 +26,6 @@ clean:
 
 %.out:%.o
 	$(CC) $(CLFLAGS) $^ -o $@
+
+%.so:%.c
+	$(CC) $(CLIBFLAGS) -o $@ $^

@@ -9,7 +9,27 @@ NOTE:
 Ctypes
 ------
 
+Ctypes and Jupyter: https://stackoverflow.com/questions/62849806/using-ctypes-in-jupyter-notebook
+
+To capture standard output from C extensions in Jupyter use wurlitzer:
+
+```
+pip install wurlitzer
+```
+
+In the notebook:
+
+```
+%load_ext wurlitzer
+```
+
+And done!
+
 In order to call C routines in python use ctypes: https://coderslegacy.com/python/ctypes-tutorial/
+
+Read:
+- https://nesi.github.io/perf-training/python-scatter/ctypes
+- https://stackoverflow.com/questions/8067171/ctypes-vs-c-extension
 
 Useful documentation:
 - https://docs.python.org/3/library/ctypes.html#module-ctypes
