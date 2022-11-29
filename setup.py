@@ -85,16 +85,8 @@ setuptools.setup(
     tests_require=['nose'],
 
     # ######################################################################
-    # DEPENDENCIES
-    # ######################################################################
-    # install_requires=['rebound','scipy','ipython',
-    #                   'matplotlib','tqdm','dill',
-    #                   'spiceypy','cmasher','pandas','celluloid',
-    #                   'sigfig','anytree','ipywidgets'],
-
-    # ######################################################################
     # OPTIONS
     # ######################################################################
     include_package_data=True,
-    package_data={"": ["*.c","data/*.*", "tests/*.*"]},
+    package_data={"": ["data/*.*", "tests/*.*"]},
 )
