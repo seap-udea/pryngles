@@ -13,6 +13,7 @@
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 import setuptools
+from numpy.distutils.core import Extension, setup
 
 """
 
@@ -32,7 +33,7 @@ https://stackoverflow.com/a/55358607
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     # ######################################################################
     # BASIC DESCRIPTION
     # ######################################################################
@@ -66,7 +67,11 @@ setuptools.setup(
     # EXTENSIONS
     # ######################################################################
     ext_modules=[
-        setuptools.Extension(name="pryngles.cpixx",
+        Extension(name="pryngles.pixx",
+                  sources=["src/pryngles/pixx_sig.pyf",
+                           "src/pryngles/pixx/pixx.f",
+                           ]),
+        Extension(name="pryngles.cpixx",
                   sources=["src/pryngles/cpixx/cpixx.c",
                            ]),
     ],
@@ -87,10 +92,10 @@ setuptools.setup(
     # ######################################################################
     # DEPENDENCIES
     # ######################################################################
-    # install_requires=['rebound','scipy','ipython',
-    #                   'matplotlib','tqdm','dill',
-    #                   'spiceypy','cmasher','pandas','celluloid',
-    #                   'sigfig','anytree','ipywidgets'],
+    install_requires=['rebound','scipy','ipython',
+	              'matplotlib','tqdm','dill',
+	              'spiceypy','cmasher','pandas','celluloid',
+	              'sigfig','anytree','ipywidgets'],
 
     # ######################################################################
     # OPTIONS
