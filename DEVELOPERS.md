@@ -69,28 +69,28 @@ Here it is a description on how to add an extension to the package.
 4. Import from python:
 
    ```python
-import ctypes
-import numpy as np
-import glob
-from pryngles import *
-
-libfile = glob.glob(Misc.get_data('../cpixx*.so'))[0]
-cpixx=ctypes.CDLL(libfile)
-
-n=10
-x=np.arange(1.0,n+1,1.0)
-y=x**2
-y2=np.zeros_like(y)
-
-cpixx.spline.restype = ctypes.c_double
-cpixx.spline.argtypes = [
-    np.ctypeslib.ndpointer(dtype=float),
-    np.ctypeslib.ndpointer(dtype=float),
-    ctypes.c_int,
-    np.ctypeslib.ndpointer(dtype=float),
-]
-suma=cpixx.spline(x,y,n,y2)
-print(y2.sum(),suma)
+   import ctypes
+   import numpy as np
+   import glob
+   from pryngles import *
+   
+   libfile = glob.glob(Misc.get_data('../cpixx*.so'))[0]
+   cpixx=ctypes.CDLL(libfile)
+   
+   n=10
+   x=np.arange(1.0,n+1,1.0)
+   y=x**2
+   y2=np.zeros_like(y)
+   
+   cpixx.spline.restype = ctypes.c_double
+   cpixx.spline.argtypes = [
+       np.ctypeslib.ndpointer(dtype=float),
+       np.ctypeslib.ndpointer(dtype=float),
+       ctypes.c_int,
+       np.ctypeslib.ndpointer(dtype=float),
+   ]
+   suma=cpixx.spline(x,y,n,y2)
+   print(y2.sum(),suma)
    ```
 
 Ctypes
