@@ -25,12 +25,10 @@ src/pryngles.egg-info/entry_points.txt
 src/pryngles.egg-info/requires.txt
 src/pryngles.egg-info/top_level.txt
 src/pryngles/data/diffuse_reflection_function.data
-src/pryngles/pixx/bracks.f
-src/pryngles/pixx/rdfous_planet.f
-src/pryngles/pixx/rdfous_ring.f
-src/pryngles/pixx/reflection.f
-src/pryngles/pixx/spline.f
-src/pryngles/pixx/splint.f
+src/pryngles/data/fou_gasplanet.dat
+src/pryngles/data/fou_lambert.dat
+src/pryngles/data/fou_ring_0_4_0_8.dat
+src/pryngles/pixx/pixx.f
 src/pryngles/tests/test-__init__.py
 src/pryngles/tests/test-body.py
 src/pryngles/tests/test-consts.py
