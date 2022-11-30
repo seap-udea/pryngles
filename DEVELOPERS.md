@@ -6,10 +6,117 @@ In this guide you will find common procedures for developers.
 NOTE:
 - You will need /bin/bash installed for Makefile properly works.
 
+C Extension
+-----------
+
+Here it is a description on how to add an extension to the package.
+
+1. Prepare a file with the routine, eg. `src/pryngles/cpixx/cpixx.c`
+
+   ```C
+   double spline(double x[],double y[],int n,double y2[])
+   {
+      int i,k;
+      double u[1000];
+      double sig,p,qn,un;
+   
+      y2[0] = 0;
+      u[0] =  0;
+      
+      for(i=1;i<n-1;i++){
+	sig= (x[i]-x[i-1])/(x[i+1]-x[i-1]);
+	p= sig*y2[i-1]+2;
+	y2[i]= (sig-1)/p;
+	u[i]= (6*((y[i+1]-y[i])/(x[i+1]-x[i]) - (y[i]-y[i-1])/
+		  (x[i]-x[i-1]))/(x[i+1]-x[i-1]) - sig*u[i-1])/p;
+      }
+      
+      qn= 0;
+      un= 0;
+      y2[n-1]= (un-qn*u[n-2])/(qn*y2[n-2]+1);
+      
+      for(k=n-2;k>=0;k--){
+	y2[k]= y2[k]*y2[k+1]+u[k];
+      }
+      
+      double sum=0.0;
+      for(i=0;i<n;i++){
+	sum+=y2[i];
+	printf("%lf\n",y2[i]);
+      }
+      
+      printf("%lf\n",sum);
+      return sum;
+   }      
+   ```
+
+2. Add the extension to the `setup.py`:
+
+   ```python
+    ext_modules=[
+        setuptools.Extension(name="pryngles.cpixx",
+                  sources=["src/pryngles/cpixx/cpixx.c",
+                           ]),
+    ],
+   ```
+
+3. Install:
+
+   ```
+   pip install -e .
+   ```
+
+4. Import from python:
+
+   ```python
+   import ctypes
+   import numpy as np
+   import glob
+   from pryngles import *
+   
+   libfile = glob.glob(Misc.get_data('../cpixx*.so'))[0]
+   cpixx=ctypes.CDLL(libfile)
+   
+   n=10
+   x=np.arange(1.0,n+1,1.0)
+   y=x**2
+   y2=np.zeros_like(y)
+   
+   cpixx.spline.restype = ctypes.c_double
+   cpixx.spline.argtypes = [
+       np.ctypeslib.ndpointer(dtype=float),
+       np.ctypeslib.ndpointer(dtype=float),
+       ctypes.c_int,
+       np.ctypeslib.ndpointer(dtype=float),
+   ]
+   suma=cpixx.spline(x,y,n,y2)
+   print(y2.sum(),suma)
+   ```
+
 Ctypes
 ------
 
+Ctypes and Jupyter: https://stackoverflow.com/questions/62849806/using-ctypes-in-jupyter-notebook
+
+To capture standard output from C extensions in Jupyter use wurlitzer:
+
+```
+pip install wurlitzer
+```
+
+In the notebook:
+
+```
+%load_ext wurlitzer
+```
+
+And done!
+
 In order to call C routines in python use ctypes: https://coderslegacy.com/python/ctypes-tutorial/
+
+Read:
+- https://nesi.github.io/perf-training/python-scatter/ctypes
+- https://stackoverflow.com/questions/8067171/ctypes-vs-c-extension
 
 Useful documentation:
 - https://docs.python.org/3/library/ctypes.html#module-ctypes
