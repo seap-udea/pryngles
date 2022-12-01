@@ -9,6 +9,16 @@ cpixx=ctypes.CDLL(libfile)
 
 filename=b"fou_gasplanet.dat";nmat=3;nmugs=21;nfou=3
 #filename=b"fou_ring_0_4_0_8.dat";nmat=3;nmugs=20;nfou=344
+MAX_MAT=3
+MAX_MUS=22
+MAX_FOU=350
+
+#########################################
+#Dynamic allocation of matrix
+#########################################
+M=np.ones((3,3))
+suma=cpixx.sum_matrix(M,3,3);
+exit(0);
 
 #########################################
 #Read fourier python
@@ -64,8 +74,10 @@ def read_fourier(filename):
     data=np.loadtxt(filename,skiprows=i)
     nfou=int(data[:,0].max())
 
-    rfou=np.zeros((nmat*nmugs,nmugs,nfou+1))
-    rtra=np.zeros((nmat*nmugs,nmugs,nfou+1))
+    #rfou=np.zeros((nmat*nmugs,nmugs,nfou+1))
+    #rtra=np.zeros((nmat*nmugs,nmugs,nfou+1))
+    rfou=np.zeros((MAX_MAT*MAX_MUS,MAX_MUS,MAX_FOU))
+    rtra=np.zeros((MAX_MAT*MAX_MUS,MAX_MUS,MAX_FOU))
 
     #Read fourier coefficients
     for row in data:
@@ -82,18 +94,10 @@ print(nmat,nmugs,xmu)
 print(f"Checksum rfou: {rfou.sum()}")
 print(f"Checksum rtra: {rtra.sum()}")
 
-filename="cata"
-print(filename.decode())
-exit(0)
-
 #########################################
 #Read fourier
 #########################################
-
-MAX_MAT=3
-MAX_MUS=22
-MAX_FOU=350
-
+"""
 shape=np.zeros(3,dtype=int)
 #xmu=np.zeros(nmugs)
 #rfou=np.zeros((nmat*nmugs,nmugs,nfou))
@@ -113,14 +117,12 @@ cpixx.read_fourier.argtypes = [
 cpixx.read_fourier(filename,shape,xmu,rfou,rtra)
 print(f"Python checksum rfou: {rfou.sum():e}")
 print(f"Python checksum rtra: {rtra.sum():e}")
-
-"""
+print(shape)
 for i in range(nmugs*nmat):
     for j in range(nmugs):
         for m in range(nfou):
             print(f"{i} {j} {m} {rfou[i,j,m]:.16e}")
 """
-exit(0)
 
 #########################################
 #Reflection
@@ -132,6 +134,10 @@ theta0=np.zeros(MAX_PIX)
 theta=np.zeros(MAX_PIX)
 apix=np.zeros(MAX_PIX)
 Sarr=np.zeros((MAX_PIX,MAX_MAT+1))
+#"""
+shape=np.array([nmat,nmugs,nfou],dtype=int)
+#"""
+print(shape)
 
 npix=1
 phi[0]=1.0448451569439827;

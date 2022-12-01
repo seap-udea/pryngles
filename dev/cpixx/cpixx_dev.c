@@ -12,6 +12,17 @@ void test_cpixx()
   printf("This is Pryngles!\n");
 }
 
+double sum_matrix(double **M,int n,int m)
+{
+  int i,j;
+  double suma=0;
+  for(i=0;i<n;i++)
+    for(j=0;j<m;j++)
+      suma+=M[i][j];
+  return suma;
+}
+
+
 double splint(double xa[],double ya[],double y2a[],int n,double x)
 {
   int k;
@@ -87,7 +98,7 @@ double spline(double x[],double y[],int n,double y2[])
 #define MAX_PIX 1000
 #define VERBOSITY 0
 int read_fourier(char filename[],
-		 int shape[],
+		 long int shape[],
 		 double xmu[],
 		 double rfou[][MAX_MUS][MAX_FOU],
 		 double rtra[][MAX_MUS][MAX_FOU]
@@ -210,7 +221,8 @@ int read_fourier(char filename[],
   shape[0]=nmat;
   shape[1]=nmugs;
   shape[2]=nfou;
-
+  printf("Shape: %ld,%ld,%ld\n",shape[0],shape[1],shape[2]);
+  
   //Checksum
   double checksum=0;
   for(i=0;i<nmugs*nmat;i++){
@@ -252,16 +264,17 @@ int read_fourier(char filename[],
  */
 int reflection(int npix,
 	       double phi[],double beta[],double theta0[],double theta[],
-	       int shape[],
+	       long int shape[],
 	       double xmu[],
 	       double rfou[][MAX_MUS][MAX_FOU],
 	       double apix[],
 	       double Sarr[][MAX_MAT+1])
 {
-  int nmat=shape[0];
-  int nmugs=shape[1];
-  int nfou=shape[2];
-
+  long int nmat=shape[0];
+  long int nmugs=shape[1];
+  long int nfou=shape[2];
+  printf("C shape: %ld %ld %ld\n",nmat,nmugs,nfou);
+  
   int i,j,k,m,n;
   double rf[MAX_MAT][MAX_MUS][MAX_MUS],rfsec[MAX_MAT][MAX_MUS][MAX_MUS];
   double rftemp[MAX_MUS],rfmu0[MAX_MAT][MAX_MUS];

@@ -9,12 +9,12 @@ int main(void)
 {
   int i,j,k,m;
 
-  int shape[3];
+  long int shape[3];
   double xmu[MAX_MUS];
   double rfou[MAX_MAT*MAX_MUS][MAX_MUS][MAX_FOU];
   double rtra[MAX_MAT*MAX_MUS][MAX_MUS][MAX_FOU];
   char filename[MAX_STRING];
-  int nmat,nmugs,nfou;
+  long int nmat,nmugs,nfou;
   int npix;
   double phi[MAX_PIX],beta[MAX_PIX],theta0[MAX_PIX],theta[MAX_PIX],apix[MAX_PIX],Sarr[MAX_PIX][MAX_MAT+1];
   char tfile[MAX_STRING];
@@ -22,6 +22,15 @@ int main(void)
   double tmp;
   double Spixx[4];
   double dif,difmax=-1e100;
+
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // TEST MATRIX
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  double M[][3]={{1,1,1},{1,1,1}};
+  double suma;
+  suma=sum_matrix(M,3,3);
+  printf("%lf\n",suma);
+  return 0;
   
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // TEST READ FOURIER
@@ -36,7 +45,7 @@ int main(void)
   nmat=shape[0];
   nmugs=shape[1];
   nfou=shape[2];
-  printf("nmat = %d, nmugs = %d, nfou = %d\n",shape[0],shape[1],shape[2]);
+  printf("nmat = %ld, nmugs = %ld, nfou = %ld\n",shape[0],shape[1],shape[2]);
 
   //*
   //Print rfou matrix
@@ -230,7 +239,7 @@ int main(void)
   nmat=shape[0];
   nmugs=shape[1];
   nfou=shape[2];
-  printf("nmat = %d, nmugs = %d, nfou = %d\n",shape[0],shape[1],shape[2]);
+  printf("nmat = %ld, nmugs = %ld, nfou = %ld\n",shape[0],shape[1],shape[2]);
   f=fopen("ring_back-interpolation.mat","r");
 
   npix=1;
