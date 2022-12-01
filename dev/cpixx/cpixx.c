@@ -7,7 +7,7 @@
 // ROUTINES
 //////////////////////////////////////////////////////////////
 /*
-  
+  Test cpixx
  */
 void test_cpixx()
 {
@@ -60,3 +60,42 @@ int spline(double x[],double y[],int n,
 
   return 0;
 }
+
+/*
+*----------------------------------------------------------------------------
+*     Spline interpolation routine from Press et al. (1986, p.88).   
+*                                                                 
+*     Given the arrays xa and ya of length n, which tabulate a function
+*     (with the xa(i)'s in order), and given the array y2a, which is  
+*     the output from SPLINE above, and given a value of x, this     
+*     routine returns a cubic-spline interpolated value y.       
+*----------------------------------------------------------------------------
+*/
+double splint(double xa[],double ya[],double y2a[],int n,double x)
+{
+  int k;
+  int klo=0;
+  int khi=n-1;
+  double h,a,b,y;
+  
+  while((khi-klo)>1){
+    k=floor((klo+khi)/2);
+    if(xa[k]>x)
+      khi=k;
+    else
+      klo=k;
+  }
+  
+  h=xa[khi]-xa[klo];
+
+  if(fabs(h)<1e-10)
+    fprintf(stderr,"Error in Splint: bad xa input.\n");
+
+  a=(xa[khi]-x)/h;
+  b=(x-xa[klo])/h;
+
+  y=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6;
+
+  return y;
+}
+

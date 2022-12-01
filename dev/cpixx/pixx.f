@@ -91,9 +91,14 @@ Cf2py depend(n) xa, ya, y2a
 
       h= xa(khi)-xa(klo)
 
+C      write(*,*) klo,khi,h
+      
       IF (DABS(h).LT.1.D-10) WRITE(*,10) 
       a= (xa(khi)-x)/h
       b= (x-xa(klo))/h
+
+C      write(*,*) x,xa(klo),xa(khi),a,b
+      
       y= a*ya(klo)+b*ya(khi)+
      +  ((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.D0
 

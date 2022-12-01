@@ -1,5 +1,6 @@
 #PYTHONDIR=/usr/include/python3.10
-PYTHONDIR=/Users/jorgezuluagacallejas/opt/anaconda3/include/python3.9/
+PYTHON=/usr/local/bin/python3.11
+PYTHONDIR=/Library/Frameworks/Python.framework/Versions/3.11/include/python3.11/
 FC=gfortran
 FFLAGS=
 FLFLAGS=
@@ -31,3 +32,14 @@ clean:
 
 %.so:%.c
 	$(CC) $(CLIBFLAGS) -o $@ $^
+
+#############################################################
+# TEST
+#############################################################
+test_dev:
+	make cpixx_dev.so
+	$(PYTHON) test_cpixx_dev.py 
+
+test_cpixx:
+	make cpixx.so
+	$(PYTHON) test_cpixx.py 
