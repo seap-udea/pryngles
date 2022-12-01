@@ -38,7 +38,8 @@ clean:
 #############################################################
 test_dev:
 	make cpixx_dev.so
-	$(PYTHON) test_cpixx_dev.py 
+#	$(PYTHON) test_cpixx_dev.py 
+	$(PYTHON) test_cpixx.py 
 
 test_cpixx:
 	make cpixx.so

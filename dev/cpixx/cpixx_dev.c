@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 //////////////////////////////////////////////////////////////
 // ROUTINES
@@ -68,6 +69,7 @@ double spline(double x[],double y[],int n,double y2[])
     y2[k]= y2[k]*y2[k+1]+u[k];
   }
 
+  return 0;
   double sum=0.0;
   for(i=0;i<n;i++){
     sum+=y2[i];
@@ -78,25 +80,161 @@ double spline(double x[],double y[],int n,double y2[])
   return sum;
 }
 
-#define MAX_MAT 5
-#define MAX_MUS 30
-#define MAX_FOU 5
-int reflection(int npix,
-	       double phi,double beta,double theta0,double theta,
-	       int nmugs,int nmat,int nfou,
-	       double xmu[],double rfou[][MAX_FOU],double apix[],
-	       double Sarr[][MAX_MAT])
+#define MAX_MAT 3
+#define MAX_MUS 22
+#define MAX_FOU 350
+#define MAX_STRING 1000
+#define MAX_PIX 1000
+#define VERBOSITY 0
+int read_fourier(char filename[],
+		 int shape[],
+		 double xmu[],
+		 double rfou[][MAX_MUS][MAX_FOU],
+		 double rtra[][MAX_MUS][MAX_FOU]
+		 )
 {
+  int i,j,k,m,n;
   
+  char line[MAX_STRING];
+  FILE *f=fopen(filename,"r");
+  int nline=0;
+
+  int nmat,nmugs,nfou;
+  
+  //Read first part of the file
+  double fmu;
+
+  i=0;
+  while(fgets(line,sizeof(line),f)) {
+    nline++;
+    //Avoid comments
+    if(strchr(line,'#')!=NULL) continue;
+
+    //Read size of matrix
+    if(strlen(line)<10){
+      if(!nmat)
+	sscanf(line,"%d\n",&nmat);
+      else
+	sscanf(line,"%d\n",&nmugs);
+      continue;
+    }
+
+    //Read mus
+    sscanf(line,"%lf %lf\n",&xmu[i++],&fmu);
+    if(VERBOSITY) printf("%d %.16e %.16e\n",i-1,xmu[i-1],fmu);
+    if(i==nmugs)
+      break;
+  }
+
+  //Initialize the fourier cube
+  for(i=0;i<nmat*nmugs;i++)
+    for(j=0;j<nmugs;j++)
+      for(m=0;m<=MAX_FOU;m++){
+	rfou[i][j][m]=0.0;
+	rtra[i][j][m]=0.0;
+      }
+
+  //Read fourier coefficients
+  int ifou,ibase;
+  char *token;
+  double coefficient;
+
+  ifou=0;
+  while(1){
+    if(feof(f)) break;
+    for(i=0;i<nmugs;i++){
+      ibase=i*nmat;
+      for(j=0;j<nmugs;j++){
+
+	//Stop if we get the end of the file
+	if(fgets(line,sizeof(line),f)==NULL)
+	  break;
+	nline++;
+
+	if(VERBOSITY) printf("Line: %s",line);
+
+	//Read the lines
+	token=strtok(line," ");
+	n=0;
+	k=0;
+	//printf("\nToken: %s\n",token);
+	do{
+	  if(n<3){
+	    sscanf(token,"%d",&m);
+	    ////if(n==2)
+	    //if(VERBOSITY) printf("ifou = %d, i = %d, nmu = %d\n",ifou,i,m);
+	  }else{
+	    sscanf(token,"%lf",&coefficient);
+	    //if(VERBOSITY) printf("k = %d, coefficient = %e\n",k,coefficient);
+	    if(k<nmat){
+	      rfou[ibase+k][j][ifou]=coefficient;
+	      if(VERBOSITY) printf("\trfou[%d][%d][%d] = %e\n",ibase+k,j,ifou,rfou[ibase+k][j][ifou]);
+	    }else{
+	      rtra[ibase+k-nmat][j][ifou]=coefficient;
+	      if(VERBOSITY) printf("\trtra[%d][%d][%d] = %e\n",ibase+k,j,ifou,rtra[ibase+k-nmat][j][ifou]);
+	    }
+	    k++;
+	  }
+	  token=strtok(NULL," ");
+	  //printf("%s\n",token);
+	  n++;
+	}while(token!=NULL);
+	/*
+	  sscanf(line,"%d %d %d",&m,&i1,&i2);
+	  sscanf(line,"%lf",&fmu);
+	  printf("%d %d %d\n",m,i1,i2);
+	*/
+	//printf("%lf\n",fmu);
+	//return 0;
+	//break;
+      }
+      //if(i>=0) break;
+    }
+    //if(ifou>=0) break;
+    ifou++;
+  }
+  nfou=ifou-1;
+  
+  //Read size of matrix
+  
+  //Read coefficients
+  //printf("%s",line);
+  //printf("%lu\n",strlen(line));
+  if(VERBOSITY){
+    printf("Number of lines : %d\n",nline);
+    printf("nmugs = %d, nmat = %d, nfou = %d\n",nmugs,nmat,nfou);
+    printf("Size of matrix = %d\n",nmugs*nmat*nmugs*nfou);
+  }
+
+  //Save properties of matrix
+  shape[0]=nmat;
+  shape[1]=nmugs;
+  shape[2]=nfou;
+
+  //Checksum
+  double checksum=0;
+  for(i=0;i<nmugs*nmat;i++){
+    for(j=0;j<nmugs;j++){
+      for(m=0;m<nfou;m++){
+	checksum+=rfou[i][j][m];
+      }
+    }
+  }
+  if(VERBOSITY||1) printf("[C] Checksum rfou: %.16e\n",checksum);
+
+  checksum=0;
+  for(i=0;i<nmugs*nmat;i++){
+    for(j=0;j<nmugs;j++){
+      for(m=0;m<nfou;m++){
+	checksum+=rtra[i][j][m];
+      }
+    }
+  }
+  if(VERBOSITY||1) printf("[C] Checksum rtra: %.16e\n",checksum);
   return 0;
 }
 
-
 /*
-      SUBROUTINE reflection(npix,phi,beta,theta0,theta,
-     .                      nmugs,nmat,nfou,xmu,rfou,
-     .                      apix,Sarr)
-      
 *----------------------------------------------------------------------------
 *     Read a Fourier coefficients file and calculate the Stokes vector
 *     for a given geometry.
@@ -111,241 +249,166 @@ int reflection(int npix,
 *     Author: Daphne M. Stam
 *     Date: September 2022
 *----------------------------------------------------------------------------
-      IMPLICIT NONE
-
-      DOUBLE PRECISION pi,radfac
-      PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
-
-      INTEGER i,j,nmat,nmugs,nfou,npix,ki,m,k,n
-
-      DOUBLE PRECISION fac,mu,mu0,mu0old,muold,
-     .                 be,rf3,SVR2,SvR3
-
-      DOUBLE PRECISION xmu(nmugs),
-     .                 phi(npix),
-     .                 beta(npix),
-     .                 theta0(npix),
-     .                 theta(npix),
-     .                 apix(npix),
-     .                 rfou(nmat*nmugs,nmugs,0:nfou),
-     .                 rf(nmat,nmugs,nmugs),rfsec(nmat,nmugs,nmugs),
-     .                 rftemp(nmugs),rfmu0(nmat,nmugs),
-     .                 rfsecmu0(nmugs),     
-     .                 Bplus(4),SvR(nmat),RM(npix,nmat),rf3save(nmat),
-     .                 P,Sarr(npix,nmat+1)
-
-Cf2py intent(in) npix, phi, beta, theta0, theta, apix, trans
-Cf2py intent(in) nmugs, nmat, nfou, xmu, rfou
-Cf2py intent(out) Sarr
-Cf2py depend(npix) phi, beta, theta0, theta, apix, Sarr
-Cf2py depend(nmat) rfou, Sarr
-Cf2py depend(nfou) rfou
-Cf2py depend(nmugs) rfou, xmu
-
-*----------------------------------------------------------------------------
-*     Initialize the storage matrix and values:
-*----------------------------------------------------------------------------
-      DO i=1,npix
-        DO k=1,nmat
-            RM(i,k) = 0.D0
-        ENDDO
-      ENDDO
-      muold=1.D0
-      mu0old=1.D0
-*----------------------------------------------------------------------------
-*     Loop over the Fourier coefficients:
-*----------------------------------------------------------------------------
-      DO m=0,nfou
-      
-        fac=1.D0
-        IF (m.EQ.0) fac=0.5D0
-          
-*------------------------------------------------------------------------------
-*     Initialize the interpolation matrix for the current fourier coefficient:
-*------------------------------------------------------------------------------
-        DO j=1,nmugs
-            DO k=1,nmat
-                ki = (j-1)*nmat + k
-                DO n=1,nmugs
-                    rf(k,j,n) = rfou(ki,n,m)
-                ENDDO
-                CALL spline(xmu,rf(k,j,:),nmugs,rftemp)
-                rfsec(k,j,:) = rftemp
-            ENDDO
-        ENDDO
-        
-*----------------------------------------------------------------------------
-*     Loop over the pixels:
-*       If the input angles are (very) similar to a previously calculated case
-*       use those values.
-*       To obtain obtain the fourier coefficient at (mu,mu0) spline has to be
-*       called a second time.
-*----------------------------------------------------------------------------      
-        DO i=1,npix
-            mu = theta(i)
-            mu0 = theta0(i)
-            Bplus(1)= DCOS(m*phi(i))
-            Bplus(2)= DCOS(m*phi(i))
-            Bplus(3)= DSIN(m*phi(i))
-            Bplus(4)= DSIN(m*phi(i))
-            
-            IF ((i.GT.1).AND.
-     .          (ABS(mu-muold).LT.1.D-6).AND.
-     .          (ABS(mu0-mu0old).LT.1.D-6)) THEN
-                DO k=1,nmat 
-                    RM(i,k)=RM(i,k)+ 2.D0*Bplus(k)*fac*rf3save(k)
-                ENDDO
-            ELSE
-                DO j=1,nmugs
-                    DO k=1,nmat
-                        CALL splint(xmu,rf(k,j,:),
-     .                              rfsec(k,j,:),
-     .                              nmugs,mu0,rf3)
-                        rfmu0(k,j) = rf3
-                    ENDDO
-                ENDDO                    
-                DO k=1,nmat
-                    CALL spline(xmu,rfmu0(k,:),nmugs,rfsecmu0)
-                    CALL splint(xmu,rfmu0(k,:),rfsecmu0,nmugs,mu,rf3)
-                    rf3save(k) = rf3
-                    muold = mu
-                    mu0old = mu0
-                    RM(i,k) = RM(i,k) + 2.D0*Bplus(k)*fac*rf3
-                ENDDO
-            ENDIF
-        ENDDO
-      ENDDO
-*----------------------------------------------------------------------------
-*     Loop again over the pixels to rotate Stokes vector:
-*----------------------------------------------------------------------------    
-      DO i=1,npix
-        mu = theta(i)
-        mu0 = theta0(i)
-        
-*----------------------------------------------------------------------------
-*       Calculate the locally reflected Stokes vector:
-*----------------------------------------------------------------------------
-        DO k=1,nmat
-           SvR(k)= mu0*RM(i,k) 
-        ENDDO
-
-*----------------------------------------------------------------------------
-*       Rotate Stokes elements Q and U to the actual reference plane:
-*----------------------------------------------------------------------------
-        be= 2.D0*beta(i)
-        SvR2= DCOS(be)*SvR(2) + DSIN(be)*SvR(3) 
-        SvR3=-DSIN(be)*SvR(2) + DCOS(be)*SvR(3) 
-        SvR(2)= SvR2
-        SvR(3)= SvR3
-
-*----------------------------------------------------------------------------
-*       Compute the local degree of polarisation P:
-*----------------------------------------------------------------------------
-        IF (DABS(Svr(1)).LT.1.D-6) THEN
-           P=0.D0
-        ELSEIF (DABS(SvR(3)).LT.1.D-6) THEN
-           P= -SvR(2)/SvR(1)
-        ELSE
-           P= DSQRT(SvR(2)*SvR(2)+SvR(3)*SvR(3))/SvR(1)
-        ENDIF
-        IF (DABS(P).LT.1.D-6) P=0.D0
-
-*----------------------------------------------------------------------------
-*       Add the Stokes elements of the pixel to an array:
-*       Multiply with mu and the actual pixel area to obtain stokes elements
-*----------------------------------------------------------------------------
-        DO k=1,nmat
-            Sarr(i,k) = SvR(k)*mu * apix(i)
-        ENDDO
-        
-        Sarr(i,nmat+1) = P
-
-*----------------------------------------------------------------------------
-*       Next pixel:
-*----------------------------------------------------------------------------
-
-      ENDDO
-      
-*-------------------------------------------------------------------------------
-      RETURN
-      END
  */
+int reflection(int npix,
+	       double phi[],double beta[],double theta0[],double theta[],
+	       int shape[],
+	       double xmu[],
+	       double rfou[][MAX_MUS][MAX_FOU],
+	       double apix[],
+	       double Sarr[][MAX_MAT+1])
+{
+  int nmat=shape[0];
+  int nmugs=shape[1];
+  int nfou=shape[2];
 
+  int i,j,k,m,n;
+  double rf[MAX_MAT][MAX_MUS][MAX_MUS],rfsec[MAX_MAT][MAX_MUS][MAX_MUS];
+  double rftemp[MAX_MUS],rfmu0[MAX_MAT][MAX_MUS];
+  double rfsecmu0[MAX_MUS];
+  double Bplus[4],SvR[MAX_MAT],RM[MAX_PIX][MAX_MAT],rf3save[MAX_MAT];
+  double slice[MAX_MUS],slicep[MAX_MUS];
+  double be,rf3,SvR2,SvR3,P;
+  
+  double mu,mu0,muold=1,mu0old=1;
 
-/*
-      SUBROUTINE bracks(theta,npix,xmu,nmugs,j1)
+  //Initialize the storage matrix and values
+  for(i=0;i<npix;i++)
+    for(k=0;k<nmat;k++)
+      RM[i][k]=0.0;
 
-*-------------------------------------------------------------------------------
-* PURPOSE:
-* Find a bracket around "el" in the first "n" elements of
-* "array".
-* 
-* INPUT:
-* 	el	: element to be bracketed
-* 	array   : array in which bracket must be found
-* 	n       : number of elements in array to be considered
-* 	ND      : dimension of array
-*
-* OUTPUT:
-*	i1	: index of left bracket element
-* 	i2	: index of right bracket element
-*
-*
-* COMMENTS:
-* If "el" is outside the range of "array", "i1" and "i2" are 
-* set to the appropriate extreme index value.    
-* If "el" is equal to one of the elements of "array", "i2" is
-* set to the appropriate index value.
-*-------------------------------------------------------------------------------
-      IMPLICIT DOUBLE PRECISION (a-h,o-z)
+  int ki;
+  double fac;
+  
+  //Loop over the Fourier coefficients:
+  for(m=0;m<nfou;m++){
 
-      DOUBLE PRECISION eps
-      PARAMETER (eps=1.D-10)
+    fac=1.0;
+    if(m==0) fac=0.5;
 
-      DOUBLE PRECISION pi,radfac
-      PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
+    //Initialize the interpolation matrix for the current fourier coefficient:
+    for(j=0;j<nmugs;j++){
 
-      INTEGER ni,i,nmugs,npix,i1
+      for(k=0;k<nmat;k++){
+	ki=j*nmat+k;
+	
+	for(n=0;n<nmugs;n++){
+	  rf[k][j][n]=rfou[ki][n][m];
+	  ////printf("%d %d %d %lf\n",ki,n,m,rfou[ki][n][m]);
+	}
+	
+	//Slice rf(k,j,:)
+	for(n=0;n<nmugs;n++){
+	  slice[n]=rf[k][j][n];
+	}
+	spline(xmu,slice,nmugs,rftemp);
 
-      INTEGER j1(npix)
+	for(n=0;n<nmugs;n++){
+	  rfsec[k][j][n]=rftemp[n];
+	}
+	
+	/*
+	for(n=0;n<nmugs;n++){
+	  printf("%d %d %d %e %lf %lf\n",k,j,n,xmu[n],slice[n],rftemp[n]);
+	}
+	if(k>0) return 0;
+	*/
+	
+      }//End k
 
-      DOUBLE PRECISION mu,xmu(nmugs),theta(npix)
-      
-Cf2py intent(in) theta, npix, xmu, nmugs
-Cf2py intent(out) j1
-Cf2py depend(npix) theta, j1
-Cf2py depend(nmugs) xmu
-*-------------------------------------------------------------------------------
+    }//End j
+    
+    /*
+     *----------------------------------------------------------------------------
+     *     Loop over the pixels:
+     *       If the input angles are (very) similar to a previously calculated case
+     *       use those values.
+     *       To obtain obtain the fourier coefficient at (mu,mu0) spline has to be
+     *       called a second time.
+     *----------------------------------------------------------------------------
+     */
+    for(i=0;i<npix;i++){
+      mu = theta[i];
+      mu0 = theta0[i];
+      Bplus[0]= cos(m*phi[i]);
+      Bplus[1]= cos(m*phi[i]);
+      Bplus[2]= sin(m*phi[i]);
+      Bplus[3]= sin(m*phi[i]);
 
-      DO ni=1,npix
-        i1= -1
-        j1(ni)= i1
-        
-        mu= theta(ni)
-        
-        IF (DACOS(mu)*radfac.LT.(0.D0)) GOTO 33
-        
-        IF (mu.LE.(xmu(1)+eps)) THEN
-           i1= 0
-        ELSEIF (mu.GT.(xmu(nmugs)-eps)) THEN
-           i1= nmugs
-        ELSE
-           DO i=1,nmugs-2
-               IF ((mu.GT.(xmu(i)+eps)).AND.(mu.LE.(xmu(i+1)+eps))) THEN
-                  i1= i
-               ENDIF
-           ENDDO
-           IF ((mu.GT.(xmu(nmugs-1)+eps)).AND.
-     .           (mu.LE.(xmu(nmugs)-eps))) THEN
-              i1= nmugs-1
-           ENDIF
-        ENDIF
-        j1(ni)= i1
+      if((i>0)&&((fabs(mu-muold)<1e-6))&&(fabs(mu0-mu0old)<1e-6)){
+	for(k=0;k<nmat;k++)
+	  RM[i][k]=RM[i][k]+2*Bplus[k]*fac*rf3save[k];
+      }else{
+	for(j=0;j<nmugs;j++){
+	  for(k=0;k<nmat;k++){
+	    //Slice rf(k,j,:)
+	    for(n=0;n<nmugs;n++){
+	      slice[n]=rf[k][j][n];
+	    }
+	    //Slice rfsec(k,j,:)
+	    for(n=0;n<nmugs;n++){
+	      slicep[n]=rfsec[k][j][n];
+	    }
+	    rf3=splint(xmu,slice,slicep,nmugs,mu0);
+	    rfmu0[k][j]=rf3;
+	  }
+	}
 
-33      CONTINUE
+	for(k=0;k<nmat;k++){
+	  //Slice rfmu0(k,:)
+	  for(n=0;n<nmugs;n++){
+	    slice[n]=rfmu0[k][n];
+	  }
+	  spline(xmu,slice,nmugs,rfsecmu0);
+	  rf3=splint(xmu,slice,rfsecmu0,nmugs,mu);
+	  rf3save[k] = rf3;
+	  muold = mu;
+	  mu0old = mu0;
+	  RM[i][k] = RM[i][k] + 2*Bplus[k]*fac*rf3;
+	}
+      }//End else
+    }//End i (pix)	
+  }//End loop fourier coefficients
 
-      ENDDO
+  //Loop again over the pixels to rotate Stokes vector:
+  for(i=0;i<npix;i++){
+    mu = theta[i];
+    mu0 = theta0[i];
 
-*-------------------------------------------------------------------------------
-      RETURN
-*/
+    //Calculate the locally reflected Stokes vector:
+    for(k=0;k<nmat;k++)
+      SvR[k]= mu0*RM[i][k];
+    
+    //Rotate Stokes elements Q and U to the actual reference plane:
+    be= 2*beta[i];
+    SvR2= cos(be)*SvR[1] + sin(be)*SvR[2];
+    SvR3=-sin(be)*SvR[1] + cos(be)*SvR[2];
+    SvR[1]= SvR2;
+    SvR[2]= SvR3;
+    
+    //Compute the local degree of polarisation P:
+    if(fabs(SvR[0])<1e-6)
+      P=0;
+    else if(fabs(SvR[2])<1e-6)
+      P=-SvR[1]/SvR[0];
+    else
+      P= sqrt(SvR[1]*SvR[1]+SvR[2]*SvR[2])/SvR[0];
+    if(fabs(P)<1e-6) P=0;
+    
+    /*
+     *----------------------------------------------------------------------------
+     *       Add the Stokes elements of the pixel to an array:
+     *       Multiply with mu and the actual pixel area to obtain stokes elements
+     *----------------------------------------------------------------------------
+     */
+    for(k=0;k<nmat;k++){
+      Sarr[i][k] = SvR[k]*mu*apix[i];
+    }
+
+    //The value of the degree of polarization
+    Sarr[i][nmat] = P;
+
+  }//End i (pix)
+  
+  return 0;
+}

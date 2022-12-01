@@ -267,11 +267,22 @@ Cf2py depend(nmugs) rfou, xmu
             DO k=1,nmat
                 ki = (j-1)*nmat + k
                 DO n=1,nmugs
-                    rf(k,j,n) = rfou(ki,n,m)
+                   rf(k,j,n) = rfou(ki,n,m)
+CC                   write(*,*) ki,n,m,rfou(ki,n,m)
                 ENDDO
+                
                 CALL spline(xmu,rf(k,j,:),nmugs,rftemp)
                 rfsec(k,j,:) = rftemp
-            ENDDO
+                
+c$$$                DO n=1,nmugs
+c$$$                   write(*,*) k,j,n,xmu(n),rf(k,j,n),rftemp(n)
+c$$$                ENDDO
+c$$$
+c$$$                IF(k.EQ.2) THEN
+c$$$                   RETURN
+c$$$                ENDIF
+
+             ENDDO
         ENDDO
         
 *----------------------------------------------------------------------------
@@ -447,6 +458,7 @@ Cf2py depend(nmugs) rfou, xmu
       ENDDO
       ifou= ifou+1
       GOTO 20
+
 21    CLOSE(iunf)
 
 *----------------------------------------------------------------------------
