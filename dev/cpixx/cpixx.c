@@ -1,26 +1,31 @@
+//////////////////////////////////////////////////////////////
+// DEPENDENCIES
+//////////////////////////////////////////////////////////////
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 //////////////////////////////////////////////////////////////
-//MACROS
+// MACROS
 //////////////////////////////////////////////////////////////
 #define MAX_MAT 3
 #define MAX_MUS 22
 #define MAX_FOU 350
 #define MAX_STRING 1000
-#define MAX_PIX 1000
+#define VERBOSITY 0
 
 //////////////////////////////////////////////////////////////
 // ROUTINES
 //////////////////////////////////////////////////////////////
-/*
-  Test cpixx
- */
-void test_cpixx()
+double** allocate_matrix(int n,int m)
 {
-  printf("This is CPIXX in Pryngles!\n");
+  double **M;
+  M=(double**)calloc(sizeof(double*),n);
+  for(int i=0;i<m;i++)
+    M[i]=(double*)calloc(sizeof(double),m);
+  return M;
 }
 
 /*
@@ -41,8 +46,7 @@ void test_cpixx()
 *     n is the number of elements in x and y
 *----------------------------------------------------------------------------
 */
-int spline(double x[],double y[],int n,
-	   double y2[])
+double spline(double x[],double y[],int n,double y2[])
 {
   int i,k;
   double u[1000];
@@ -68,6 +72,14 @@ int spline(double x[],double y[],int n,
   }
 
   return 0;
+  double sum=0.0;
+  for(i=0;i<n;i++){
+    sum+=y2[i];
+    printf("%lf\n",y2[i]);
+  }
+
+  printf("%lf\n",sum);
+  return sum;
 }
 
 /*
@@ -110,104 +122,6 @@ double splint(double xa[],double ya[],double y2a[],int n,double x)
 
 /*
 *----------------------------------------------------------------------------
-Read Fourier coefficients
-*----------------------------------------------------------------------------
-*/
-int read_fourier(char filename[],
-		 int shape[],
-		 double xmu[],
-		 double rfou[][MAX_MUS][MAX_FOU],
-		 double rtra[][MAX_MUS][MAX_FOU]
-		 )
-{
-  FILE *f=fopen(filename,"r");
-  char line[MAX_STRING];
-  int i,j,k,m,n;
-  int nline=0;
-  int nmat,nmugs,nfou;
-  double fmu;
-  int ifou,ibase;
-  char *token;
-  double coefficient;
-
-  i=0;
-  while(fgets(line,sizeof(line),f)) {
-    nline++;
-    //Avoid comments
-    if(strchr(line,'#')!=NULL) continue;
-
-    //Read size of matrix
-    if(strlen(line)<10){
-      if(!nmat)
-	sscanf(line,"%d\n",&nmat);
-      else
-	sscanf(line,"%d\n",&nmugs);
-      continue;
-    }
-
-    //Read mus
-    sscanf(line,"%lf %lf\n",&xmu[i++],&fmu);
-    if(i==nmugs) break;
-  }
-
-  //Initialize the fourier cube
-  for(i=0;i<nmat*nmugs;i++)
-    for(j=0;j<nmugs;j++)
-      for(m=0;m<=MAX_FOU;m++){
-	rfou[i][j][m]=0.0;
-	rtra[i][j][m]=0.0;
-      }
-
-  //Read fourier coefficients
-  ifou=0;
-  while(1){
-    if(feof(f)) break;
-    for(i=0;i<nmugs;i++){
-      ibase=i*nmat;
-      for(j=0;j<nmugs;j++){
-
-	//Stop if we get the end of the file
-	if(fgets(line,sizeof(line),f)==NULL)
-	  break;
-	nline++;
-
-	//Read the lines
-	token=strtok(line," ");
-	n=0;
-	k=0;
-
-	do{
-	  if(n<3){
-	    sscanf(token,"%d",&m);
-	  }else{
-	    sscanf(token,"%lf",&coefficient);
-	    if(k<nmat){
-	      rfou[ibase+k][j][ifou]=coefficient;
-	    }else{
-	      rtra[ibase+k-nmat][j][ifou]=coefficient;
-	    }
-	    k++;
-	  }
-	  token=strtok(NULL," ");
-	  n++;
-	}while(token!=NULL);
-      }
-    }
-    ifou++;
-  }
-  nfou=ifou-1;
-  
-  //Store properties of matrix
-  shape[0]=nmat;
-  shape[1]=nmugs;
-  shape[2]=nfou;
-
-  fclose(f);
-  return 0;
-}
-
-/*
-*----------------------------------------------------------------------------
 *     Read a Fourier coefficients file and calculate the Stokes vector
 *     for a given geometry.
 *
@@ -224,28 +138,34 @@ int read_fourier(char filename[],
  */
 int reflection(int npix,
 	       double phi[],double beta[],double theta0[],double theta[],
-	       int shape[],
+	       long int shape[],
 	       double xmu[],
 	       double rfou[][MAX_MUS][MAX_FOU],
 	       double apix[],
 	       double Sarr[][MAX_MAT+1])
 {
+  //Declarations
   int i,j,k,m,n;
   double rf[MAX_MAT][MAX_MUS][MAX_MUS],rfsec[MAX_MAT][MAX_MUS][MAX_MUS];
   double rftemp[MAX_MUS],rfmu0[MAX_MAT][MAX_MUS];
   double rfsecmu0[MAX_MUS];
-  double Bplus[4],SvR[MAX_MAT],RM[MAX_PIX][MAX_MAT],rf3save[MAX_MAT];
+  double Bplus[4],SvR[MAX_MAT],**RM,rf3save[MAX_MAT];
   double slice[MAX_MUS],slicep[MAX_MUS];
   double be,rf3,SvR2,SvR3,P;
   double mu,mu0,muold=1,mu0old=1;
   int ki;
   double fac;
+  
+  //Read size
+  long int nmat=shape[0];
+  long int nmugs=shape[1];
+  long int nfou=shape[2];
 
-  //Sizes
-  int nmat=shape[0];
-  int nmugs=shape[1];
-  int nfou=shape[2];
-
+  //printf("%ld,%ld,%ld\n",nmat,nmugs,nfou);
+  
+  //Allocate dynamically temporal matrices
+  RM=allocate_matrix(npix,nmat);
+  
   //Initialize the storage matrix and values
   for(i=0;i<npix;i++)
     for(k=0;k<nmat;k++)
@@ -263,19 +183,16 @@ int reflection(int npix,
       for(k=0;k<nmat;k++){
 	ki=j*nmat+k;
 	
-	for(n=0;n<nmugs;n++){
+	for(n=0;n<nmugs;n++)
 	  rf[k][j][n]=rfou[ki][n][m];
-	}
 	
 	//Slice rf(k,j,:)
-	for(n=0;n<nmugs;n++){
+	for(n=0;n<nmugs;n++)
 	  slice[n]=rf[k][j][n];
-	}
 	spline(xmu,slice,nmugs,rftemp);
 
-	for(n=0;n<nmugs;n++){
+	for(n=0;n<nmugs;n++)
 	  rfsec[k][j][n]=rftemp[n];
-	}
 	
       }//End k
 
@@ -299,19 +216,22 @@ int reflection(int npix,
       Bplus[3]= sin(m*phi[i]);
 
       if((i>0)&&((fabs(mu-muold)<1e-6))&&(fabs(mu0-mu0old)<1e-6)){
+
 	for(k=0;k<nmat;k++)
 	  RM[i][k]=RM[i][k]+2*Bplus[k]*fac*rf3save[k];
+
       }else{
+
 	for(j=0;j<nmugs;j++){
 	  for(k=0;k<nmat;k++){
 	    //Slice rf(k,j,:)
-	    for(n=0;n<nmugs;n++){
+	    for(n=0;n<nmugs;n++)
 	      slice[n]=rf[k][j][n];
-	    }
+	    
 	    //Slice rfsec(k,j,:)
-	    for(n=0;n<nmugs;n++){
+	    for(n=0;n<nmugs;n++)
 	      slicep[n]=rfsec[k][j][n];
-	    }
+
 	    rf3=splint(xmu,slice,slicep,nmugs,mu0);
 	    rfmu0[k][j]=rf3;
 	  }
@@ -319,9 +239,9 @@ int reflection(int npix,
 
 	for(k=0;k<nmat;k++){
 	  //Slice rfmu0(k,:)
-	  for(n=0;n<nmugs;n++){
+	  for(n=0;n<nmugs;n++)
 	    slice[n]=rfmu0[k][n];
-	  }
+
 	  spline(xmu,slice,nmugs,rfsecmu0);
 	  rf3=splint(xmu,slice,rfsecmu0,nmugs,mu);
 	  rf3save[k] = rf3;
@@ -374,4 +294,116 @@ int reflection(int npix,
   }//End i (pix)
   
   return 0;
+}
+
+/*
+*----------------------------------------------------------------------------
+Read Fourier coefficients
+*----------------------------------------------------------------------------
+*/
+double read_fourier(char filename[],
+		    long int shape[],
+		    double xmu[],
+		    double rfou[][MAX_MUS][MAX_FOU],
+		    double rtra[][MAX_MUS][MAX_FOU]
+		    )
+{
+  int i,j,k,m,n;
+  char line[MAX_STRING];
+  int nline=0;
+  long int nmat,nmugs,nfou;
+  double fmu;
+  int ifou,ibase;
+  char *token;
+  double coefficient;
+  double checksum;
+
+  //Open file
+  FILE *f=fopen(filename,"r");
+  
+  //Read first part of the file
+  i=0;
+  while(fgets(line,sizeof(line),f)) {
+    nline++;
+    //Avoid comments
+    if(strchr(line,'#')!=NULL) continue;
+
+    //Read size of matrix
+    if(strlen(line)<10){
+      if(!nmat)
+	sscanf(line,"%ld\n",&nmat);
+      else
+	sscanf(line,"%ld\n",&nmugs);
+      continue;
+    }
+
+    //Read mus
+    sscanf(line,"%lf %lf\n",&xmu[i++],&fmu);
+    if(i==nmugs)
+      break;
+  }
+  
+  //Initialize the fourier cube
+  for(i=0;i<nmat*nmugs;i++)
+    for(j=0;j<nmugs;j++)
+      for(m=0;m<=MAX_FOU;m++){
+	rfou[i][j][m]=0.0;
+	rtra[i][j][m]=0.0;
+      }
+  
+  //Read fourier coefficients
+  ifou=0;
+  while(1){
+    if(feof(f)) break;
+    for(i=0;i<nmugs;i++){
+      ibase=i*nmat;
+      for(j=0;j<nmugs;j++){
+
+	//Stop if we get the end of the file
+	if(fgets(line,sizeof(line),f)==NULL)
+	  break;
+	nline++;
+
+	//Read the lines
+	token=strtok(line," ");
+	n=0;
+	k=0;
+	do{
+	  if(n<3){
+	    sscanf(token,"%d",&m);
+	  }else{
+	    sscanf(token,"%lf",&coefficient);
+	    if(k<nmat){
+	      rfou[ibase+k][j][ifou]=coefficient;
+	    }else{
+	      rtra[ibase+k-nmat][j][ifou]=coefficient;
+	    }
+	    k++;
+	  }
+	  token=strtok(NULL," ");
+	  n++;
+	}while(token!=NULL);
+      }
+    }
+    ifou++;
+  }
+  nfou=ifou-1;
+  
+  //Save properties of matrix
+  shape[0]=nmat;
+  shape[1]=nmugs;
+  shape[2]=nfou;
+
+  //Checksum
+  checksum=0;
+  for(i=0;i<nmugs*nmat;i++){
+    for(j=0;j<nmugs;j++){
+      for(m=0;m<nfou;m++){
+	//printf("%d %d %d %lf %lf\n",i,j,m,rfou[i][j][m],rtra[i][j][m]);
+	checksum+=rfou[i][j][m]+rtra[i][j][m];
+      }
+    }
+  }
+  
+  return checksum;
 }

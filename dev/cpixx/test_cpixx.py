@@ -4,21 +4,24 @@ import glob
 import pandas as pd
 import time
 
-libfile = glob.glob('./cpixx_dev*.so')[0]
-cpixx=ctypes.CDLL(libfile)
+qtype="PLANET"
+#qtype="RING_REFLECTION"
+#qtype="RING_TRANSMISSION"
 
-filename=b"fou_gasplanet.dat";nmat=3;nmugs=21;nfou=3
-#filename=b"fou_ring_0_4_0_8.dat";nmat=3;nmugs=20;nfou=344
+#Global variables
 MAX_MAT=3
 MAX_MUS=22
 MAX_FOU=350
 
-#########################################
-#Dynamic allocation of matrix
-#########################################
-M=np.ones((3,3))
-suma=cpixx.sum_matrix(M,3,3);
-exit(0);
+#Load library
+libfile = glob.glob('./cpixx*.so')[0]
+cpixx=ctypes.CDLL(libfile)
+
+#Read file with Fourier coefficients
+if qtype=="PLANET":
+    filename="fou_gasplanet.dat"
+if "RING" in qtype:
+    filename="fou_ring_0_4_0_8.dat"
 
 #########################################
 #Read fourier python
@@ -72,10 +75,8 @@ def read_fourier(filename):
 
     #Get core data
     data=np.loadtxt(filename,skiprows=i)
-    nfou=int(data[:,0].max())
+    nfou=int(data[:,0].max())+1
 
-    #rfou=np.zeros((nmat*nmugs,nmugs,nfou+1))
-    #rtra=np.zeros((nmat*nmugs,nmugs,nfou+1))
     rfou=np.zeros((MAX_MAT*MAX_MUS,MAX_MUS,MAX_FOU))
     rtra=np.zeros((MAX_MAT*MAX_MUS,MAX_MUS,MAX_FOU))
 
@@ -87,65 +88,46 @@ def read_fourier(filename):
         if len(row[3:])>nmat:
             rtra[ibase:ibase+3,j,m]=row[3+nmat:3+2*nmat]
             
-    return nmat,nmugs,xmu,rfou,rtra
+    return nmat,nmugs,nfou,xmu,rfou,rtra
 
-nmat,nmugs,xmu,rfou,rtra=read_fourier(filename.decode())
-print(nmat,nmugs,xmu)
-print(f"Checksum rfou: {rfou.sum()}")
-print(f"Checksum rtra: {rtra.sum()}")
-
-#########################################
-#Read fourier
-#########################################
-"""
-shape=np.zeros(3,dtype=int)
-#xmu=np.zeros(nmugs)
-#rfou=np.zeros((nmat*nmugs,nmugs,nfou))
-#rtra=np.zeros((nmat*nmugs,nmugs,nfou))
-xmu=np.zeros(MAX_MUS)
-rfou=np.zeros((MAX_MAT*MAX_MUS,MAX_MUS,MAX_FOU))
-rtra=np.zeros((MAX_MAT*MAX_MUS,MAX_MUS,MAX_FOU))
-
-#read_fourier Specifications
-cpixx.read_fourier.argtypes = [
-    ctypes.c_char_p,
-    np.ctypeslib.ndpointer(dtype=int),
-    np.ctypeslib.ndpointer(dtype=float),
-    np.ctypeslib.ndpointer(dtype=float),
-    np.ctypeslib.ndpointer(dtype=float),
-]
-cpixx.read_fourier(filename,shape,xmu,rfou,rtra)
-print(f"Python checksum rfou: {rfou.sum():e}")
-print(f"Python checksum rtra: {rtra.sum():e}")
-print(shape)
-for i in range(nmugs*nmat):
-    for j in range(nmugs):
-        for m in range(nfou):
-            print(f"{i} {j} {m} {rfou[i,j,m]:.16e}")
-"""
+nmat,nmugs,nfou,xmu,rfou,rtra=read_fourier(filename)
+print(f"Checksum '{filename}': {rfou.sum()+rtra.sum():.16e}")
 
 #########################################
 #Reflection
 #########################################
-MAX_PIX=1000
+MAX_PIX=1
 phi=np.zeros(MAX_PIX)
 beta=np.zeros(MAX_PIX)
 theta0=np.zeros(MAX_PIX)
 theta=np.zeros(MAX_PIX)
 apix=np.zeros(MAX_PIX)
 Sarr=np.zeros((MAX_PIX,MAX_MAT+1))
-#"""
 shape=np.array([nmat,nmugs,nfou],dtype=int)
-#"""
-print(shape)
 
 npix=1
-phi[0]=1.0448451569439827;
-beta[0]=3.069394277348945;
-theta0[0]=0.04990329026929557;
-theta[0]=0.02509670973070432;
-apix[0]=9.432328787795567e-05;
-
+if qtype=="PLANET":
+    phi[0]=1.0448451569439827;
+    beta[0]=3.069394277348945;
+    theta0[0]=0.04990329026929557;
+    theta[0]=0.02509670973070432;
+    apix[0]=9.432328787795567e-05;
+    print("Expected values:\n4.597857424902560283e-07 2.251229972872198058e-07 1.834400800563127439e-09 4.896421313424954569e-01");
+if qtype=="RING_REFLECTION":
+    phi[0]=1.490116119384765625e-08;
+    beta[0]=0.000000000000000000e+00;
+    theta0[0]=4.999999999999998890e-01;
+    theta[0]=5.000000000000000000e-01;
+    apix[0]=1.163314390931110409e-04;
+    print("Expected:\n6.193646058775441171e-06 -3.046132218287162406e-07 -9.759550180589223642e-15 4.918156751904256135e-02");    
+if qtype=="RING_TRANSMISSION":
+    phi[0]=1.601029385538801364e+00;
+    beta[0]=1.601029385538801364e+00;
+    theta0[0]=1.744974835125044643e-02;
+    theta[0]=5.000000000000000000e-01;
+    apix[0]=1.163314390931110409e-04;
+    print("Expected:\n1.688771016436214060e-07 -1.485273114913191718e-08 2.674513729889046925e-09 8.936444506313186154e-02");
+    
 #reflection Specifications
 cpixx.reflection.argtypes = [
     ctypes.c_int,
@@ -159,50 +141,10 @@ cpixx.reflection.argtypes = [
     np.ctypeslib.ndpointer(dtype=float),
     np.ctypeslib.ndpointer(dtype=float),
 ]
-cpixx.reflection(npix,phi,beta,theta0,theta,shape,xmu,rfou,apix,Sarr);
+if "TRANSMISSION" in qtype:
+    cpixx.reflection(npix,phi,beta,theta0,theta,shape,xmu,rtra,apix,Sarr);
+else:
+    cpixx.reflection(npix,phi,beta,theta0,theta,shape,xmu,rfou,apix,Sarr);
 
-print(Sarr[0])
-exit(0)
-
-#########################################
-#Spline
-#########################################
-n=10
-x=np.arange(1.0,n+1,1.0)
-y=x**2
-y2=np.zeros_like(y)
-
-#Spline Specifications
-#cpixx.spline.restype = np.ctypeslib.ndpointer(dtype=float)
-cpixx.spline.argtypes = [
-    np.ctypeslib.ndpointer(dtype=float),
-    np.ctypeslib.ndpointer(dtype=float),
-    ctypes.c_int,
-    np.ctypeslib.ndpointer(dtype=float),
-]
-cpixx.spline(x,y,n,y2)
-print(y2)
-
-#########################################
-#Splint
-#########################################
-#Splint Specifications
-cpixx.splint.restype = ctypes.c_double
-cpixx.splint.argtypes = [
-    np.ctypeslib.ndpointer(dtype=float),
-    np.ctypeslib.ndpointer(dtype=float),
-    np.ctypeslib.ndpointer(dtype=float),
-    ctypes.c_int,
-    ctypes.c_double,
-]
-
-for i in range(1,n):
-    xv=i+0.3;
-    yv=cpixx.splint(x,y,y2,n,xv);
-    print(xv,yv);
-
-#########################################
-#Test
-#########################################
-cpixx.test_cpixx()
-
+print("Calculated values:")
+print([f"{S:.16e}" for S in Sarr[0]])

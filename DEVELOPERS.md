@@ -9,6 +9,9 @@ NOTE:
 C Extension
 -----------
 
+A great presentation about C types:
+https://indico.ictp.it/event/7657/session/4/contribution/19/material/1/0.pdf.
+
 Here it is a description on how to add an extension to the package.
 
 1. Prepare a file with the routine, eg. `src/pryngles/cpixx/cpixx.c`
