@@ -22,8 +22,8 @@ src/pryngles.egg-info/PKG-INFO
 src/pryngles.egg-info/SOURCES.txt
 src/pryngles.egg-info/dependency_links.txt
 src/pryngles.egg-info/entry_points.txt
-src/pryngles.egg-info/requires.txt
 src/pryngles.egg-info/top_level.txt
+src/pryngles/cpixx/cpixx.c
 src/pryngles/data/diffuse_reflection_function.data
 src/pryngles/data/fou_gasplanet.dat
 src/pryngles/data/fou_lambert.dat
@@ -34,7 +34,6 @@ src/pryngles/tests/test-body.py
 src/pryngles/tests/test-consts.py
 src/pryngles/tests/test-legacy.py
 src/pryngles/tests/test-misc.py
-src/pryngles/tests/test-optics.py
 src/pryngles/tests/test-orbit.py
 src/pryngles/tests/test-plot.py
 src/pryngles/tests/test-sampler.py
