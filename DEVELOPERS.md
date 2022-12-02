@@ -12,6 +12,12 @@ C Extension
 A great presentation about C types:
 https://indico.ictp.it/event/7657/session/4/contribution/19/material/1/0.pdf.
 
+Ctypes and arrays:
+https://stackoverflow.com/questions/62940186/how-can-i-create-and-pass-as-argument-a-multidimensional-ctypes-array
+
+Ctypes and multidimensional array:
+https://github.com/dvida/py-ctypes-multidimensional-arrays
+
 Here it is a description on how to add an extension to the package.
 
 1. Prepare a file with the routine, eg. `src/pryngles/cpixx/cpixx.c`

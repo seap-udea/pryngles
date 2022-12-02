@@ -1,7 +1,8 @@
 #include "cpixx.c"
 
 #define VERBOSE 0
-#define MAX_PIX 1000
+#define MAX_MAT 5
+#define MAX_PIX 1000000
 
 enum OBJS {PLANET,RING_REFLECTION,RING_TRANSMISSION};
 
@@ -11,24 +12,27 @@ enum OBJS {PLANET,RING_REFLECTION,RING_TRANSMISSION};
 int main(void)
 {
   int type;
-  type=PLANET;
+  //type=PLANET;
   //type=RING_REFLECTION;
-  //type=RING_TRANSMISSION;
+  type=RING_TRANSMISSION;
+
+  FILE *f;
 
   int i,j,k,m;
-  long int shape[3];
-  double xmu[MAX_MUS];
-  double rfou[MAX_MAT*MAX_MUS][MAX_MUS][MAX_FOU];
-  double rtra[MAX_MAT*MAX_MUS][MAX_MUS][MAX_FOU];
-  char filename[MAX_STRING];
-  long int nmat,nmugs,nfou;
-  double check_sum;
+  int nmat,nmugs,nfou;
   int npix;
-  double phi[MAX_PIX],beta[MAX_PIX],theta0[MAX_PIX],theta[MAX_PIX],apix[MAX_PIX],Sarr[MAX_PIX][MAX_MAT+1];
+
+  char filename[MAX_STRING];
   char line[MAX_STRING];
-  FILE *f;
+
+  struct FourierCoefficients F;
+  
+  double check_sum;
+  double *phi,*beta,*theta0,*theta,*apix;
+  double **Sarr;
+  double **Spixx;
+
   double tmp;
-  double Spixx[4];
   double dif,difmax=-1e100;
   int qreflection;
   
@@ -53,8 +57,11 @@ int main(void)
     f=fopen("ring_back-interpolation.mat","r");
     qreflection=0;
   }
-  check_sum=read_fourier(filename,shape,xmu,rfou,rtra);
+  check_sum=read_fourier(filename,&F);
+  nmat=F.nmat;nmugs=F.nmugs;nfou=F.nfou;
+  printf("Main: nmat = %d, numgs = %d, nfou = %d\n",nmat,nmugs,nfou);
   printf("Checksum = %.16e\n",check_sum);
+  
   /*
     Checksum of a Fourier coefficient file
 
@@ -72,8 +79,15 @@ int main(void)
   printf("REFLECTION TEST (SINGLE VALUE):\n");
   printf("================================================================================\n");
   double **rmat;
-  
+
   npix=1;
+  Sarr=zeros_matrix(npix,nmat+1);
+  phi=zeros_vector(npix);
+  beta=zeros_vector(npix);
+  theta0=zeros_vector(npix);
+  theta=zeros_vector(npix);
+  apix=zeros_vector(npix);
+  
   if(type==PLANET){
     phi[0]=1.0448451569439827;
     beta[0]=3.069394277348945;
@@ -98,13 +112,7 @@ int main(void)
     apix[0]=1.163314390931110409e-04;
     printf("Expected:\n1.688771016436214060e-07 -1.485273114913191718e-08 2.674513729889046925e-09 8.936444506313186154e-02\n");
   }
-
-  if(qreflection)
-    reflection(npix,phi,beta,theta0,theta,shape,xmu,rfou,apix,Sarr);
-  else
-    reflection(npix,phi,beta,theta0,theta,shape,xmu,rtra,apix,Sarr);
-
-  nmat=shape[0];nmugs=shape[1];nfou=shape[2];
+  reflection(F,qreflection,npix,phi,beta,theta0,theta,apix,Sarr);
   printf("Calculated values:\n");
   for(i=0;i<npix;i++){
     for(j=0;j<nmat+1;j++){
@@ -112,42 +120,43 @@ int main(void)
     }
     printf("\n");
   }
-  
+
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  // CHECK INTERPOLATION VALUES
-  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // CHECK INTERPOLATION VALUES MASSIVELY
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%ç
   printf("================================================================================\n");
   printf("REFLECTION TEST (MULTIPLE VALUE):\n");
   printf("================================================================================\n");
-  printf("nmat = %ld, nmugs = %ld, nfou = %ld\n",nmat,nmugs,nfou);
-  
-  //Reading interpolation
-  npix=1;
+  printf("nmat = %d, nmugs = %d, nfou = %d\n",nmat,nmugs,nfou);
+
   i=0;
+  phi=zeros_vector(MAX_PIX);
+  beta=zeros_vector(MAX_PIX);
+  theta0=zeros_vector(MAX_PIX);
+  theta=zeros_vector(MAX_PIX);
+  apix=zeros_vector(MAX_PIX);
+  Spixx=zeros_matrix(MAX_PIX,MAX_MAT+1);
   while(fgets(line,sizeof(line),f)){
-    if((i%50000)==0)
-      printf("Comparing value %d...\n",i+1);
-
     sscanf(line,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf ",
-	   &phi[0],&beta[0],&theta0[0],&theta[0],
+	   &phi[i],&beta[i],&theta0[i],&theta[i],
 	   &tmp,&tmp,&tmp,
-	   &apix[0],
-	   &Spixx[0],&Spixx[1],&Spixx[2],&Spixx[3]);
-
-    //Compute with new routine
-    if(qreflection)
-      reflection(npix,phi,beta,theta0,theta,shape,xmu,rfou,apix,Sarr);
-    else
-      reflection(npix,phi,beta,theta0,theta,shape,xmu,rtra,apix,Sarr);
-
-    //Compute difference
+	   &apix[i],
+	   &Spixx[i][0],&Spixx[i][1],&Spixx[i][2],&Spixx[i][3]);
+    i++;
+  }
+  npix=i;
+  Sarr=zeros_matrix(npix,nmat+1);
+  printf("Comparing %d values...\n",npix);
+  reflection(F,qreflection,npix,phi,beta,theta0,theta,apix,Sarr);
+  
+  for(i=0;i<npix;i++){
     dif=0;
     for(j=0;j<nmat+1;j++){
-      dif+=fabs(Spixx[j]-Sarr[0][j]);
+      dif+=fabs(Spixx[i][j]-Sarr[i][j]);
     }
-
     difmax=dif>difmax?dif:difmax;
-    i++;
-  }  
+  }
   printf("Maximum difference: %e\n",difmax);
+
+  return 0;
 }

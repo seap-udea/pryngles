@@ -10,22 +10,138 @@
 //////////////////////////////////////////////////////////////
 // MACROS
 //////////////////////////////////////////////////////////////
-#define MAX_MAT 3
-#define MAX_MUS 22
-#define MAX_FOU 350
+#define MAX_FOU 1000
 #define MAX_STRING 1000
 #define VERBOSITY 0
 
 //////////////////////////////////////////////////////////////
 // ROUTINES
 //////////////////////////////////////////////////////////////
-double** allocate_matrix(int n,int m)
+struct FourierCoefficients{
+  int nmat,nmugs,nfou;
+  double *xmu;
+  double ***rfou;
+  double ***rtra;
+};
+
+//////////////////////////////////////////////////////////////
+// TEST ROUTINES
+//////////////////////////////////////////////////////////////
+double sum_structure(struct FourierCoefficients F,int n,int m,int p)
+{
+  double sum=0;
+  for(int i=0;i<n;i++){
+    for(int j=0;j<m;j++){
+      for(int k=0;k<p;k++){
+	sum+=F.rfou[i][j][k];
+	printf("%lf ",F.rfou[i][j][k]);
+	F.rfou[i][j][k]*=2;
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
+  return sum;
+}
+
+double sum_cube(double ***C,int n,int m,int p)
+{
+  double sum=0;
+  printf("%d\n",n);
+  for(int i=0;i<n;i++){
+    for(int j=0;j<m;j++){
+      for(int k=0;k<p;k++){
+	sum+=C[i][j][k];
+	printf("%lf\n",C[i][j][k]);
+	C[i][j][k]*=2;
+      }
+    }
+  }
+  return sum;
+}
+
+double sum_matrix(double **M,int n,int m)
+{
+  double sum=0;
+  printf("%d\n",n);
+  for(int i=0;i<n;i++){
+    for(int j=0;j<m;j++){
+      sum+=M[i][j];
+      printf("%lf\n",M[i][j]);
+      M[i][j]*=2;
+    }
+  }
+  return sum;
+}
+
+double sum_vector(double *v,int n)
+{
+  double sum=0;
+  printf("%d\n",n);
+  for(int i=0;i<n;i++){
+    sum+=v[i];
+    v[i]*=2;
+  }
+  return sum;
+}
+
+int reflection_test(struct FourierCoefficients F,int qreflection,int npix)
+{
+  int i,j,m;
+
+  printf("qreflection = %d, npix = %d\n",qreflection,npix);
+
+  //Check sum
+  printf("Size = %d\n",F.nmugs);
+
+  //Check xmu
+  for(i=0;i<F.nmugs;i++){
+    printf("xmu [%d] = %.16e\n",i,F.xmu[i]);
+  }
+  printf("%.16e\n",F.rfou[0][0][0]);
+  exit(0);
+
+  double checksum=0;
+  for(i=0;i<F.nmugs*F.nmat;i++){
+    for(j=0;j<F.nmugs;j++){
+      for(m=0;m<F.nfou;m++){
+	checksum+=F.rfou[i][j][m]+F.rtra[i][j][m];
+      }
+    }
+  }
+  printf("Checksum = %.16e\n",checksum);
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////
+// ROUTINES
+//////////////////////////////////////////////////////////////
+double* zeros_vector(int n)
+{
+  double *v;
+  v=(double*)calloc(n,sizeof(double));
+  for(int i=0;i<n;i++) v[i]=0.0;
+  return v;
+}
+
+double** zeros_matrix(int n,int m)
 {
   double **M;
-  M=(double**)calloc(sizeof(double*),n);
-  for(int i=0;i<m;i++)
-    M[i]=(double*)calloc(sizeof(double),m);
+  M=(double**)calloc(n,sizeof(double*));
+  for(int i=0;i<n;i++){
+    M[i]=zeros_vector(m);
+    for(int j=0;j<m;j++) M[i][j]=0.0;
+  }
   return M;
+}
+
+double*** zeros_cube(int n,int m,int p)
+{
+  double ***C;
+  C=(double***)calloc(n,sizeof(double**));
+  for(int i=0;i<n;i++)
+    C[i]=zeros_matrix(m,p);
+  return C;
 }
 
 /*
@@ -135,41 +251,45 @@ double splint(double xa[],double ya[],double y2a[],int n,double x)
 *     Author: Daphne M. Stam
 *     Date: September 2022
 *----------------------------------------------------------------------------
- */
-int reflection(int npix,
-	       double phi[],double beta[],double theta0[],double theta[],
-	       long int shape[],
-	       double xmu[],
-	       double rfou[][MAX_MUS][MAX_FOU],
-	       double apix[],
-	       double Sarr[][MAX_MAT+1])
+*/
+int reflection(struct FourierCoefficients F,int qreflection,
+	       int npix,
+	       double* phi,double* beta,double* theta0,double* theta,double *apix,
+	       double **Sarr)
 {
   //Declarations
   int i,j,k,m,n;
-  double rf[MAX_MAT][MAX_MUS][MAX_MUS],rfsec[MAX_MAT][MAX_MUS][MAX_MUS];
-  double rftemp[MAX_MUS],rfmu0[MAX_MAT][MAX_MUS];
-  double rfsecmu0[MAX_MUS];
-  double Bplus[4],SvR[MAX_MAT],**RM,rf3save[MAX_MAT];
-  double slice[MAX_MUS],slicep[MAX_MUS];
   double be,rf3,SvR2,SvR3,P;
   double mu,mu0,muold=1,mu0old=1;
   int ki;
   double fac;
   
-  //Read size
-  long int nmat=shape[0];
-  long int nmugs=shape[1];
-  long int nfou=shape[2];
+  //Read sizes
+  int nmat=F.nmat;
+  int nmugs=F.nmugs;
+  int nfou=F.nfou;
 
-  //printf("%ld,%ld,%ld\n",nmat,nmugs,nfou);
+  double ***rf,***rfsec;
+  double **RM,**rfmu0;
+  double *rftemp,*slice,*slicep,*rfsecmu0;
+  double *SvR,*rf3save;
+  double Bplus[4];
   
   //Allocate dynamically temporal matrices
-  RM=allocate_matrix(npix,nmat);
-  
-  //Initialize the storage matrix and values
-  for(i=0;i<npix;i++)
-    for(k=0;k<nmat;k++)
-      RM[i][k]=0.0;
+  //Cubes
+  rf=zeros_cube(nmat,nmugs,nmugs);
+  rfsec=zeros_cube(nmat,nmugs,nmugs);
+  //Matrices
+  rfmu0=zeros_matrix(nmat,nmugs);
+  RM=zeros_matrix(npix,nmat);
+  //Vectos nmugs
+  rftemp=zeros_vector(nmugs);
+  rfsecmu0=zeros_vector(nmugs);
+  slice=zeros_vector(nmugs);
+  slicep=zeros_vector(nmugs);
+  //Vectos nmats
+  rf3save=zeros_vector(nmat);
+  SvR=zeros_vector(nmat);
 
   //Loop over the Fourier coefficients:
   for(m=0;m<nfou;m++){
@@ -183,13 +303,14 @@ int reflection(int npix,
       for(k=0;k<nmat;k++){
 	ki=j*nmat+k;
 	
-	for(n=0;n<nmugs;n++)
-	  rf[k][j][n]=rfou[ki][n][m];
+	for(n=0;n<nmugs;n++){
+	  rf[k][j][n]=qreflection?F.rfou[ki][n][m]:F.rtra[ki][n][m];
+	}
 	
 	//Slice rf(k,j,:)
 	for(n=0;n<nmugs;n++)
 	  slice[n]=rf[k][j][n];
-	spline(xmu,slice,nmugs,rftemp);
+	spline(F.xmu,slice,nmugs,rftemp);
 
 	for(n=0;n<nmugs;n++)
 	  rfsec[k][j][n]=rftemp[n];
@@ -232,7 +353,7 @@ int reflection(int npix,
 	    for(n=0;n<nmugs;n++)
 	      slicep[n]=rfsec[k][j][n];
 
-	    rf3=splint(xmu,slice,slicep,nmugs,mu0);
+	    rf3=splint(F.xmu,slice,slicep,nmugs,mu0);
 	    rfmu0[k][j]=rf3;
 	  }
 	}
@@ -242,8 +363,8 @@ int reflection(int npix,
 	  for(n=0;n<nmugs;n++)
 	    slice[n]=rfmu0[k][n];
 
-	  spline(xmu,slice,nmugs,rfsecmu0);
-	  rf3=splint(xmu,slice,rfsecmu0,nmugs,mu);
+	  spline(F.xmu,slice,nmugs,rfsecmu0);
+	  rf3=splint(F.xmu,slice,rfsecmu0,nmugs,mu);
 	  rf3save[k] = rf3;
 	  muold = mu;
 	  mu0old = mu0;
@@ -290,8 +411,22 @@ int reflection(int npix,
 
     //The value of the degree of polarization
     Sarr[i][nmat] = P;
-
   }//End i (pix)
+
+  //Free temporal arrays
+  free(rf);
+  free(rfsec);
+  //Matrices
+  free(rfmu0);
+  free(RM);
+  //Vectos nmugs
+  free(rftemp);
+  free(rfsecmu0);
+  free(slice);
+  free(slicep);
+  //Vectos nmats
+  free(rf3save);
+  free(SvR);
   
   return 0;
 }
@@ -301,17 +436,12 @@ int reflection(int npix,
 Read Fourier coefficients
 *----------------------------------------------------------------------------
 */
-double read_fourier(char filename[],
-		    long int shape[],
-		    double xmu[],
-		    double rfou[][MAX_MUS][MAX_FOU],
-		    double rtra[][MAX_MUS][MAX_FOU]
-		    )
+double read_fourier(char filename[],struct FourierCoefficients* F)
 {
   int i,j,k,m,n;
   char line[MAX_STRING];
   int nline=0;
-  long int nmat,nmugs,nfou;
+  int nmat,nmugs,nfou;
   double fmu;
   int ifou,ibase;
   char *token;
@@ -323,6 +453,7 @@ double read_fourier(char filename[],
   
   //Read first part of the file
   i=0;
+
   while(fgets(line,sizeof(line),f)) {
     nline++;
     //Avoid comments
@@ -330,34 +461,35 @@ double read_fourier(char filename[],
 
     //Read size of matrix
     if(strlen(line)<10){
-      if(!nmat)
-	sscanf(line,"%ld\n",&nmat);
-      else
-	sscanf(line,"%ld\n",&nmugs);
+      if(!nmat){
+	sscanf(line,"%d\n",&nmat);
+	F->nmat=nmat;
+      }
+      else{
+	sscanf(line,"%d\n",&nmugs);
+	F->nmugs=nmugs;
+	F->xmu=zeros_vector(F->nmugs);
+      }
       continue;
     }
 
     //Read mus
-    sscanf(line,"%lf %lf\n",&xmu[i++],&fmu);
+    sscanf(line,"%lf %lf\n",&(F->xmu[i++]),&fmu);
     if(i==nmugs)
       break;
   }
   
   //Initialize the fourier cube
-  for(i=0;i<nmat*nmugs;i++)
-    for(j=0;j<nmugs;j++)
-      for(m=0;m<=MAX_FOU;m++){
-	rfou[i][j][m]=0.0;
-	rtra[i][j][m]=0.0;
-      }
+  double*** rfou_read=zeros_cube(F->nmat*F->nmugs,F->nmugs,MAX_FOU);
+  double*** rtra_read=zeros_cube(F->nmat*F->nmugs,F->nmugs,MAX_FOU);
   
   //Read fourier coefficients
   ifou=0;
   while(1){
     if(feof(f)) break;
-    for(i=0;i<nmugs;i++){
-      ibase=i*nmat;
-      for(j=0;j<nmugs;j++){
+    for(i=0;i<F->nmugs;i++){
+      ibase=i*F->nmat;
+      for(j=0;j<F->nmugs;j++){
 
 	//Stop if we get the end of the file
 	if(fgets(line,sizeof(line),f)==NULL)
@@ -374,9 +506,9 @@ double read_fourier(char filename[],
 	  }else{
 	    sscanf(token,"%lf",&coefficient);
 	    if(k<nmat){
-	      rfou[ibase+k][j][ifou]=coefficient;
+	      rfou_read[ibase+k][j][ifou]=coefficient;
 	    }else{
-	      rtra[ibase+k-nmat][j][ifou]=coefficient;
+	      rtra_read[ibase+k-nmat][j][ifou]=coefficient;
 	    }
 	    k++;
 	  }
@@ -387,23 +519,28 @@ double read_fourier(char filename[],
     }
     ifou++;
   }
-  nfou=ifou-1;
+  F->nfou=ifou-1;
   
   //Save properties of matrix
-  shape[0]=nmat;
-  shape[1]=nmugs;
-  shape[2]=nfou;
+  printf("Read fourier: nmat = %d, numgs = %d, nfou = %d\n",F->nmat,F->nmugs,F->nfou);
 
+  F->rfou=zeros_cube(F->nmugs*F->nmat,F->nmugs,F->nfou);
+  F->rtra=zeros_cube(F->nmugs*F->nmat,F->nmugs,F->nfou);
+  
   //Checksum
   checksum=0;
-  for(i=0;i<nmugs*nmat;i++){
-    for(j=0;j<nmugs;j++){
-      for(m=0;m<nfou;m++){
-	//printf("%d %d %d %lf %lf\n",i,j,m,rfou[i][j][m],rtra[i][j][m]);
-	checksum+=rfou[i][j][m]+rtra[i][j][m];
+  for(i=0;i<F->nmugs*F->nmat;i++){
+    for(j=0;j<F->nmugs;j++){
+      for(m=0;m<F->nfou;m++){
+	F->rfou[i][j][m]=rfou_read[i][j][m];
+	F->rtra[i][j][m]=rtra_read[i][j][m];
+	checksum+=F->rfou[i][j][m]+F->rtra[i][j][m];
       }
     }
   }
+
+  free(rfou_read);
+  free(rtra_read);
   
   return checksum;
 }

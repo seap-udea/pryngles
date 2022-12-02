@@ -27,3 +27,7 @@ clean:
 test_cpixx:
 	make cpixx.so
 	$(PYTHON) test_cpixx.py 
+
+test_mul:
+	make cpixx.so
+	$(PYTHON) test_mularray.py 
