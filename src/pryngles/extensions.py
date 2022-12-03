@@ -12,14 +12,11 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
-#!/usr/bin/env python
-# coding: utf-8
 
-# # Pryngles module: extensions
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# ## External modules
-
-#@external
 from pryngles import *
 
 import ctypes
@@ -28,42 +25,11 @@ import glob
 #Load library
 libfile = glob.glob(Misc.get_data('../cpixx*.so'))[0]
 cpixx_ext=ctypes.CDLL(libfile)
-#@end
 
-# ## Constants
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Stand alone code of the module
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#@consts:extensions
-import ctypes
-DOUBLE = ctypes.c_double
-PDOUBLE = ctypes.POINTER(DOUBLE)
-PPDOUBLE = ctypes.POINTER(PDOUBLE)
-PPPDOUBLE = ctypes.POINTER(PPDOUBLE)
-#@end:consts
-
-# ## Fourier coefficients
-
-#@class
-class FourierCoefficients(ctypes.Structure):
-    _fields_=[
-        ("nmat",ctypes.c_int),
-        ("nmugs",ctypes.c_int),
-        ("nfou",ctypes.c_int),
-        ("xmu",PDOUBLE),
-        ("rfou",PPPDOUBLE),
-        ("rtra",PPPDOUBLE),
-    ]
-    def __init__(self,nmat,nmugs,nfou,xmu,rfou,rtra):
-        self.nmat=nmat
-        self.nmugs=nmugs
-        self.nfou=nfou
-        self.xmu=double1ArrayToPointer(xmu)
-        self.rfou=double3ArrayToPointer(rfou)
-        self.rtra=double3ArrayToPointer(rtra)
-#@end:class
-
-# ## Specifications cpixx functions
-
-#@standalone:extension
 
 #Sum structure
 cpixx_ext.sum_structure.restype = ctypes.c_double
@@ -79,11 +45,34 @@ cpixx_ext.reflection.argtypes = [
     PDOUBLE,PDOUBLE,PDOUBLE,PDOUBLE,PDOUBLE,
     PPDOUBLE
 ]
-#@end:standalone
 
-# ## Extension utils
 
-#@class
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class FourierCoefficients
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class FourierCoefficients(ctypes.Structure):
+    """Fourier coefficients ctypes structure
+    """
+    _fields_=[
+        ("nmat",ctypes.c_int),
+        ("nmugs",ctypes.c_int),
+        ("nfou",ctypes.c_int),
+        ("xmu",PDOUBLE),
+        ("rfou",PPPDOUBLE),
+        ("rtra",PPPDOUBLE),
+    ]
+    def __init__(self,nmat,nmugs,nfou,xmu,rfou,rtra):
+        self.nmat=nmat
+        self.nmugs=nmugs
+        self.nfou=nfou
+        self.xmu=ExtensionUtil.vec2ptr(xmu)
+        self.rfou=ExtensionUtil.cub2ptr(rfou)
+        self.rtra=ExtensionUtil.cub2ptr(rtra)
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class ExtensionUtil
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class ExtensionUtil(object):
     """Util routines for extensions.
     """
@@ -192,30 +181,11 @@ class ExtensionUtil(object):
 
         return arr
 
-#@end:class
 
-#@class
-class FourierCoefficients(ctypes.Structure):
-    """Fourier coefficients ctypes structure
-    """
-    _fields_=[
-        ("nmat",ctypes.c_int),
-        ("nmugs",ctypes.c_int),
-        ("nfou",ctypes.c_int),
-        ("xmu",PDOUBLE),
-        ("rfou",PPPDOUBLE),
-        ("rtra",PPPDOUBLE),
-    ]
-    def __init__(self,nmat,nmugs,nfou,xmu,rfou,rtra):
-        self.nmat=nmat
-        self.nmugs=nmugs
-        self.nfou=nfou
-        self.xmu=ExtensionUtil.vec2ptr(xmu)
-        self.rfou=ExtensionUtil.cub2ptr(rfou)
-        self.rtra=ExtensionUtil.cub2ptr(rtra)
-#@end:class
 
-#@class
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class StokesScatterer
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class StokesScatterer(object):
     """Stokes scatterer
     """
@@ -292,32 +262,24 @@ class StokesScatterer(object):
         self.nmat,self.nmugs,self.nfou=nmat,nmugs,nfou
         self.xmu,self.rfou,self.rtra=xmu,rfou,rtra
         self.F=FourierCoefficients(nmat,nmugs,nfou,xmu,rfou,rtra)
-#@end:class
 
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file extensions
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-#@method:StokesScatterer
-def calculate_stokes(self,phi,beta,theta0,theta,apix,qreflection=1):
-    """
-    """
-    npix=len(phi)
-    Sarr=np.zeros((npix,self.F.nmat+1))
-    Sarr_ptr=ExtensionUtil.mat2ptr(Sarr)
-    cpixx_ext.reflection(self.F,qreflection,npix,
-                         ExtensionUtil.vec2ptr(phi),
-                         ExtensionUtil.vec2ptr(beta),
-                         ExtensionUtil.vec2ptr(theta0),
-                         ExtensionUtil.vec2ptr(theta),
-                         ExtensionUtil.vec2ptr(apix),
-                         Sarr_ptr);
-    stokes=ExtensionUtil.ptr2mat(Sarr_ptr,*Sarr.shape)
-    return stokes
-    
-#@end:method
-
-StokesScatterer.calculate_stokes=calculate_stokes
-
-
-
-# ### The end
-
+    def calculate_stokes(self,phi,beta,theta0,theta,apix,qreflection=1):
+        """
+        """
+        npix=len(phi)
+        Sarr=np.zeros((npix,self.F.nmat+1))
+        Sarr_ptr=ExtensionUtil.mat2ptr(Sarr)
+        cpixx_ext.reflection(self.F,qreflection,npix,
+                             ExtensionUtil.vec2ptr(phi),
+                             ExtensionUtil.vec2ptr(beta),
+                             ExtensionUtil.vec2ptr(theta0),
+                             ExtensionUtil.vec2ptr(theta),
+                             ExtensionUtil.vec2ptr(apix),
+                             Sarr_ptr);
+        stokes=ExtensionUtil.ptr2mat(Sarr_ptr,*Sarr.shape)
+        return stokes
+        
