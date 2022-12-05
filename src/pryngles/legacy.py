@@ -2849,7 +2849,8 @@ class RingedPlanet(object):
                 elif self.physics["extension"] == "cpixx":
                     self.Stokesr[cond,:] = self.SCr.calculate_stokes(self.phidiffrs[cond], self.betars[cond],
                                                                      abs(self.etars[cond]), abs(self.zetars[cond]),
-                                                                     np.ones(cond.sum())*self.normr*self.afr
+                                                                     np.ones(cond.sum())*self.normr*self.afr,
+                                                                     qreflection=0
                                                                     )
 
             else:
@@ -2874,7 +2875,7 @@ class RingedPlanet(object):
                     self.Stokesr[cond,:] = self.SCr.calculate_stokes(self.phidiffrs[cond], self.betars[cond],
                                                                      abs(self.etars[cond]), abs(self.zetars[cond]),
                                                                      np.ones(cond.sum())*self.normr*self.afr,
-                                                                     qreflection=0
+                                                                     qreflection=1
                                                                     )
 
             Sr = self.Stokesr[:,:-1]
