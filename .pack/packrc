@@ -14,9 +14,9 @@
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 #Pthon binaries. In Linux is preferrable python3, nosetests3
-PYTHON=python3.11
+PYTHON=python3
 NOSETESTS=nosetests
-PIP=pip3.11
+PIP=pip3
 
 #Directories
 STOREDIR=.store
