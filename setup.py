@@ -14,21 +14,6 @@
 ##################################################################
 import setuptools
 
-"""
-
-Note about setuptools:
-
-NumPy distutils is not simply the old distutils package.  Actually it
-internally tries to import setuptools and use it as much as possible.
-We use numpy.distutils because we are distributing Pryngles along with
-the fortran code pixx.
-
-For a detailed explanation see eg:
-https://het.as.utexas.edu/HET/Software/Numpy/f2py/distutils.html
-https://stackoverflow.com/a/55358607
-
-"""
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 

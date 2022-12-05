@@ -68,7 +68,9 @@ echo "Success. Package ready to be released."
 # Update setup.py file
 ##################################################################
 sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py 
+sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py.pixx 
 mv setup.py.bak tmp/
+mv setup.py.pixx.bak tmp/
 
 ##################################################################
 # Remove previous versions
