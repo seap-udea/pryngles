@@ -37,6 +37,7 @@ MOD=None
 
 #Modules
 MODULES=$(shell cat src/modules)
+MODULES_TEST=$(shell cat src/modules.test)
 
 #Enforce conversion.  Use make convert ENFORCE=forced
 ENFORCE=
@@ -171,9 +172,9 @@ else
 	@for mod in $(shell echo $(MOD) | sed 's/,/ /'); do echo "Testing $$mod";$(NOSETESTS) src/pryngles/tests/test-$${mod}.py 2> >(tee /tmp/$(PACKNAME)-test-errors-$${mod}.log >&2);done
 endif
 
-testdet:
+testall:
 	@echo "Testing module by module..."
-	@for module in $(MODULES);do make test MOD=$$module;done
+	@for module in $(MODULES_TEST);do make test MOD=$$module;done
 
 version:
 	@pip show $(PACKNAME)

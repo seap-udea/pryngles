@@ -69,8 +69,8 @@ echo "Success. Package ready to be released."
 ##################################################################
 sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py 
 sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py.pixx 
-mv setup.py.bak tmp/
-mv setup.py.pixx.bak tmp/
+sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py.cpixx 
+mv setup*.bak tmp/
 
 ##################################################################
 # Remove previous versions
@@ -103,4 +103,3 @@ else
     echo "Uploading to PyPI (use your username and password)..."
     $PYTHON -m twine upload dist/* --verbose
 fi
-

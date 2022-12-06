@@ -44,7 +44,6 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.ticker import LogLocator
-import pryngles.pixx as pixx
 get_ipython().run_line_magic('matplotlib', 'nbagg')
 
 # Choose 
@@ -1103,7 +1102,7 @@ class RingedPlanet(object):
         #Stellar limb darkening
         limb_cs=[0.6550],
         #Scatterer extension
-        extension="pixx",
+        extension="cpixx",
     )
     _behavior=dict(
         #Include shadows in computations and plots?
@@ -1228,7 +1227,7 @@ class RingedPlanet(object):
         Reading is by a FORTRAN function
         """
         if self.physics["extension"]=="pixx":
-        
+            import pryngles.pixx as pixx
             if fname_planet is not None:
                 i = j = 0
                 with open(fname_planet) as file:
@@ -2759,6 +2758,7 @@ class RingedPlanet(object):
                                                         abs(self.etaps[cond]), abs(self.zetaps[cond]),
                                                         self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
                                                         np.ones(cond.sum())*self.normp*self.afp)
+                """This code is used for debugging purposes
                 self.save_values+=[
                             dict(
                                 obj="planet",
@@ -2771,6 +2771,7 @@ class RingedPlanet(object):
                                 stokes=self.Stokesp[cond,:],
                             )
                         ]
+                """
             elif self.physics["extension"] == "cpixx":
                  self.Stokesp[cond,:] = self.SCp.calculate_stokes(self.phidiffps[cond],self.betaps[cond],
                                                                   abs(self.etaps[cond]),abs(self.zetaps[cond]),
@@ -2834,6 +2835,7 @@ class RingedPlanet(object):
                                                             abs(self.etars[cond]), abs(self.zetars[cond]),
                                                             self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
                                                             np.ones(cond.sum())*self.normr*self.afr)
+                    """This code is used for debugging purposes
                     self.save_values+=[
                             dict(
                                 obj="ring back",
@@ -2846,6 +2848,7 @@ class RingedPlanet(object):
                                 stokes=self.Stokesr[cond,:],
                             )
                         ]
+                    """
                 elif self.physics["extension"] == "cpixx":
                     self.Stokesr[cond,:] = self.SCr.calculate_stokes(self.phidiffrs[cond], self.betars[cond],
                                                                      abs(self.etars[cond]), abs(self.zetars[cond]),

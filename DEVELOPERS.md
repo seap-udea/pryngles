@@ -448,13 +448,9 @@ Tasks:
 5. Update the local version:
 
    ```
-   python -m pip install --index-url https://test.pypi.org/simple/ pryngles==x.y.z.w
+   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pryngles==x.y.z.w
    ```
    
-   A more complete version is:
-
-   
-
 6. Open `Jupyter`:
 
    ```
