@@ -163,22 +163,38 @@ Let's have some `Pryngles`.
 
 ## Realistic scattering and polarization
 
-Starting in version 0.9.x Pryngles is able to compute fluxes using a
+Starting in version 0.9.x, Pryngles is able to compute fluxes using a
 more realistic model for scattering that includes polarization. The
 new features are not yet flexible enough but they can be used to
 create more realistic light curves.
 
-Here is a simple example of how to compute the light curve of a ringed planet
-whose atmosphere scatters reallistically the light of the star. 
+These new features are based on the science and Fortran code developed
+by Prof. Daphne Stam and collaborators, and adapted to Pryngles
+environment by Allard Veenstra (Fortran and Python wrapping) and Jorge
+I. Zuluaga (translation to C and `ctypes`). For the science behind the
+scattering and polarization code see:
 
-As shown before we need to create the system:
+> Rossi, L., Berzosa-Molina, J., & Stam, D. M. (2018). PyMieDAP: a
+  Python–Fortran tool for computing fluxes and polarization signals of
+  (exo) planets. Astronomy & Astrophysics, 616,
+  A147. [arXiv:1804.08357](https://arxiv.org/abs/1804.08357)
+
+Below is a simple example of how to compute the light curve of a
+ringed planet whose atmosphere and ring scatters reallistically the
+light of the star. The code compute the components of the Stokes
+vector and the degree of polarization of the diffusely reflected light
+on the system.
+
+As shown in the example before, we first need to create the system:
 
 ```python
 nspangles=1000
 sys = pr.System()
 S=sys.add(kind="Star",radius=Consts.rsun/sys.ul,limb_coeffs=[0.65])
-P=sys.add(kind="Planet", primary=S,a=3,e=0.0,radius=Consts.rsaturn/sys.ul,nspangles=nspangles)
-R=sys.add(kind="Ring", primary=P,fi=1.5,fe=2.25,i=30*Consts.deg,roll=90*Consts.deg,nspangles=nspangles)
+P=sys.add(kind="Planet",primary=S,a=3,e=0.0,
+          radius=Consts.rsaturn/sys.ul,nspangles=nspangles)
+R=sys.add(kind="Ring",primary=P,fi=1.5,fe=2.25,
+          i=30*Consts.deg,roll=90*Consts.deg,nspangles=nspangles)
 RP=sys.ensamble_system()
 ```
 

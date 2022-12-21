@@ -9,6 +9,15 @@ NOTE:
 C Extension
 -----------
 
+A great presentation about C types:
+https://indico.ictp.it/event/7657/session/4/contribution/19/material/1/0.pdf.
+
+Ctypes and arrays:
+https://stackoverflow.com/questions/62940186/how-can-i-create-and-pass-as-argument-a-multidimensional-ctypes-array
+
+Ctypes and multidimensional array:
+https://github.com/dvida/py-ctypes-multidimensional-arrays
+
 Here it is a description on how to add an extension to the package.
 
 1. Prepare a file with the routine, eg. `src/pryngles/cpixx/cpixx.c`
@@ -439,13 +448,9 @@ Tasks:
 5. Update the local version:
 
    ```
-   python -m pip install --index-url https://test.pypi.org/simple/ pryngles==x.y.z.w
+   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pryngles==x.y.z.w
    ```
    
-   A more complete version is:
-
-   
-
 6. Open `Jupyter`:
 
    ```

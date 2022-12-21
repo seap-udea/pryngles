@@ -1,25 +1,13 @@
 #PYTHONDIR=/usr/include/python3.10
 PYTHON=/usr/local/bin/python3.11
 PYTHONDIR=/Library/Frameworks/Python.framework/Versions/3.11/include/python3.11/
-FC=gfortran
-FFLAGS=
-FLFLAGS=
 CC=gcc
 CFLAGS=-I. -I$(PYTHONDIR)
 CLFLAGS=-lm
-CLIBFLAGS=-fPIC -shared $(CFLAGS) 
+CLIBFLAGS=-fPIC -shared $(CFLAGS)
 
 clean:
 	rm -rf *.o *.out *.fo *.fout *~
-
-#############################################################
-# FORTRAN COMPILING RULES
-#############################################################
-%.fo:%.f
-	$(FC) $(FFLAGS) -c $^ -o $@ 
-
-%.fout:%.fo pixx.fo 
-	$(FC) $(FLFLAGS) $^ -o $@
 
 #############################################################
 # C COMPILING RULES
@@ -36,10 +24,10 @@ clean:
 #############################################################
 # TEST
 #############################################################
-test_dev:
-	make cpixx_dev.so
-	$(PYTHON) test_cpixx_dev.py 
-
 test_cpixx:
 	make cpixx.so
 	$(PYTHON) test_cpixx.py 
+
+test_mul:
+	make cpixx.so
+	$(PYTHON) test_mularray.py 

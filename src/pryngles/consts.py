@@ -83,6 +83,15 @@ RAD=Consts.rad
 DEG=Consts.deg
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module extensions
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+import ctypes
+DOUBLE = ctypes.c_double
+PDOUBLE = ctypes.POINTER(DOUBLE)
+PPDOUBLE = ctypes.POINTER(PDOUBLE)
+PPPDOUBLE = ctypes.POINTER(PPDOUBLE)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants of module science
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SCIENCE_LIMB_NORMALIZATIONS=dict()
