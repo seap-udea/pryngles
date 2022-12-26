@@ -843,8 +843,10 @@ class System(PrynglesCommon):
             Rint=self.bodies["Ring"].fi,
             Rext=self.bodies["Ring"].fe,
             i=self.bodies["Ring"].i,
-    
-            a=self.bodies["Planet"].a,e=self.bodies["Planet"].e,
+            roll=self.bodies["Ring"].roll,
+            
+            a=self.bodies["Planet"].a,
+            e=self.bodies["Planet"].e,
     
             #Orbit 
             Mstar=1,x=0,lambq=0,t0=0,kepler=False,
