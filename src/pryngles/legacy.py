@@ -1187,7 +1187,8 @@ class RingedPlanet(object):
                  #Physical properties
                  physics=dict(),
                  #Fourier coefficient files
-                 fname_planet = Misc.get_data("fou_gasplanet.dat"),
+                 #fname_planet = Misc.get_data("fou_gasplanet.dat"),
+                 fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
                  fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
                 ):
         """
