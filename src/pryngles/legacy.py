@@ -1246,22 +1246,10 @@ class RingedPlanet(object):
                  #Behavior
                  behavior=dict(),
                  #Physical properties
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
                  physics=dict(),
                  #Fourier coefficient files
-<<<<<<< HEAD
-=======
-                 #fname_planet = Misc.get_data("fou_gasplanet.dat"),
->>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
                  fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
                  fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
-=======
-                 physics=dict()                 
->>>>>>> Stashed changes
-=======
-                 physics=dict()                 
->>>>>>> Stashed changes
                 ):
         """
         The initialization routine only sets the basic geometric properties of the ring
@@ -2791,11 +2779,7 @@ class RingedPlanet(object):
         t3[t3 < -1] = -1.0
         t3[abs(t3) < 1e-6] = 0.0
         
-<<<<<<< HEAD
-        self.phidiffrs = np.arccos(t3) - np.pi
-=======
         self.phidiffrs = np.arccos(t3)-np.pi
->>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
         ang1 = np.arctan2(self.nstar_obs[1],self.nstar_obs[0])
         ang2 = np.arctan2(nrs_obs[1],nrs_obs[0])
         if nrs_obs[1] >= 0:
@@ -3120,10 +3104,6 @@ class RingedPlanet(object):
             Sr = self.Stokesr[:,:-1]
             self.Pir[cond] = self.Stokesr[cond,-1]
             
-<<<<<<< HEAD
-=======
-            # To normalize: /np.pi*(self.Rp**2)) # For ppm: /(4*np.pi*self.rstar**2)*1e6
->>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
             if normalize:
                 self.Rir[cond] = Sr[cond,0]/(np.pi*(self.Rp**2)) 
             else:
@@ -3183,11 +3163,7 @@ class RingedPlanet(object):
         self.Ptot = Ptot
         
         verbose(VERB_DEEP,"Ftot: ", self.Stot[0], "Ptot: ", self.Ptot)
-<<<<<<< HEAD
-    
-=======
-        
->>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
+
     def lambertian_test(self,alpha):
         """
         Simple, analytical model for the normalized reflected light coming of a lambertian planet
