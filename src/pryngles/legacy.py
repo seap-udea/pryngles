@@ -465,6 +465,64 @@ class Util(object):
         ARp=np.pi*Rp**2+np.pi*(re2-ri2)*Rp**2
 
         return ARp
+    
+    def calcStartingPosition(orbit_i,
+                             ring_i,
+                             ring_l):
+        """
+        Function that calculates the starting true anomaly and observer location(longitude, inclination) 
+        to generate an orbit with the given orbit inclination, ring inclination, ring longitude rotation
+        and one that starts with the planet situated below the star, all with respect to the observer.
+        
+        Input parameters:
+            -orbit_i: Orbital inclination with respect to the observer, 0 is seeing the orbit face-on and
+                      90 is seeing the orbit edge-on.
+            -ring_i:  Ring inclination with respect to the observer, 0 is face-on and 90 is edge-on.
+            -ring_l:  Ring longitude rotation, 0 is face-on, so no rotation, and 90 is edge-on.
+            
+        Output parameters:
+            -gamma:     Given ring inclination with respect to the ecliptic system
+            -beta_obs:  Inclination of the observer with respect to the ecliptic system
+            -lamb_obs:  Longitude of the observer with respect to the ecliptic system
+            -lamb_star: Starting true anomaly of the star to ensure the planet is situated under the star
+            
+        IMPORTANT:
+            All input parameters are in degrees while the output is in radians
+            output is rounded to the eight decimal to decrease numerical errors
+        """
+        orbit_i = orbit_i*DEG
+        ring_i = ring_i*DEG
+        ring_l = ring_l*DEG
+
+        if abs(ring_l) < 0.01:
+            beta_obs = np.pi/2 - orbit_i
+            lamb_obs = np.pi/2
+            gamma = orbit_i - ring_i
+            if gamma > np.pi/2:
+                gamma -= np.pi
+            elif gamma < -np.pi/2:
+                gamma += np.pi  
+        else:
+            res = least_squares(Util.funcNormalRing, np.array([np.pi/4,ring_l,np.pi/2 - orbit_i]), args=(ring_i,ring_l,orbit_i))
+            gamma,lamb_obs,beta_obs = res.x
+            lamb_obs = lamb_obs - int(lamb_obs/(2*np.pi)) * 2*np.pi # Ensure longitude stays within [-2*pi,2*pi]
+            verbose(VERB_DEEP, "gamma, lamb, beta: ", gamma/DEG, lamb_obs/DEG, beta_obs/DEG)
+            verbose(VERB_DEEP, "Check: ",Util.funcNormalRing(np.array([gamma,lamb_obs,beta_obs]),ring_i,ring_l,orbit_i))
+
+        lamb_star = np.pi - abs(lamb_obs)
+        if lamb_obs >= 0:
+            lamb_star *= -1
+        return round(gamma,8), round(beta_obs,8), round(lamb_obs,8), round(lamb_star,8)
+    
+    def funcNormalRing(x,a,b,c):
+        """
+        Equates the normal vector of the ring in the ecliptic system to the 
+        normal vector of the ring in the observer system. 
+        """
+        return [np.sin(x[1]+np.pi/2)*np.sin(x[0]) - np.sin(b)*np.cos(a),
+                np.cos(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) + np.sin(np.pi/2-x[2])*np.cos(x[0]) - np.sin(a),
+                np.cos(np.pi/2-x[2])*np.cos(x[0]) - np.sin(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) - np.cos(b)*np.cos(a),
+                x[2] - np.pi/2 + c]
 
     def calcStartingPosition(orbit_i,
                              ring_i,
@@ -1161,6 +1219,9 @@ class RingedPlanet(object):
         limb_cs=[0.6550],
         #Scatterer extension
         extension="cpixx",
+        #Fourier coefficient files
+        fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
+        fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
     )
     _behavior=dict(
         #Include shadows in computations and plots?
@@ -1185,10 +1246,18 @@ class RingedPlanet(object):
                  #Behavior
                  behavior=dict(),
                  #Physical properties
+<<<<<<< Updated upstream
                  physics=dict(),
                  #Fourier coefficient files
+<<<<<<< HEAD
+=======
+                 #fname_planet = Misc.get_data("fou_gasplanet.dat"),
+>>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
                  fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
                  fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
+=======
+                 physics=dict()                 
+>>>>>>> Stashed changes
                 ):
         """
         The initialization routine only sets the basic geometric properties of the ring
@@ -1261,14 +1330,14 @@ class RingedPlanet(object):
         self.physics.update(physics)
         self.updatePhysicalProperties(physics)
         
+        # Read data
+        self.readData(self.fname_planet, self.fname_ring)
+        
         #Update several optical factors (projected areas, stellar fluxes, albedos, etc.)
         self.updateOpticalFactors()
 
         #Plot options
         self._resetPlot()
-        
-        # Read data
-        self.readData(fname_planet, fname_ring)
 
     def updateProperties(self):
         """
@@ -2647,6 +2716,12 @@ class RingedPlanet(object):
         #Limb darkening coefficients
         self.limb_cs=self.physics["limb_cs"]
         self.normlimb=Util.limbDarkeningNormalization(self.limb_cs)  
+        
+        self.extension=self.physics["extension"]
+        
+        #Fourier coefficient files
+        self.fname_planet = self.physics["fname_planet"]
+        self.fname_ring = self.physics["fname_ring"]
     
     ##############################################################
     # FLUX RELATED ROUTINES
@@ -2712,7 +2787,11 @@ class RingedPlanet(object):
         t3[t3 < -1] = -1.0
         t3[abs(t3) < 1e-6] = 0.0
         
+<<<<<<< HEAD
         self.phidiffrs = np.arccos(t3) - np.pi
+=======
+        self.phidiffrs = np.arccos(t3)-np.pi
+>>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
         ang1 = np.arctan2(self.nstar_obs[1],self.nstar_obs[0])
         ang2 = np.arctan2(nrs_obs[1],nrs_obs[0])
         if nrs_obs[1] >= 0:
@@ -2877,7 +2956,7 @@ class RingedPlanet(object):
         ring_used = False
         self.taur = taur
         
-        #Reset results
+        #Reset combined results
         self.Ptot = 0
         self.Stot = 0
         
@@ -3037,6 +3116,10 @@ class RingedPlanet(object):
             Sr = self.Stokesr[:,:-1]
             self.Pir[cond] = self.Stokesr[cond,-1]
             
+<<<<<<< HEAD
+=======
+            # To normalize: /np.pi*(self.Rp**2)) # For ppm: /(4*np.pi*self.rstar**2)*1e6
+>>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
             if normalize:
                 self.Rir[cond] = Sr[cond,0]/(np.pi*(self.Rp**2)) 
             else:
@@ -3096,7 +3179,11 @@ class RingedPlanet(object):
         self.Ptot = Ptot
         
         verbose(VERB_DEEP,"Ftot: ", self.Stot[0], "Ptot: ", self.Ptot)
+<<<<<<< HEAD
     
+=======
+        
+>>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
     def lambertian_test(self,alpha):
         """
         Simple, analytical model for the normalized reflected light coming of a lambertian planet

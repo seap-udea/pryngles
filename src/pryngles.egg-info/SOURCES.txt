@@ -5,6 +5,7 @@ setup.py
 src/pryngles/__init__.py
 src/pryngles/body.py
 src/pryngles/consts.py
+src/pryngles/extensions.py
 src/pryngles/legacy.py
 src/pryngles/misc.py
 src/pryngles/optics.py
@@ -27,12 +28,15 @@ src/pryngles.egg-info/top_level.txt
 src/pryngles/cpixx/cpixx.c
 src/pryngles/data/diffuse_reflection_function.data
 src/pryngles/data/fou_gasplanet.dat
+src/pryngles/data/fou_gasplanet_optical_50.dat
 src/pryngles/data/fou_lambert.dat
 src/pryngles/data/fou_ring_0_4_0_8.dat
+src/pryngles/data/ring-interpolation.mat
 src/pryngles/pixx/pixx.f
 src/pryngles/tests/test-__init__.py
 src/pryngles/tests/test-body.py
 src/pryngles/tests/test-consts.py
+src/pryngles/tests/test-extensions.py
 src/pryngles/tests/test-legacy.py
 src/pryngles/tests/test-misc.py
 src/pryngles/tests/test-orbit.py
