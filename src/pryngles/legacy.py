@@ -1247,6 +1247,7 @@ class RingedPlanet(object):
                  behavior=dict(),
                  #Physical properties
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                  physics=dict(),
                  #Fourier coefficient files
 <<<<<<< HEAD
@@ -1255,6 +1256,9 @@ class RingedPlanet(object):
 >>>>>>> 19b172af6ba03c5194216362686b4adba24c549f
                  fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
                  fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
+=======
+                 physics=dict()                 
+>>>>>>> Stashed changes
 =======
                  physics=dict()                 
 >>>>>>> Stashed changes
