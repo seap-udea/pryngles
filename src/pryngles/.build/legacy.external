@@ -1,0 +1,37 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+from pryngles import *
+
+import pickle
+import unittest
+import spiceypy as spy
+import numpy as np
+import scipy as sp
+from scipy.optimize import newton,least_squares
+import math
+math.arctan=math.atan
+math.arcsin=math.asin
+math.arccos=math.acos
+math.arctan2=math.atan2
+from copy import deepcopy
+import os
+import tqdm
+from mpl_toolkits.mplot3d import Axes3D
+from scipy.interpolate import interp1d,interp2d
+from scipy.integrate import quad,dblquad
+import dill
+import cmasher as cmr
+import matplotlib.pyplot as plt
+
+# Added
+import matplotlib as mpl
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.ticker import LogLocator
+get_ipython().run_line_magic('matplotlib', 'nbagg')
+
+# Choose 
+#mh=np #Slower but powerful with arrays
+mh=math #Faster but not suitable for arrays

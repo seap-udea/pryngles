@@ -524,64 +524,6 @@ class Util(object):
                 np.cos(np.pi/2-x[2])*np.cos(x[0]) - np.sin(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) - np.cos(b)*np.cos(a),
                 x[2] - np.pi/2 + c]
 
-    def calcStartingPosition(orbit_i,
-                             ring_i,
-                             ring_l):
-        """
-        Function that calculates the starting true anomaly and observer location(longitude, inclination) 
-        to generate an orbit with the given orbit inclination, ring inclination, ring longitude rotation
-        and one that starts with the planet situated below the star, all with respect to the observer.
-        
-        Input parameters:
-            -orbit_i: Orbital inclination with respect to the observer, 0 is seeing the orbit face-on and
-                      90 is seeing the orbit edge-on.
-            -ring_i:  Ring inclination with respect to the observer, 0 is face-on and 90 is edge-on.
-            -ring_l:  Ring longitude rotation, 0 is face-on, so no rotation, and 90 is edge-on.
-            
-        Output parameters:
-            -gamma:     Given ring inclination with respect to the ecliptic system
-            -beta_obs:  Inclination of the observer with respect to the ecliptic system
-            -lamb_obs:  Longitude of the observer with respect to the ecliptic system
-            -lamb_star: Starting true anomaly of the star to ensure the planet is situated under the star
-            
-        IMPORTANT:
-            All input parameters are in degrees while the output is in radians
-            output is rounded to the eight decimal to decrease numerical errors
-        """
-        def func(x,a,b,c):
-            """
-            Equates the normal vector of the ring in the ecliptic system to the 
-            normal vector of the ring in the observer system. 
-            """
-            return [np.sin(x[1]+np.pi/2)*np.sin(x[0]) - np.sin(b)*np.cos(a),
-                    np.cos(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) + np.sin(np.pi/2-x[2])*np.cos(x[0]) - np.sin(a),
-                    np.cos(np.pi/2-x[2])*np.cos(x[0]) - np.sin(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) - np.cos(b)*np.cos(a),
-                    x[2] - np.pi/2 + c]
-        
-        orbit_i = orbit_i*DEG
-        ring_i = ring_i*DEG
-        ring_l = ring_l*DEG
-
-        if abs(ring_l) < 0.01:
-            beta_obs = np.pi/2 - orbit_i
-            lamb_obs = np.pi/2
-            gamma = orbit_i - ring_i
-            if gamma > np.pi/2:
-                gamma -= np.pi
-            elif gamma < -np.pi/2:
-                gamma += np.pi  
-        else:
-            res = least_squares(func, np.array([np.pi/4,ring_l,np.pi/2 - orbit_i]), args=(ring_i,ring_l,orbit_i))
-            gamma,lamb_obs,beta_obs = res.x
-            lamb_obs = lamb_obs - int(lamb_obs/(2*np.pi)) * 2*np.pi # Ensure longitude stays within [-2*pi,2*pi]
-            verbose(VERB_DEEP, "gamma, lamb, beta: ", gamma/DEG, lamb_obs/DEG, beta_obs/DEG)
-            verbose(VERB_DEEP, "Check: ",func(np.array([gamma,lamb_obs,beta_obs]),ring_i,ring_l,orbit_i))
-
-        lamb_star = np.pi - abs(lamb_obs)
-        if lamb_obs >= 0:
-            lamb_star *= -1
-        return round(gamma,8), round(beta_obs,8), round(lamb_obs,8), round(lamb_star,8)
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Conf
@@ -1221,11 +1163,15 @@ class RingedPlanet(object):
         extension="cpixx",
         #Fourier coefficient files
         fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
-        fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
+        fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat"),
     )
     _behavior=dict(
         #Include shadows in computations and plots?
         shadows=True,
+        #Type of interpolation method, spline or bilinear for planet
+        interp_method_planet = "spline",
+        #Type of interpolation method, spline or bilinear for ring
+        interp_method_ring = "bilinear",
     )
 
     ##############################################################
@@ -1246,10 +1192,7 @@ class RingedPlanet(object):
                  #Behavior
                  behavior=dict(),
                  #Physical properties
-                 physics=dict(),
-                 #Fourier coefficient files
-                 fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
-                 fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
+                 physics=dict()
                 ):
         """
         The initialization routine only sets the basic geometric properties of the ring
@@ -1295,7 +1238,7 @@ class RingedPlanet(object):
         self.roll=roll
         self._setEquEclTransform()
                         
-        #Sample planet and rings
+        #Sample palnet and rings
         self._updateSampling(Ns,Np,Nr,Nb)
 
         #Observer properties
@@ -2938,13 +2881,15 @@ class RingedPlanet(object):
         Update:
             - updateOpticalFactors
         """
+        if self.physics["extension"] == "pixx":
+            import pryngles.pixx as pixx
         #Constants
         angle_eps = 1e-3 # Cutoff angle
         planet_used = False
         ring_used = False
         self.taur = taur
         
-        #Reset combined results
+        #Reset results
         self.Ptot = 0
         self.Stot = 0
         
@@ -2980,9 +2925,11 @@ class RingedPlanet(object):
             planet_used = True
             if self.physics["extension"] == "pixx":
                 self.Stokesp[cond,:] = pixx.reflection(cond.sum(), self.phidiffps[cond], self.betaps[cond],
-                                                        abs(self.etaps[cond]), abs(self.zetaps[cond]),
-                                                        self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
-                                                        np.ones(cond.sum())*self.normp*self.afp)
+                                                       abs(self.etaps[cond]), abs(self.zetaps[cond]),
+                                                       self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
+                                                       np.ones(cond.sum())*self.normp*self.afp,
+                                                       self.behavior["interp_method_planet"]
+                                                      )
                 """This code is used for debugging purposes
                 self.save_values+=[
                             dict(
@@ -3053,9 +3000,11 @@ class RingedPlanet(object):
             if back:
                 if self.physics["extension"] == "pixx":
                     self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
-                                                            abs(self.etars[cond]), abs(self.zetars[cond]),
-                                                            self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
-                                                            np.ones(cond.sum())*self.normr*self.afr)
+                                                           abs(self.etars[cond]), abs(self.zetars[cond]),
+                                                           self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
+                                                           np.ones(cond.sum())*self.normr*self.afr,
+                                                           self.behavior["interp_method_ring"]
+                                                          )
                     """This code is used for debugging purposes
                     self.save_values+=[
                             dict(
@@ -3080,9 +3029,11 @@ class RingedPlanet(object):
             else:
                 if self.physics["extension"] == "pixx":
                     self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
-                                                            abs(self.etars[cond]), abs(self.zetars[cond]),
-                                                            self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
-                                                            np.ones(cond.sum())*self.normr*self.afr)
+                                                           abs(self.etars[cond]), abs(self.zetars[cond]),
+                                                           self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
+                                                           np.ones(cond.sum())*self.normr*self.afr,
+                                                           self.behavior["interp_method_ring"]
+                                                          )
                     self.save_values+=[
                             dict(
                                 obj="ring forward",
@@ -3163,7 +3114,7 @@ class RingedPlanet(object):
         self.Ptot = Ptot
         
         verbose(VERB_DEEP,"Ftot: ", self.Stot[0], "Ptot: ", self.Ptot)
-
+        
     def lambertian_test(self,alpha):
         """
         Simple, analytical model for the normalized reflected light coming of a lambertian planet

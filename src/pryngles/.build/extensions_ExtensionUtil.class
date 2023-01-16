@@ -1,0 +1,113 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class ExtensionUtil
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class ExtensionUtil(object):
+    """Util routines for extensions.
+    """
+    def vec2ptr(arr):
+        """Converts a 1D numpy to ctypes 1D array. 
+
+        Parameters:
+            arr: [ndarray] 1D numpy float64 array
+
+        Return:
+            arr_ptr: [ctypes double pointer]
+        """
+        arr_ptr = arr.ctypes.data_as(PDOUBLE)
+        return arr_ptr
+
+    def mat2ptr(arr):
+        """ Converts a 2D numpy to ctypes 2D array. 
+
+        Arguments:
+            arr: [ndarray] 2D numpy float64 array
+
+        Return:
+            arr_ptr: [ctypes double pointer]
+
+        """
+
+        ARR_DIMX = DOUBLE*arr.shape[1]
+        ARR_DIMY = PDOUBLE*arr.shape[0]
+
+        arr_ptr = ARR_DIMY()
+
+        # Fill the 2D ctypes array with values
+        for i, row in enumerate(arr):
+            arr_ptr[i] = ARR_DIMX()
+
+            for j, val in enumerate(row):
+                arr_ptr[i][j] = val
+
+        return arr_ptr
+
+    def ptr2mat(ptr, n, m):
+        """ Converts ctypes 2D array into a 2D numpy array. 
+
+        Arguments:
+            arr_ptr: [ctypes double pointer]
+
+        Return:
+            arr: [ndarray] 2D numpy float64 array
+
+        """
+
+        arr = np.zeros(shape=(n, m))
+
+        for i in range(n):
+            for j in range(m):
+                arr[i,j] = ptr[i][j]
+
+        return arr
+
+    def cub2ptr(arr):
+        """ Converts a 3D numpy to ctypes 3D array. 
+
+        Arguments:
+            arr: [ndarray] 3D numpy float64 array
+
+        Return:
+            arr_ptr: [ctypes double pointer]
+
+        """
+
+        ARR_DIMX = DOUBLE*arr.shape[2]
+        ARR_DIMY = PDOUBLE*arr.shape[1]
+        ARR_DIMZ = PPDOUBLE*arr.shape[0]
+
+        arr_ptr = ARR_DIMZ()
+
+        # Fill the 2D ctypes array with values
+        for i, row in enumerate(arr):
+            arr_ptr[i] = ARR_DIMY()
+
+            for j, col in enumerate(row):
+                arr_ptr[i][j] = ARR_DIMX()
+
+                for k, val in enumerate(col):
+                    arr_ptr[i][j][k] = val
+
+        return arr_ptr
+
+    def ptr2cub(ptr, n, m, o):
+        """ Converts ctypes 3D array into a 3D numpy array. 
+
+        Arguments:
+            arr_ptr: [ctypes double pointer]
+
+        Return:
+            arr: [ndarray] 3D numpy float64 array
+
+        """
+
+        arr = np.zeros(shape=(n, m, o))
+
+        for i in range(n):
+            for j in range(m):
+                for k in range(o):
+                    arr[i,j,k] = ptr[i][j][k]
+
+        return arr
+

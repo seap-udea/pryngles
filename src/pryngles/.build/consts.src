@@ -1,0 +1,101 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Pryngles module: Constants and Enumerators
+# 
+# This module contains all the constants required by other modules in the package.
+
+# ## External modules
+
+#@external
+from pryngles import *
+import numpy as np
+from rebound import units
+import re
+#@end:external
+
+# ## Constants and enumerators by Module
+
+# ### System related
+
+#@standalone
+import os
+#Root directory
+try:
+    FILE=__file__
+    ROOTDIR=os.path.abspath(os.path.dirname(FILE))
+except:
+    import IPython
+    FILE=""
+    ROOTDIR=os.path.abspath('')
+    
+IN_JUPYTER='ipykernel' in sys.modules
+#@end:standalone
+
+# ## Constants class
+# 
+# This class contains several physical and astronomical constants.  It takes constants from other packages (rebound, astropy) and define other constants based on reliable sources.
+
+#@standalone
+class Consts(object):
+    """Constants class
+    """
+    def get_physical():
+        import pryngles as pr
+        all_constants=[]
+        for key in Consts.__dict__.keys():
+            patterns = "^[a-z]+$"
+            if re.search(patterns,key):
+                all_constants+=[key]
+        return sorted(all_constants)
+
+    def get_all():
+        import pryngles as pr
+        all_constants=[]
+        for key in pr.__dict__.keys():
+            patterns = "^[A-Z_]+$"
+            if re.search(patterns,key):
+                all_constants+=[key]
+        return sorted(all_constants)
+
+#Mathematical constants
+Consts.rad=180/np.pi
+Consts.deg=1/Consts.rad
+Consts.ppm=1e6 #parts per million factor
+Consts.ppb=1e9 #parts per billion factor
+
+#Physical constants
+GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
+for const in "times","lengths","masses":
+    values=eval(f"units.{const}_SI.copy()")
+    for key in values:
+        exec(f"Consts.{key}=values[key]")
+
+#Size of reference objects
+Consts.rearth=6378.137e3 #m, volumetric mean radius, source: 
+Consts.rsun=695700e3 #m, nominal solar radius, source: 
+Consts.rjupiter=71492e3 #m, equatorial radius, source: 
+Consts.rsaturn=60268e3 #m, equatorial radius, source: 
+
+#For compatibility purposes with legacy: remove when legacy is retired
+RAD=Consts.rad
+DEG=Consts.deg
+#@end:standalone
+
+
+# ### The end
+

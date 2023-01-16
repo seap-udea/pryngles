@@ -1,0 +1,8 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module scatterer
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+try:
+    SCATTERERS_CATALOGUE
+except:
+    SCATTERERS_CATALOGUE=dict()

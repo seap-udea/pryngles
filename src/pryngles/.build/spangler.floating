@@ -1,0 +1,120 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Pryngles module: Spangler
+
+# This module contains all the physics of light scattered on spangles
+
+# ## External modules and aliases
+
+
+# ## Constants
+
+
+# ## The Spangler class
+# 
+# This class contains a family of routines useful for spangling different kind of objects.
+
+
+
+
+Spangler.__doc__=Spangler_doc
+
+# ### Test class
+
+
+
+
+# ### Populate Spangler
+
+Spangler.populate_spangler=populate_spangler
+Spangler._update_column_order=_update_column_order
+
+
+# ### Plot3D
+
+Spangler.plot3d=plot3d
+
+
+# ### Set intersection, observer, light-source
+
+Spangler.set_intersect=set_intersect
+Spangler._calc_qhulls=_calc_qhulls
+
+
+Spangler.set_observer=set_observer
+Spangler.set_luz=set_luz
+
+
+
+# ### Plot 2d
+
+Spangler.plot2d=plot2d
+
+"""
+#Simple testing
+#Use this code for debugging purposes
+nspangles=100
+sg1=Spangler(nspangles=nspangles,name="Ring",n_equ=[1,0,0.1])
+sg1.populate_spangler(shape="ring",spangle_type=SPANGLE_GRANULAR,scale=2.5,seed=1,ri=1.5/2.5,boundary=0)
+
+sg2=Spangler(nspangles=nspangles,name="Planet",n_equ=[0,0,1])
+sg2.populate_spangler(shape="sphere",spangle_type=SPANGLE_ATMOSPHERIC,scale=1,seed=1,preset=False)
+
+sgj=Spangler(spanglers=[sg1,sg2])
+self=sgj
+
+sgj.set_observer([1,0,0])
+sgj.set_luz([0,0,1])
+
+sgj.plot2d(show_azim=1,fsize=5)
+#""";
+
+"""
+#More complex debugging
+sys=System()
+S=sys.add()
+P=sys.add("Planet",primary=S,radius=0.2,a=5)
+R=sys.add("Ring",primary=P,
+          fi=1.3,fe=2.3,
+          i=-30*Consts.deg,roll=0*Consts.deg)
+sys.initialize_simulation()
+sys.spangle_system()
+sys.update_perspective(n_obs=Science.direction(120,30))
+plot2d(sys.sg,include=["Planet","Ring"],show_azim=0);
+#plot2d(sys.sg,include=["Star"],show_azim=False,maxval=1);
+#plot2d(sys.sg,include=["Planet"],show_azim=False);
+#plot2d(sys.sg,include=["Ring"],show_azim=False);
+plot2d(sys.sg,include=["Planet","Star","Ring"],show_azim=1);
+#""";
+
+
+# ### Test join
+
+
+# ## Update state
+
+Spangler.update_intersection_state=update_intersection_state
+Spangler.update_visibility_state=update_visibility_state
+Spangler.update_illumination_state=update_illumination_state
+
+
+# ## Test multiple sources of light
+
+
+# ### The end
+

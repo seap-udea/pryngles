@@ -1,0 +1,351 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Spangler
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Spangler(PrynglesCommon):
+    """A Spangler associated to an object or set of objects.
+        
+       There are two ways to initialize a Spangler:
+        
+            Creating a Spangler for a single object:
+            
+                Mandatory:
+    
+                    nspangles: int, default = 0:
+                        Number of spangles in spangling.
+    
+                Optional:
+    
+                    body_hash: string, default = None:
+                        Hash identifying the body to which spangles are associated 
+                        (see Body documentation for explanation about hash).
+    
+                    spangle_type: int, default = 0:
+                        Type of spangle (see *_SPANGLE in Consts module).
+    
+                    n_equ: numpy Array (3), default = [0,0,1]:
+                        unitary vector normal to {equ} (equatorial) plane.
+    
+                    alpha_equ: float, default = 0:
+                        Roll angle of x-axis of equatorial system (not implemented yet)
+    
+                    center_equ: numpy Array (3), default = [0,0,0]:
+                        Position of the spnagler in the {equ} (equatorial) system.
+    
+                    center_ecl: numpy Array (3), default = [0,0,0]:
+                        Position of the spnagler in the {ecl} (ecliptic) system.
+                        
+                    w, q0: float [rad/ut, rad], default = 0, 0:
+                        Angular velocity and reference latitude at t = 0.
+    
+            Joining a set of Spanglers (several objects):
+    
+                spanglers: list of Spanglers. default = []:
+                    Set of spanglers to join.
+    
+    Core attributes:
+    
+        nspangles: int:
+            Total number of spangles.
+    
+        data: Pandas DataFrame: 
+            Dataframe containing all the information about the spangling.
+            For Columns see global variable SPANGLER_COLUMNS.
+    """
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Bassic methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    def __init__(self,
+                 #Initialization using specific options
+                 #Initialization with a list of spanglers
+                     spanglers=[],
+                 #Basic
+                     nspangles=1,
+                     name=None,
+                     n_equ=SPANGLER_COLUMNS["n_equ"],
+                     alpha_equ=SPANGLER_COLUMNS["alpha_equ"],
+                     center_equ=SPANGLER_COLUMNS["center_equ"],
+                     center_ecl=SPANGLER_COLUMNS["center_ecl"],
+                 #Optional
+                     w=SPANGLER_COLUMNS["w"],
+                     q0=SPANGLER_COLUMNS["q0"],
+                ):
+        
+        #Common attributes
+        self.n_obs=np.array([0,0,1])
+        self.n_luz=np.array([0,0,1])
+        self.d_obs=self.d_luz=1
+        self.sample=None
+        self.geometry=-1
+        
+        #Direction of vantages point in spherical coordinates
+        self.rqf_obs=sci.spherical(self.n_obs)
+        self.rqf_luz=sci.spherical(self.n_luz)
+        self.center_luz=None
+        self.center_obs=None
+        
+        #Transformation matrices from equatorial to ecliptic coordinates
+        self.M_equ2ecl=dict()
+        self.M_ecl2equ=dict()
+        
+        #Convex hulls of spanglers
+        self.qhulls=dict()
+        
+        #Required for plotting
+        self.fig2d=None
+        self.ax2d=None
+        self.fig3d=None
+        self.ax3d=None
+        
+        #Create a spanglers with a list of other spanglers
+        if len(spanglers)>0:
+            verbose(VERB_SIMPLE,f"Joining {len(spanglers)} spanglers")
+            self._join_spanglers(spanglers)
+            
+        #Create a spangler with the desired options
+        else:
+            #Attributes
+            self.nspangles=nspangles
+            self.shape="vanilla" #No geometry defined
+            
+            #Default property values
+            self._defaults=deepcopy(SPANGLER_COLUMNS)
+
+            if not name:
+                #Generate a random hash for object
+                self.name=str(random.getrandbits(16))
+                verbose(VERB_VERIFY,f"Generating random hash {self.name}")
+            else:
+                self.name=name
+                
+            self._defaults.update(dict(name=self.name))
+            
+            #Update other parameters
+            self._defaults.update(
+                dict(w=w,q0=q0)
+            )
+
+            #Create Spangler dataframe
+            if self.nspangles>0:
+                
+                #Create a simple DataFrame with the default values
+                self.data=pd.DataFrame([list(self._defaults.values())]*self.nspangles,
+                                       columns=self._defaults.keys())
+
+                #Update positions
+                self.set_positions(
+                    n_equ=n_equ,alpha_equ=alpha_equ,
+                    center_equ=center_equ,center_ecl=center_ecl,
+                    t=None
+                )
+        
+            else:        
+                verbose(VERB_SIMPLE,f"Creating a blank Spangler")
+                #Creat a blank DataFrame
+                self.data=pd.DataFrame(columns=self._defaults.keys())
+        
+    def reset_state(self):
+        """Reset spangler state
+        """
+        self.data[list(SPANGLER_SOURCE_STATES)+list(SPANGLER_VISIBILITY_STATES)]=False
+        self.data["unset"]=True
+        for coords in "int","obs","luz":
+            self.data["hidden_by_"+coords]=""
+            self.data["transit_over_"+coords]=""
+
+    def set_scale(self,scale):
+        """Set scale
+        
+        scale: float:
+            New scale.  All lengths will be multiplied by scale, areas by scale**2 and
+            vector components by scale.
+        """
+        self.scale=scale
+        self.data[SPANGLER_LENGTHS]*=self.scale
+        self.data[SPANGLER_AREAS]*=self.scale**2
+        for vector in SPANGLER_VECTORS:
+            self.data[vector]=[np.array(v)*scale for v in self.data[vector]]
+        
+    def _join_spanglers(self,spanglers):
+        """
+        Join spanglers into a single spangler
+
+        Parameters:
+            spanglers: list of Spanglers:
+                Spanglers to join.
+        """
+        self.name=[]
+        for spangler in spanglers:
+            if not isinstance(spangler,Spangler):
+                raise AssertionError(f"One of the spangler is not an Spangler instance")
+                
+            if spangler.name in self.name:
+                raise ValueError(f"Hash '{spangler.name}' already included in spangler '{self.name}'")
+                
+            self.name+=[spangler.name]
+
+        #When joining there is no single geometry
+        self.shape="Join"
+        
+        #Set of spanglers
+        self.spanglers=spanglers
+
+        #Concatenate data
+        datas=[spangler.data for spangler in spanglers]
+        self.data=pd.concat(datas,ignore_index=True)
+
+        self.M_equ2ecl=dict()
+        for spangler in spanglers:
+            self.M_equ2ecl.update(spangler.M_equ2ecl)
+
+        #Join properties
+        self.nspangles=len(self.data)
+        
+    def get_mem_usage(self,info=False):
+        """Get size of the Spangler DataFrame in megabytes
+
+        Optional parameters:
+            info: boolean, default = False:
+                Get detailed information on memory usage.
+                
+        Return:
+            mem_usage: float:
+                Size in Mb of the memomory usage.
+        """
+        mem_usage=self.data.memory_usage(deep=True).sum()/1024**2
+        if info:
+            print(f"Basic information:\n")
+            self.data.info(memory_usage="deep")
+            print(f"\nDetailed size:\n")
+            print(self.data.memory_usage(deep=True).to_string())
+            print(f"\nTotal size: {mem_usage:.1g} Mb")
+
+        return mem_usage
+        
+    def set_positions(self,
+                      n_equ=[],alpha_equ=0,
+                      center_equ=[],center_ecl=[],
+                      t=None
+                     ):
+        """
+        Set the positions and orientation of spanglers in all reference systems.
+
+        Parameters:
+
+            n_equ: list/array (3), default = []:
+                Normal vector towards north pole equatorial system.
+
+            alpha_equ: float, default = 0:
+                Roll angle of x-axis of equatorial system (not implemented yet)
+
+            center_equ: list/array (3), default = []:
+                Location of the center of the body with respect to the barycenter in the equatorial system.
+
+            center_ecl: list/array (3), default = []:
+                Location of the center of the body with respect to the barycenter in the ecliptic system.
+
+            t: float, default = None:
+                Time.  This quantity is used to update the equatorial coordinates.
+                If None, equatorial coordinates are not set.
+
+        Return:
+            None
+
+        Update:
+    
+            If n_equ:
+                Rotation matrices M_equ2ecl
+
+            If t is provided:
+                Coordinates of the spangles in the equatorial, (x_equ,y_equ,z_equ).
+                Normals to the spangle (ns_equ)
+
+            In all cases:
+                Coordinates of the spangles, (x_ecl,y_ecl,z_ecl).
+            
+        """
+        verbose(VERB_VERIFY,f"Setting positions")
+
+        #Update normal vectors
+        qupdate=False
+
+        #Update center
+        if len(center_equ)>0:
+            verbose(VERB_VERIFY,f"Updating center in {{equ}} to {center_equ}")
+            self.data["center_equ"]=[center_equ]*self.nspangles
+            
+        if len(center_ecl)>0:
+            verbose(VERB_VERIFY,f"Updating center {{ecl}} to {center_ecl}")
+            self.data["center_ecl"]=[center_ecl]*self.nspangles
+
+        if len(n_equ)>0:
+            verbose(VERB_VERIFY,f"Generating equatorial transformation matrices from n_equ = {n_equ}")
+
+            #Unitary equatorial vector
+            n_equ,one=spy.unorm(n_equ)
+            self.data["n_equ"]=[n_equ]*self.nspangles
+
+            #Transformation matrices
+            self.M_equ2ecl[self.name],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ)
+
+            qupdate=True
+
+        #Update equatorial coordinates by rotation
+        if t is not None:
+            verbose(VERB_VERIFY,f"Updating rotations at t = {t}")
+
+            self.data["q_equ"]=[q+q0+w*t for q,w,q0 in zip(self.data.q_equ,self.data.w,self.data.q0)]
+            self.data[["x_equ","y_equ","z_equ"]]=                [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
+
+            qupdate=True
+
+        #If equatorial positions have been changed
+        if qupdate and self.sample:
+ 
+            #Update spangles orientations
+            verbose(VERB_VERIFY,f"Generating normal vectors")
+
+            #If the spangler has been poputaled update normals
+            if self.sample:
+                self.data["ns_equ"]=pd.Series(
+                    list(
+                        self.sample.update_normals(self.data[["x_equ","y_equ","z_equ"]])
+                    ),dtype=object
+                )
+
+        #Convert from equatorial to ecliptic
+        verbose(VERB_VERIFY,f"Converting to equatorial")
+        self.data[["x_ecl","y_ecl","z_ecl"]]=            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl             for sph,r,cequ,cecl in zip(self.data.name,
+                                        np.array(self.data[["x_equ","y_equ","z_equ"]]),
+                                        self.data.center_equ,self.data.center_ecl)]
+        
+        #Update orientation of the spangle
+        self.data["ns_ecl"]=[np.matmul(self.M_equ2ecl[sph],n) for sph,n in zip(self.data.name,
+                                                                               self.data.ns_equ)]
+        
+        #Update matrix of the transformation from ecliptic to local (horizontal) reference frame of the spangle
+
+        #Search all spangles pointing towards ez or -ez
+        cond=pd.Series([abs(spy.vdot(ns,[0,0,1]))!=1 for ns in self.data.ns_ecl])
+        if sum(cond)>0:
+            verbose(VERB_VERIFY,f"Setting local vectors based on ns: {sum(cond)}")
+            #wy = ez x ns because with this definition seen from above the system is oriented as usual
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0]                                                     for ns in self.data[cond].ns_ecl],dtype=object).values
+            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns)                                                     for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
+                                                   dtype=object).values
+            cond=~cond
+        else:
+            cond=[True]*self.nspangles
+
+        #Spangles pointing towards ez or -ez
+        if sum(cond)>0:
+            verbose(VERB_VERIFY,f"Setting local matrix based on ex: {sum(cond)}")
+            self.data.loc[cond,"wx_ecl"]=pd.Series([[1,0,0]]*sum(cond),dtype=object).values
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0]                                                     for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
+                                                   dtype=object).values
+            
+        #Update velocities
+        #Not implemented yet

@@ -8,9 +8,7 @@ src/pryngles/consts.py
 src/pryngles/extensions.py
 src/pryngles/legacy.py
 src/pryngles/misc.py
-src/pryngles/optics.py
 src/pryngles/orbit.py
-src/pryngles/pixx_sig.pyf
 src/pryngles/pixxmodule.c
 src/pryngles/plot.py
 src/pryngles/sampler.py
@@ -31,6 +29,7 @@ src/pryngles/data/fou_gasplanet.dat
 src/pryngles/data/fou_gasplanet_optical_50.dat
 src/pryngles/data/fou_lambert.dat
 src/pryngles/data/fou_ring_0_4_0_8.dat
+src/pryngles/data/fou_ring_0_4_0_8_20gaus.dat
 src/pryngles/data/ring-interpolation.mat
 src/pryngles/pixx/pixx.f
 src/pryngles/tests/test-__init__.py

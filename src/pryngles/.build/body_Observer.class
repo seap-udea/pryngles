@@ -1,0 +1,13 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Observer
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Observer(Body):
+    """This class is intended only for legacy purposes.
+    """
+    def __init__(self,
+                 parent=None,
+                 **props
+                ):
+        Body.__init__(self,"Observer",OBSERVER_DEFAULTS,parent,**props)

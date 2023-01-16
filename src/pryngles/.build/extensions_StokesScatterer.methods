@@ -1,0 +1,21 @@
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file extensions
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def calculate_stokes(self,phi,beta,theta0,theta,apix,qreflection=1):
+        """
+        """
+        npix=len(phi)
+        Sarr=np.zeros((npix,self.F.nmat+1))
+        Sarr_ptr=ExtensionUtil.mat2ptr(Sarr)
+        cpixx_ext.reflection(self.F,qreflection,npix,
+                             ExtensionUtil.vec2ptr(phi),
+                             ExtensionUtil.vec2ptr(beta),
+                             ExtensionUtil.vec2ptr(theta0),
+                             ExtensionUtil.vec2ptr(theta),
+                             ExtensionUtil.vec2ptr(apix),
+                             Sarr_ptr);
+        stokes=ExtensionUtil.ptr2mat(Sarr_ptr,*Sarr.shape)
+        return stokes
+        

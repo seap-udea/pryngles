@@ -1,0 +1,91 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class LambertianGraySurface
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class LambertianGraySurface(Scatterer):
+    """Lambertian Gray Surface.
+    
+    This is the scatterer corresponding to a surface having a gray lambertian Albedo.
+    
+    Parameters:
+    
+        phase_law: function, default=lambda eta,zeta,delta,lambda:eta :
+
+            Law of reflection (by default is Lambertian, see Russel, 1916)
+
+            The phase_law must obey the following prototype:
+
+                phase_law(eta,zeta,delta,lamb,**params):
+                    '''Phase law of the surface
+
+                    Parameters:
+                        eta: float:
+                            cosine of the incoming angle.
+
+                        zeta: float:
+                            cosine of the outgoing angle.
+
+                        delta: float:
+                            difference between the incoming and outgoing azimuth.
+
+                        lamb: float:
+                            Wavelength.
+
+                        parameters: dictionary: 
+                            Other parameters of the phase law.
+
+                    Return:
+                        Wavelength dependent albedo.
+                    '''
+                    ...
+
+                Other law is the Lommel-Seeliger law:
+
+                    phase_law = lambda eta,zeta,delta,params:eta*zeta/(eta+zeta) (see Russel, 1916)
+
+    """
+    
+    def __init__(self,**params):
+
+        
+        if self.register(self,params):
+            verbose(VERB_SIMPLE,f"Initializing {self.params['name']} with hash {self.hash}")
+            
+            #Phase law
+            if "phase_law" in params:
+                self.phase_law=params["phase_law"]
+            else:
+                self.phase_law=lambda eta,zeta,delta,lamb,params:eta
+
+            #Gray albedo
+            self.AL=params["AL"]
+
+            #Calculate the gammap parameter
+            self.gammap0=self._find_gammap()
+
+            #Accelerate the calculation of the albedo
+            self._accelerate_lambertian_albedo()
+
+    def get_albedo(self,eta,zeta,delta,lamb,**params):
+        return self._get_albedo(eta)
+        
+    #####################################
+    #Complimentary routines
+    #####################################
+    def _calc_lambertian_albedo(self,eta,gammap0=1):
+        if eta==0:return self.AL
+        integrand=lambda zeta:self.phase_law(eta,zeta,0,0,0)/eta
+        AL=2*np.pi*gammap0*quad(integrand,0,1)[0]
+        return AL
+
+    def _find_gammap(self):
+        function=lambda gammap0:self._calc_lambertian_albedo(1,gammap0)-self.AL
+        gammap0=bisect(function,0.0,1.0,rtol=1e-3)
+        return gammap0 if gammap0<=1 else 1
+    
+    def _accelerate_lambertian_albedo(self):
+        etas=np.linspace(0.0,1.0,20)
+        ALs=np.array([self._calc_lambertian_albedo(eta,gammap0=self.gammap0) for eta in etas])
+        self._get_albedo=interp1d(etas,ALs)
+

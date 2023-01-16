@@ -1,0 +1,67 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Planet
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Planet(Body):
+    """A planet.
+
+    Initialization attributes:
+        
+        parent: Class Body, default = None:
+            Object in the center of the orbit of the star for specification purposes.
+            If None the object is the center of the orbit specification for other objects.
+
+        **props: dictionary:
+            List of properties for star.  For the complete set of default values of the properties
+            see STAR_DEFAULTS.  Description of properties are available in the Body class documentation.
+            
+            Additional properties:
+            
+                x,y,z: float [ul], default = 1.0, 0.0, 0.0:
+                    Initial position of the body.
+
+                vy: float, default = 0.0, 1.0, 0.0:
+                    Intitial velocity of the body
+        
+    Derived attributes:
+        None.
+    
+    Notes:
+
+        See Body class documentation.
+    
+    """
+    
+    def __init__(self,
+                 parent=None,
+                 **props
+                ):
+        
+        
+        #Instantiate object with basic properties
+        Body.__init__(self,"Planet",PLANET_DEFAULTS,parent,**props)
+        
+        #Check parent
+        if self.parent is None:
+            raise ValueError(f"Parent not provided and it is mandatory for {self.kind}.")
+        
+        #Update properties
+        self.update_planet(**props)
+
+    def _update_planet_properties(self):
+        """Update specific properties of the star
+        
+        Properties to update:
+        
+            norm_limb_darkening: float:
+                Limb darkening function normalization.
+                Requires: limb_coefs.
+
+        """
+        verbose(VERB_VERIFY,"Updating Planet properties")
+        
+    def update_planet(self,**pars):
+        verbose(VERB_VERIFY,"Updating Planet")
+        Body.update_body(self,**pars)
+        self._update_planet_properties()

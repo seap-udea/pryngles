@@ -1,0 +1,19 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module system
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+LEGACY_PHYSICAL_PROPERTIES=dict(
+    #Albedos
+    AS=1,AL=1,
+    #Ring geometrical opacity
+    taug=1.0, #Geometrical opacity
+    diffeff=1.0, #Diffraction efficiency
+    #Law of diffuse reflection on ring surface
+    reflection_rings_law=lambda x,y:x,
+    #Observations wavelength
+    wavelength=550e-9,
+    #Ring particle propeties (see French & Nicholson, 2000)
+    particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
+    #Stellar limb darkening
+    limb_cs=[],
+)

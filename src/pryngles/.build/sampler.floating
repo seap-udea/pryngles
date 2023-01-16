@@ -1,0 +1,57 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Pryngles module: Sampler
+
+# ## External modules
+
+
+# ## Constants
+
+
+# ## Sampler class
+
+
+Sampler.__doc__ = Sampler_doc
+
+Sampler.plot = plot
+
+
+Sampler.gen_circle = gen_circle
+
+
+Sampler._cut_hole = _cut_hole
+
+
+
+Sampler.gen_ring = gen_ring
+
+
+
+Sampler.gen_sphere = gen_sphere
+
+
+Sampler.purge_sample = purge_sample
+
+
+# ## Update normal vectors
+
+Sampler.update_normals=update_normals
+
+
+# ### The end
+

@@ -1,0 +1,205 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Body
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Body(Orbody):
+    """A general body.  This class is not intended to be used independently, just for inheritance purposes.
+        
+    Initialization attributes:
+    
+        kind : string:
+            One of the kind of bodies defined in the package (see _BODY_KINDS)
+            Defined objects are: "Star", "Planet", "Ring".
+    
+        defaults : OrderedDict:
+            Dictionary with the properties of the object.
+    
+        parent: Class Body:
+            Object in the center of the orbit of this body.
+    
+        **properties: dicitionary:
+            Specification of the body properties.  All objects of the class Body has the following
+            properties by default:
+            
+            name: string, default = None:
+                Name of the object, ie. a unique string identifying the object.  It can be provided
+                by the user or automatically set by the initializer using a unique hash 
+                (see hash Python function).
+    
+            orbital properties: 
+                Object with the orbital properties of the body (eg. orbit.m is the mass)
+                see each specific Body definition for attributes.
+                orbit must be compatible with rebound.
+    
+                    m: float [rebound mass units], default = 1:
+                        Mass of the body.  If m = 0 the body does not produce gravitation.
+    
+            physical properties:
+    
+                Object with the physical properties of the body (eg. physics.radius)
+                see each specific Body definition for attributes.
+    
+                    radius: float [rebound length units], default = 1:
+                        Radius of the body.
+    
+                    prot: float [ut], default = 1:
+                        Period of rotation of the star.
+    
+                    i: float [rad], default = 0:
+                        Inclination of the body equator with respect to the ecliptic plane.
+    
+                    roll: float [rad], default = 0:
+                        Roll angle.  This is the angle with respect to ecliptic x-axis in which 
+                        the normal to the object equatorial plane is rotated.
+    
+                    alpha_equ: float [rad], default = 0:
+                        Longitude of the zero meridian of the object.
+    
+                    q0: float [ut], default = 0:
+                        Initial longitude for zero meridian.
+    
+            optical properties:
+    
+                Object with the optical properties of the body (eg. physics.lamb_albedo)
+                see each specific Body definition for attributes.
+    
+                    nspangles: int, default = 1000:
+                        Number of spangles on which the object will be discretized.
+                        
+                    spangle_type: int, default = SOLID_SPANGLE:
+                        Type of spangles of the body.
+                        
+                    preset: boolean, default = True:
+                        If True spangle object from a preset.
+    
+    Derived attributes:
+    
+            wrot: float [rad/ut]:
+                Rotational angular velocity.
+    
+            n_equ: array(3):
+                Rotational axis vector in the ecliptic system.
+        
+    Secondary attributes:
+    
+        childs: list
+            List with child bodies (bodies which have this body) as the center.
+    
+    Public methods:
+    
+        update_body(**props):
+            Update a given set of properties.
+            
+    Examples:
+    
+        Create a body with None parent and name = 'B':
+        
+            B=Body("Body",BODY_DEFAULTS,None,name='B',m=2,c=2)
+            
+        Create a body having parent the Body "B" defined before:
+             
+            C=Body("Body",BODY_DEFAULTS,B,name="C")
+    
+    """
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Bassic methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    def __init__(self,kind,defaults,parent,**props):
+
+        #Kind, parent and child attributes
+        self.kind=kind
+        self.__defaults=defaults
+        
+        #Prepare key attributes
+        self.sg=None
+
+        #Name of the object
+        if 'name' in props:
+            name=self.name=str(props["name"])
+        elif 'name_by_kind' in props:
+            name=self.name=self.kind
+        else:
+            name=self.name=str(hash(self))
+
+        #Legacy
+        if 'primary' in props:
+            parent=props["primary"]
+        if 'optics' in props:
+            props.update(props["optics"])
+        if 'orbit' in props:
+            props.update(props["orbit"])
+        if 'physics' in props:
+            props.update(props["physics"])
+
+        #Update childs and parent
+        if parent is not None:
+            if not isinstance(parent,Body):
+                raise AssertionError(f"Parent is not a valid Object: {type(parent)}, {isinstance(parent,Body)}")
+            else:
+                self.parent=parent
+                parent._update_childs(self)
+
+        #Update parent and childs        
+        self._update_parent(parent)
+        self._update_childs()
+
+        #Update default properties
+        self.__dict__.update(defaults)
+        #Set name
+        self.name=name
+        #Update body
+        self.update_body(**props)
+    
+    def update_body(self,**props):
+        """Update properties of the Body.
+        
+        Parametes:
+            **props: dictionary:
+                Properties to update. The current object is updated with new 
+                values provided in this new object
+                
+        Example:
+            B.update_body(m=2)
+                This only update the attribute m of orbit.
+        """
+        for prop in props:
+            if prop in self.__defaults or prop in REBOUND_ORBITAL_PROPERTIES:
+                self.__dict__[prop]=props[prop]
+            else:
+                raise ValueError(f"Property {prop} not identified in object {self.kind}")
+                
+        self.elements={k:v for k,v in self.__dict__.items() if k in REBOUND_ORBITAL_PROPERTIES}
+        
+        verbose(VERB_VERIFY,"Updating Body")
+        self._update_properties()
+    
+    def _update_childs(self,child=None):
+        if 'childs' not in self.__dict__:
+            self.childs=dict()
+        if child is not None:
+            verbose(VERB_VERIFY,f"Add child {child.name} to body {self.kind} ({self.name})")
+            self.childs[child.name]=child
+            
+    def _update_parent(self,parent=None):
+        if 'parent' not in self.__dict__:
+            if parent:
+                verbose(VERB_VERIFY,f"Add parent {parent.name} to body {self.kind} ({self.name})")
+            self.parent=parent
+        elif parent is not None:
+            verbose(VERB_VERIFY,f"Add parent {parent.name} to body {self.kind} ({self.name})")
+            self.parent=parent
+            parent._update_childs(self)
+    
+    def _update_properties(self):
+        verbose(VERB_VERIFY,"Updating properties of Body")
+        #Rotational angular velocity
+        self.wrot=2*np.pi/self.prot
+        #Rotation axis
+        self.n_equ=sci.cartesian([1,self.roll,90*Consts.deg-self.i])
+    
+    def show_tree(self):
+        print(RenderTree(self))
+        

@@ -1,0 +1,82 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class OrbitUtil
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class OrbitUtil(PrynglesCommon):
+    """Celestial mechanics utilities
+    """
+    
+    def build_system(pair,units=None):
+        """Builds a hierarchichal N-body system
+        
+        Parameters:
+            pair: list (2) of Orbody objects:
+                List with two objects forming the system.
+                
+            units: list of strings, default = ['au','msun','yr2pi']:
+                Units used in calculations following the conventions and signs of rebound.
+                The order SHOULD always be MKS: length, mass, time (in that order).
+                
+        Return:
+            orbit: object of the class Orbit:
+                Hierarchical N-body system.
+                
+        Examples:
+            #Objects
+            S1=Orbody(name="Star1",m=1)
+            P1S1=Orbody(name="Planet1Star1",parent=S1,m=0.1,a=1,e=0.2)
+            M1P1=Orbody(name="Moon1Planet1",parent=P1S1,m=0.01,a=0.1,e=0.5)
+            SM1M1=Orbody(name="Moon1Planet1",parent=P1S1,m=0.001,a=0.01,e=0.2)
+
+            S2=Orbody(name="Star1",m=1,a=5,e=0.3)
+            P1S2=Orbody(name="Planet1Star2",parent=S2,m=0.1,a=1,e=0.5)
+
+            #All possible systems
+            #Simple binary
+            orbital_tree=[S1,S2]
+            orbit,pelements=build_system(orbital_tree)
+                        
+            #Star and planet with moon
+            orbital_tree=[S1,[P1S1,M1P1]]
+            orbit,pelements=build_system(orbital_tree)
+            
+            #Star and planet with moon and minimoon
+            orbital_tree=[S1,[P1S1,[M1P1,SM1M1]]]
+            orbit,pelements=build_system(orbital_tree)
+            
+            #Two stars with their planets
+            orbital_tree=[[S1,P1S1],[S2,P1S2]]
+            orbit,pelements=build_system(orbital_tree)
+            
+            #Two stars with planets and moon
+            orbital_tree=[[S1,[P1S1,M1P1]],[S2,P1S2]]
+            orbit,pelements=build_system(orbital_tree)
+            
+            #Two stars with planets, moon and minimoon
+            orbital_tree=[[S1,[P1S1,[M1P1,SM1M1]]],[S2,P1S2]]
+            orbit,pelements=build_system(orbital_tree)
+
+            #You may check the result using:
+            orbit.calculate_orbit()
+            Plot.animate_rebound(orbit.sim,color='b',ms=2)
+        """
+        
+        p1,p2=pair
+
+        if type(p1) is list:
+            m1,pelements=OrbitUtil.build_system(p1,units)
+        else:
+            m1=p1.m
+            pelements=p1.elements.copy()
+
+        if type(p2) is list:
+            m2,elements=OrbitUtil.build_system(p2,units)
+        else:
+            m2=p2.m
+            elements=p2.elements
+
+        Orbit.ORBIT_SIMULATIONS=[]
+        orbit=Orbit(m1=m1,m2=m2,units=units,**elements)
+
+        return orbit,pelements

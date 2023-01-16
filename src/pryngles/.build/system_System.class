@@ -1,0 +1,276 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class System
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class System(PrynglesCommon):
+    """Creates a planetary system.
+    
+        Initialization attributes:
+    
+            units: list of strings, default = ['au','msun','yr2pi']:
+                Units used in calculations following the conventions and signs of rebound.
+                The order SHOULD always be MKS: length, mass, time (in that order)
+    
+        Optional attributes:
+    
+            resetable: boolean, default = False:
+                If True the system is resetable, namely you can reset it to the initial system.
+                
+            filename: string, default = None:
+                File to load system.
+    
+        Derived attributes:
+    
+            sim: Class Simulation:
+                Rebound Simulation object.
+    
+            ul, um, ut: float [SI units]:
+                Value of the conversion factors for each unit.
+    
+            G: float [ul^3/ut^2/um]
+                Value of the gravitational constant.
+    
+            bodies: dictionary:
+                Bodies in the system.
+    
+            nbodies: int:
+                Number of bodies.
+    
+            nparticles: int:
+                Numbre of particles in rebound simulation.
+    
+            spangler: Class Spangler:
+                Spangler object with all the spangles in the system.
+    
+        Examples:
+    
+            #Create a system
+            sys=System(units=["au","msun","yr"])
+            sys.sim.integrator='whfast'
+            sys.sim.dt=0.01
+    
+            #Add star (by default, m = 1)
+            S=sys.add()
+    
+            #Add planet, when an object is added, it is automatically spangled
+            P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
+    
+            #Add moon: orbital elements are respect to ecliptic system
+            M=sys.add("Planet",parent=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
+    
+            #Add ring system
+            R=sys.add("Ring",parent=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)
+    
+    """
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Bassic methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def __init__(self,
+                 filename=None,
+                 units=['au','msun','yr2pi'],
+                 resetable=False
+                ):
+        
+        if filename:
+            self.load_from(filename)
+            return
+        
+        #Rebound simulation
+        self.sim=None
+        self._simulated=False
+        
+        #Attributes by default
+        
+        #List of bodies in the system
+        self.bodies=odict()
+        
+        #Root of the tree of bodies
+        self.root=None
+        
+        #Center of the light-source in the system
+        self.source=None
+        self.center_root=np.array([0,0,0])
+        
+        #Orbital configuration
+        self.orbital_configuration=None
+        
+        #Observer properties
+        self.n_obs=np.array([0,0,1])
+        self.alpha_obs=0  
+        self.center_obs=None
+        
+        #Check if spangled
+        self._spangled=False
+        
+        #Check if observer has been set
+        self._observer_set=False
+        self._luz_set=False
+        
+        #Initialize spangler object
+        self.sg=None
+        
+        #Is the system resetable?
+        self._resetable=resetable
+        if self._resetable:
+            #Create temporary file
+            self._snap_file_name = "/tmp/pryngles-system.pkl"
+        
+        #Update rebound units
+        self.update_units(units)
+        
+        #By default spangle scatterers
+        """
+        This is the list of the class of scatterers used to calculate the scattering in
+        different types of spangles.
+        
+        The structure of this dictionary is:
+        
+            key: integer (or enumerator):
+                This is the column spangle_type in the spangler DataFrame.
+                
+            item: tuple (2):
+                Component 1: 
+                    Class of scatterer.
+                Component 2: 
+                    Dictionary mapping the initialization properties of the scatterer to columns
+                    in the spangler DataFrame.
+        
+        Example of item:
+        
+            SPANGLE_ATMOSPHERIC:(LambertianGrayAtmosphere,dict(AS="albedo_gray_spherical"))
+            
+                This means that for spangles of the type SPANGLE_ATMOSPHERIC Pryngles will 
+                instantiate an object of the class LambertianGrayAtmosphere.  This class have a
+                single parameter, the spherical albedo AS.  The dictionary means that when 
+                instantiating the object the column "albedo_gray_spherical" will be used to 
+                initialize the object.                
+        """
+        self.spangle_scatterers={
+            SPANGLE_ATMOSPHERIC:(LambertianGrayAtmosphere,dict(AS="albedo_gray_spherical")),
+            SPANGLE_GRANULAR:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
+            SPANGLE_LIQUID:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
+            SPANGLE_SOLID_ICE:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
+            SPANGLE_SOLID_ROCK:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
+            SPANGLE_GASEOUS:(BlackBodySurface,dict()),
+            SPANGLE_STELLAR:(BlackBodySurface,dict()),
+        }
+        
+    def update_units(self,units):
+        """Update units of the system
+        """
+        #Check units
+        if units[0] not in rb.units.lengths_SI:
+            raise ValueError(f"Length unit provided '{units[0]}' is not recognized by Rebound.  Use one of these: {tuple(rb.units.lengths_SI.keys())}")
+        if units[1] not in rb.units.masses_SI:
+            raise ValueError(f"Mass unit provided '{units[1]}' is not recognized by Rebound.  Use one of these: {tuple(rb.units.masses_SI.keys())}")
+        if units[2] not in rb.units.times_SI:
+            raise ValueError(f"Time unit provided '{units[2]}' is not recognized by Rebound.  Use one of these: {tuple(rb.units.times_SI.keys())}")
+        
+        #Units        
+        self.units=units
+        self._ul,self._um,self._ut=self.units
+        #self.sim.units=self.units
+        
+        #Canonical units of the system
+        self.ul=rb.units.convert_length(1,self._ul,"m")
+        self.um=rb.units.convert_mass(1,self._um,"kg")
+
+        #Compute the units of time
+        sim=rb.Simulation()
+        sim.units=self.units
+        self.G=sim.G
+        self.ut=np.sqrt(self.G*self.ul**3/(self.um*GSI))
+        
+        #Update system
+        self._update_system()
+        
+    def _get_source(self,body):
+        """Get the source of light (stellar body) in the center of a body
+        """
+        if (body.parent is None) or (body.kind == "Star"):
+            return body
+
+        elif body.parent.kind == "Star":
+            return body.parent
+
+        else:
+            return self._get_source(body.parent)
+
+    def _update_system(self):
+        """Update system properties
+        """
+        self.nbodies=len(self.bodies)
+        if self._simulated:
+            self.nparticles=len(self.sim.particles)
+        
+    def _is_spangled(self):
+        """Check if system is spangled
+        """
+        return True if self.sg else False
+    
+    def reset_state(self):
+        """Reset the state of the spangler
+        """
+        self.sg.reset_state()
+        self._observer_set=False
+        self._luz_set=False
+
+    def save_to(self,filename):
+        """Save system from file
+        
+        Parameters:
+            filename: string:
+                Path to file where the object will be pickled.
+                
+        Result:
+            File 'filename' for regular object and 'filename.rbin' for rebound simulation
+        """
+        if self._simulated:
+            #Rebound file
+            rb_filename=filename+".rbin"
+
+            #Save rebound state
+            verbose(VERB_SIMPLE,"Saving rebound simulation")
+            self.sim.save(rb_filename)
+
+            #Since rebound have ctypes it cannot be pickled
+            del self.sim
+            self._simulated=True
+
+        #Pickle system
+        PrynglesCommon.save_to(self,filename)
+
+        if self._simulated:
+            #Load again rebound
+            self.sim=rb.Simulation(rb_filename)
+
+    def load_from(self,filename):
+        """Load system from filename
+                
+        Parameters:
+            filename: string:
+                Path to file where the object will be pickled.
+                There to be 2 files: 'filename' (with the regular object) and filename.rbin with 
+                rebound simulation.
+        """
+        #Load system
+        self=PrynglesCommon.load_from(self,filename)
+
+        if self._simulated:
+            #Rebound file
+            rb_filename=filename+".rbin"
+
+            #Load rebound
+            verbose(VERB_SIMPLE,"Loading rebound simulation")
+            self.sim=rb.Simulation(rb_filename)
+        
+    def status(self):
+        if self._simulated:
+            print(f"System with {self.nbodies} bodies and {self.nparticles} particles (rings and disk are not particles)")
+            self.sim.status()
+        else:
+            print(f"Simulation for this system has not been yet initialized. Use System.initialize_simulation()")
+

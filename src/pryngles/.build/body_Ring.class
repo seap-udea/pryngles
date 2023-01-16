@@ -1,0 +1,91 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Ring
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Ring(Body):
+    """Class Ring.
+    
+Initialization attributes:
+        
+        parent: Class Body, default = None:
+            Object in the center of the orbit of the star for specification purposes.
+            If None the object is the center of the orbit specification for other objects.
+
+        **props: dictionary:
+            List of properties for star.  For the complete set of default values of the properties
+            see STAR_DEFAULTS.  Description of properties are available in the Body class documentation.
+            
+            Additional properties:
+
+            fi: float [adimensional], default = 1:
+                Fraction of the radius of the parent object where ring stars.
+
+            fe: float [adimensional], default = 1:
+                Fraction of the radius of the parent object where ring ends.
+
+            albedo_gray_normal: float. default = 1: 
+                Lambertian (normal) gray (wavelength indpendent) albedo of the spangle.
+
+            tau_gray_optical: float. default = 0:
+                Gray (wavelength indpendent) Optical depth of the spangle.  
+                If 0 the spangle is entirely opaque to all wavelength, despite its type.            
+
+    Derived attributes:
+    
+        ri: float:
+            Radius of the inner border of the ring in units of the parent radius.
+
+        re: float:
+            Radius of the outer border of the ring in units of the parent radius.
+            
+    Notes:
+
+        See Body class documentation.
+    """
+    def __init__(self,
+                 parent=None,
+                 **props
+                ):
+        
+        
+        #Instantiate object with basic properties
+        Body.__init__(self,"Ring",RING_DEFAULTS,parent,**props)
+        
+        #Check parent
+        if self.parent is None:
+            raise ValueError(f"Parent not provided and mandatory for {self.kind}.")
+        
+        #Update properties
+        self.update_ring(**props)
+
+    def _update_ring_properties(self):
+        """Update specific properties of the star
+        
+        Properties to update:
+        
+            ri, re: float:
+                Radius of the inner (outer) border of the ring in units of the parent radius.
+                Requires: limb_coefs.
+                
+            radius: float:
+                Object radius.
+                
+            geometry_args: dictionary:
+                
+        """
+        verbose(VERB_VERIFY,"Updating Ring properties")
+    
+        #Update radius
+        self.ri=self.fi*self.parent.radius
+        self.re=self.fe*self.parent.radius
+        self.radius=self.re
+        
+        #Update geometry args for spangling purposes
+        self.geometry_args=dict(ri=self.ri/self.re)
+        
+    def update_ring(self,**pars):
+        verbose(VERB_VERIFY,"Updating Ring")
+        Body.update_body(self,**pars)
+        self._update_ring_properties()   
+

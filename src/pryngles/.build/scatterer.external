@@ -1,0 +1,11 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+from pryngles import *
+
+from abc import ABC, abstractmethod
+from scipy.optimize import bisect
+from scipy.integrate import quad,dblquad
+from scipy.interpolate import interp1d,interp2d
