@@ -450,7 +450,8 @@ class Util(object):
             ri2=fi**2*cosir-1
         else:
             yi=np.sqrt(fi**2-1)/(fi*sinir)
-            ri2=fi**2*cosir*2/np.pi*np.arcsin(yi)-                2/np.pi*np.arcsin(yi*fi*cosir)
+            ri2=fi**2*cosir*2/np.pi*np.arcsin(yi)-\
+                2/np.pi*np.arcsin(yi*fi*cosir)
         ri2=beta*ri2
 
         #EXTERNAL RING EFFECTIVE RADIUS
@@ -458,7 +459,8 @@ class Util(object):
             re2=fe**2*cosir-1
         else:
             ye=np.sqrt(fe**2-1)/(fe*sinir)
-            re2=fe**2*cosir*2/np.pi*np.arcsin(ye)-                2/np.pi*np.arcsin(ye*fe*cosir)
+            re2=fe**2*cosir*2/np.pi*np.arcsin(ye)-\
+                2/np.pi*np.arcsin(ye*fe*cosir)
         re2=beta*re2
 
         #RINGED-PLANET AREA
@@ -928,7 +930,8 @@ class Sample(object):
 # Class RingedPlanet
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class RingedPlanet(object):
-    """
+    """RingedPlanet_doc=\
+    
     Class Ringed Planet.
     
     Conventions:
@@ -1697,12 +1700,14 @@ class RingedPlanet(object):
         #Check side of the star
         side=self.rstar_obs[2]>0
         #Planet
-        self.rhops=((self.rps_obs[:,0]-self.rstar_obs[0])**2+                    (self.rps_obs[:,1]-self.rstar_obs[1])**2)**0.5
+        self.rhops=((self.rps_obs[:,0]-self.rstar_obs[0])**2+\
+                    (self.rps_obs[:,1]-self.rstar_obs[1])**2)**0.5
         sp=(self.rhops<=self.Rs)*(self.rps_obs[:,2]>=0)
         self.tp=sp if ~side else self.tp
         self.cp=sp if side else self.cp
         #Ring
-        self.rhors=((self.rrs_obs[:,0]-self.rstar_obs[0])**2+                    (self.rrs_obs[:,1]-self.rstar_obs[1])**2)**0.5
+        self.rhors=((self.rrs_obs[:,0]-self.rstar_obs[0])**2+\
+                    (self.rrs_obs[:,1]-self.rstar_obs[1])**2)**0.5
         sr=(self.rhors<=self.Rs)
         self.tr=sr if ~side else self.tr
         self.cr=sr if side else self.cr

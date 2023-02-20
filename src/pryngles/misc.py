@@ -29,7 +29,8 @@ from sys import maxsize as HASH_MAXSIZE
 # Class Misc
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Misc(object):
-    """
+    """Misc_doc=\
+    
     Miscelaneous routines.
     
     This is a set of util routines intended for a diversity of purposes.

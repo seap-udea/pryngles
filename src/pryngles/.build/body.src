@@ -39,7 +39,8 @@ BODY_KINDS=[]
 # The Body class is one of the most important classes in the package. 
 
 #@docstring:Body
-Body_doc="""A general body.  This class is not intended to be used independently, just for inheritance purposes.
+Body_doc=\
+"""A general body.  This class is not intended to be used independently, just for inheritance purposes.
     
 Initialization attributes:
 

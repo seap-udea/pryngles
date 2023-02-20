@@ -7,7 +7,6 @@ Author: Jorge I. Zuluaga, Allard Veenstra, Jaime A. Alvarado, Mario Sucerquia
 Author-email: jorge.zuluaga@udea.edu.co
 License: MIT
 Keywords: astronomy exoplanets planetary-rings
-Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
@@ -334,5 +333,3 @@ new](https://github.com/seap-udea/pryngles-public/blob/master/WHATSNEW.md).
 This package has been designed and written originally by Jorge
 I. Zuluaga, Mario Sucerquia & Jaime A. Alvarado-Montes with the
 contribution of Allard Veenstra (C) 2022
-
-

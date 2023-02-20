@@ -27,7 +27,8 @@ from tqdm import tqdm
 # Class System
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class System(PrynglesCommon):
-    """Creates a planetary system.
+    """System_doc=\
+    f    Creates a planetary system.
     
         Initialization attributes:
     
