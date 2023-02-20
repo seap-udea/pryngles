@@ -79,21 +79,30 @@ DEG=Const.deg
 
 
 class CanonicalUnits(object):
-    def __init__(self,UL=0,UT=0,UM=0):
-        if (UL==0)+(UT==0)+(UM==0)!=1:
-            raise AssertionError("You should provide at least two units.")
-        if (UL==0):
+    def __init__(self,G=None,UL=0,UT=0,UM=0):
+
+        if G:
+            self.G=G
+            self.UL=UL
             self.UM=UM
             self.UT=UT
-            self.UL=(Const.G*UM*UT)**(1./3)
-        elif (UT==0):
-            self.UM=UM
-            self.UL=UL
-            self.UT=(UL**3/(Const.G*UM))**0.5
-        elif (UM==0):
-            self.UL=UL
-            self.UT=UT
-            self.UM=(UL**3/(Const.G*UT))**0.5
+
+        else:
+            self.G=1
+            if (UL==0)+(UT==0)+(UM==0)!=1:
+                raise AssertionError("You should provide at least two units.")
+            if (UL==0):
+                self.UM=UM
+                self.UT=UT
+                self.UL=(Const.G*UM*UT)**(1./3)
+            elif (UT==0):
+                self.UM=UM
+                self.UL=UL
+                self.UT=(UL**3/(Const.G*UM))**0.5
+            elif (UM==0):
+                self.UL=UL
+                self.UT=UT
+                self.UM=(UL**3/(Const.G*UT))**0.5
 
         #Derived units
         self.UV=self.UL/self.UT #Velocity
@@ -103,7 +112,6 @@ class CanonicalUnits(object):
         self.UF=self.UM*self.UA #Force
         self.UE=self.UF*self.UA #Energy
         self.UN=1/self.UT #Angular frequency
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Util
@@ -1219,7 +1227,7 @@ class RingedPlanet(object):
         self.Rs=1.0
 
         #Planetary and stellar properties
-        self.mu=self.Mstar
+        self.mu=self.CU.G*self.Mstar
         self.Rplanet=Rplanet
         self.Rp=self.Rplanet/self.Rstar #All lengths will be in units of Rs
 
