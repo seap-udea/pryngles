@@ -1,0 +1,10 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+from pryngles import *
+import numpy as np
+import rebound as rb
+from tqdm import tqdm
+from anytree import NodeMixin,RenderTree,ZigZagGroupIter

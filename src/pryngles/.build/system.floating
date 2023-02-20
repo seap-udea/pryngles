@@ -1,0 +1,73 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Pryngles module: System
+
+# ## External modules
+
+
+# ## System Class
+# 
+# This is the most important class in the whole package.  This class allows to create the planetary system and manipulate it.
+
+
+System.__doc__=System_doc
+
+
+System.add=add
+
+
+
+System.initialize_simulation=initialize_simulation
+
+
+# ## Remove particles
+
+System.remove=remove
+
+
+# ## Spangle System, Set Observer and Set Luz
+
+
+System._set_luz_recursive=_set_luz_recursive
+System._set_observer=_set_observer
+System._set_luz=_set_luz
+System.update_perspective=update_perspective
+System.spangle_system=spangle_system
+
+
+
+
+# ### Miscelaneous methods
+
+System.update_body=update_body
+
+
+System.reset=reset
+
+
+System.integrate=integrate
+
+
+# ## Legacy method
+
+
+System.ensamble_system=ensamble_system
+
+
+# ### The end
+

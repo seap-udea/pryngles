@@ -1,0 +1,117 @@
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file plot
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def calc_flyby(normal=[0,0,1],start=0,stop=360,num=10,lat=0):
+        
+        """Calculate a flyby coordinates
+        
+        Parameters:
+            normal: array (3), default = [0,0,1]:
+                Normal to flyby plane.
+                
+            start: float, default = 0:
+                Start longitude.
+                
+            stop: float, default = 0:
+                Stop longitude.
+                
+            num: int, default = 10:
+                Number of points in flyby.
+                
+            lat: float, default = 0:
+                Constant latitude of flyby.
+        """
+    
+        #Range of longitudes and latitudes
+        lonp=np.linspace(start,stop,num)
+        latp=lat*np.ones_like(lonp)
+        
+        #Rotation matrices
+        M,I=Science.rotation_matrix(normal,0)
+    
+        #Compute directions
+        nvecs=np.zeros((num,3))
+        for i in range(num):
+            rp=Science.direction(lonp[i],latp[i])
+            nvecs[i]=spy.mxv(I,rp)
+    
+        return nvecs
+    
+    def animate_rebound(sim,filename=None,tini=0,tend=None,nsnap=None,interval=100,axis=False,traces=False,**plot_args):
+        """Animate a rebound simulation.
+        """
+        default_plot_args=dict(
+            marker='o',
+            color='r'
+        )
+        default_plot_args.update(plot_args)
+        
+        verbosity=Verbose.VERBOSITY
+        Verbose.VERBOSITY=VERB_NONE
+        
+        fig,ax=plt.subplots()
+    
+        if not traces:
+            camera=Camera(fig)
+    
+        #Get the period of the longest osculant orbit
+        P=-1
+        for p in sim.particles[1:]:
+            P=p.P if p.P>P else P
+        
+        #Choose properly tend and nsnap
+        tend=P if tend is None else tend
+        nsnap=int(tend/(P/100)) if nsnap is None else nsnap
+        
+        if traces:
+            sim.move_to_com()
+            for p in sim.particles:
+                xyz=p.xyz
+                ax.plot(xyz[0],xyz[1],marker="*",color='k',ms=10,zorder=1000)
+    
+        #Simulate
+        for i,t in enumerate(tqdm(np.linspace(tini,tend,nsnap))):
+            sim.integrate(t)
+            sim.move_to_com()
+            
+            for p in sim.particles:
+                xyz=p.xyz
+                ax.plot(xyz[0],xyz[1],**default_plot_args)
+             
+            if not traces:
+                ax.text(0.5,1,f"t = {sigfig.round(t,3)} (snap {i+1}/{nsnap})",
+                        transform=ax.transAxes,
+                        ha='center',va='bottom')
+    
+                camera.snap()
+        
+        if axis:
+            ax.grid()
+        else:
+            ax.axis("off")
+        ax.axis("equal")
+    
+        if not traces:
+            anim=camera.animate(interval=interval)    
+            Verbose.VERBOSITY=verbosity
+    
+            if filename is not None:
+                if 'gif' in filename:
+                    anim.save(filename)
+                    return anim
+                elif 'mp4' in filename:
+                    ffmpeg=animation.writers["ffmpeg"]
+                    metadata = dict(title='Pryngles Spangler Animation',
+                                    artist='Matplotlib',
+                                    comment='Movie')
+                    w=ffmpeg(fps=15,metadata=metadata)
+                    anim.save(filename,w)
+                    return anim
+                else:
+                    raise ValueError(f"Animation format '{filename}' not recognized")
+            else:
+                return anim
+    
+            return anim

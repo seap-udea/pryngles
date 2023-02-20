@@ -13,11 +13,27 @@
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 import setuptools
+from numpy.distutils.core import Extension, setup
+
+"""
+
+Note about setuptools:
+
+NumPy distutils is not simply the old distutils package.  Actually it
+internally tries to import setuptools and use it as much as possible.
+We use numpy.distutils because we are distributing Pryngles along with
+the fortran code pixx.
+
+For a detailed explanation see eg:
+https://het.as.utexas.edu/HET/Software/Numpy/f2py/distutils.html
+https://stackoverflow.com/a/55358607
+
+"""
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     # ######################################################################
     # BASIC DESCRIPTION
     # ######################################################################
@@ -51,7 +67,11 @@ setuptools.setup(
     # EXTENSIONS
     # ######################################################################
     ext_modules=[
-        setuptools.Extension(name="pryngles.cpixx",
+        Extension(name="pryngles.pixx",
+                  sources=["src/pryngles/pixx_sig.pyf",
+                           "src/pryngles/pixx/pixx.f",
+                           ]),
+        Extension(name="pryngles.cpixx",
                   sources=["src/pryngles/cpixx/cpixx.c",
                            ]),
     ],
@@ -81,5 +101,5 @@ setuptools.setup(
     # OPTIONS
     # ######################################################################
     include_package_data=True,
-    package_data={"": ["data/*.*", "tests/*.*"]},
+    package_data={"": ["*.c","data/*.*", "tests/*.*"]},
 )

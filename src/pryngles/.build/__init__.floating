@@ -1,0 +1,49 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+
+#!/usr/bin/env python
+# coding: utf-8
+
+# # PlanetaRY spanGLES
+
+# This is the initialization file of the `Pryngles` package.  
+# 
+# > **Note for `JupDev`**: This is the only module that should be converted as it is without using any decorator `#@``
+
+# ## Packages common to all modules
+
+
+# ## Jupyter compatibilty
+
+
+# ## Verbosity
+
+
+# ## PrynglesCommon
+# 
+# Many of the classes in Pryngles inherite methods of this common class
+
+
+# ## Pryngles modules
+
+
+# ## Aliases
+
+
+# ## Tests
+
+
+# ### The end
+

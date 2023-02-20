@@ -1,0 +1,11 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+from pryngles import *
+from collections import OrderedDict as odict
+from collections.abc import Iterable
+import inspect
+import os
+from sys import maxsize as HASH_MAXSIZE

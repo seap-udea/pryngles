@@ -1,0 +1,37 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Pryngles module: Constants and Enumerators
+# 
+# This module contains all the constants required by other modules in the package.
+
+# ## External modules
+
+
+# ## Constants and enumerators by Module
+
+# ### System related
+
+
+# ## Constants class
+# 
+# This class contains several physical and astronomical constants.  It takes constants from other packages (rebound, astropy) and define other constants based on reliable sources.
+
+
+
+# ### The end
+

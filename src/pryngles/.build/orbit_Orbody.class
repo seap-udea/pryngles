@@ -1,0 +1,24 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Orbody
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Orbody(PrynglesCommon,NodeMixin):
+    """Orbital body
+    """    
+    def __init__(self,name=None,parent=None,**elements):
+        
+        #Basic attributes
+        self.name='body' if name is None else name
+        self.parent=parent
+        
+        #Add initial elements to attributes
+        for element in elements:
+            if element in REBOUND_ORBITAL_PROPERTIES:
+                self.__dict__[element]=elements[element]
+            else:
+                raise ValueError(f"Element {element} not identified.")
+        self.elements=elements
+
+    def show_tree(self):
+        print(RenderTree(self))

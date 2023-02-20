@@ -1,0 +1,86 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Star
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Star(Body):
+    """A star.
+
+    Initialization attributes:
+        
+        parent: Class Body, default = None:
+            Object in the center of the orbit of the star for specification purposes.
+
+            If None the object is the center of the orbit specification for other objects.
+            
+            Object parent for a star should be another star.
+        
+        **props: dictionary:
+            List of properties for star.  For the complete set of default values of the properties
+            see STAR_DEFAULTS.  Description of properties are available in the Body class documentation.
+            
+            Additional properties:
+            
+                limb_coeffs: list [adimensional], default = []:
+                    List of limb darkening fit coefficients.  See Science.calc_limbdarkening.
+
+                    Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
+                    Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
+                    
+                spangle_type: int, default = STAR_SPANGLE:
+                    Type of spangles
+
+    Derived attributes:
+    
+    Methods:
+    
+        update_body(**pars):
+
+            This method compute some derived attributes like.
+
+    Notes:
+
+        See Body class documentation.
+    
+    """
+    def __init__(self,
+                 parent=None,
+                 **props
+                ):
+        
+        
+        #Instantiate object with basic properties
+        Body.__init__(self,"Star",STAR_DEFAULTS,parent,**props)
+
+        #Check parent
+        if self.parent is not None:
+            if self.parent.kind!="Star":
+                raise ValueError(f"Only another Star can be the parent of a Star (you provided {self.parent.kind})")
+
+        self._update_star_properties()
+        
+    def _update_star_properties(self):
+        """Update specific properties of the star
+        
+        Properties to update:
+        
+            norm_limb_darkening: float:
+                Limb darkening function normalization.
+                Requires: limb_coefs.
+
+        """
+        verbose(VERB_VERIFY,"Updating properties of Star")
+        
+        #Compute limbdarkening at r = 0 to initialize normalization constant
+        sci.limb_darkening(0,self.limb_coeffs)
+        
+        #Store limb darkening normalization
+        self.norm_limb_darkening=SCIENCE_LIMB_NORMALIZATIONS[hash(tuple(self.limb_coeffs))]
+        
+    def update_star(self,**props):
+        """General update propeties of the Star
+        """
+        verbose(VERB_VERIFY,"Updating star")
+        
+        Body.update_body(self,**props)
+        self._update_star_properties()

@@ -190,7 +190,7 @@ Cf2py depend(nmugs) xmu
 
       SUBROUTINE reflection(npix,phi,beta,theta0,theta,
      .                      nmugs,nmat,nfou,xmu,rfou,
-     .                      apix,Sarr)
+     .                      apix,method,Sarr)
       
 *----------------------------------------------------------------------------
 *     Read a Fourier coefficients file and calculate the Stokes vector
@@ -212,6 +212,7 @@ Cf2py depend(nmugs) xmu
       PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
 
       INTEGER i,j,nmat,nmugs,nfou,npix,ki,m,k,n
+      INTEGER j1(npix), i1(npix)
 
       DOUBLE PRECISION fac,mu,mu0,mu0old,muold,
      .                 be,rf3,SVR2,SvR3
@@ -227,16 +228,20 @@ Cf2py depend(nmugs) xmu
      .                 rftemp(nmugs),rfmu0(nmat,nmugs),
      .                 rfsecmu0(nmugs),     
      .                 Bplus(4),SvR(nmat),RM(npix,nmat),rf3save(nmat),
+     .                 RMbi(nmat),
      .                 P,Sarr(npix,nmat+1)
+     
+      CHARACTER method*25
 
-Cf2py intent(in) npix, phi, beta, theta0, theta, apix, trans
-Cf2py intent(in) nmugs, nmat, nfou, xmu, rfou
+Cf2py intent(in) npix, phi, beta, theta0, theta, apix
+Cf2py intent(in) nmugs, nmat, nfou, xmu, rfou, method
 Cf2py intent(out) Sarr
 Cf2py depend(npix) phi, beta, theta0, theta, apix, Sarr
 Cf2py depend(nmat) rfou, Sarr
 Cf2py depend(nfou) rfou
 Cf2py depend(nmugs) rfou, xmu
 
+      IF (method .EQ. 'spline') THEN
 *----------------------------------------------------------------------------
 *     Initialize the storage matrix and values:
 *----------------------------------------------------------------------------
@@ -358,13 +363,234 @@ Cf2py depend(nmugs) rfou, xmu
 *----------------------------------------------------------------------------
 *       Next pixel:
 *----------------------------------------------------------------------------
-
       ENDDO
+      
+*----------------------------------------------------------------------------  
+*----------------------------------------------------------------------------
+*----------------------------------------------------------------------------
+      
+*----------------------------------------------------------------------------
+*     Bilinear interpolation:
+*----------------------------------------------------------------------------
+      ELSEIF (method .EQ. 'bilinear') THEN
+      
+*----------------------------------------------------------------------------
+*       Find the locations in array xmu where the mu-values are:
+*----------------------------------------------------------------------------
+        CALL bracks(theta,npix,xmu,nmugs,j1)
+
+*----------------------------------------------------------------------------
+*       Find the location in array xmu where mu0 falls:
+*----------------------------------------------------------------------------
+        CALL bracks(theta0,npix,xmu,nmugs,i1)
+
+*----------------------------------------------------------------------------
+*       Loop over the pixels:
+*----------------------------------------------------------------------------
+        DO i=1,npix
+
+*----------------------------------------------------------------------------
+*       Initialize the reflected light vector for this pixel:
+*----------------------------------------------------------------------------
+            DO k=1,nmat
+                SvR(k)= 0.D0
+            ENDDO
+
+*----------------------------------------------------------------------------
+*           Get the cosines of the angles:
+*----------------------------------------------------------------------------
+            mu= theta(i)
+            mu0=theta0(i)
+
+*----------------------------------------------------------------------------
+*           Calculate the 1st column of the local reflection matrix:
+*----------------------------------------------------------------------------
+            CALL interpbilinear(mu0,mu,phi(i),xmu,i1(i),j1(i),
+     .                          nmugs,nmat,nfou,rfou,RMbi)
+
+*----------------------------------------------------------------------------
+*           Calculate the locally reflected Stokes vector:
+*           apix is the surface area of the pixel (the same for all pixels)
+*           apix is initially assumed to be a piece of the illuminated circle 
+*           with radius 1
+*----------------------------------------------------------------------------
+            DO k=1,nmat
+                SvR(k)= mu0*RMbi(k) 
+            ENDDO
+
+*----------------------------------------------------------------------------
+*           Rotate Stokes elements Q and U to the actual reference plane:
+*----------------------------------------------------------------------------
+            be= 2.D0*beta(i)
+            SvR2= DCOS(be)*SvR(2) + DSIN(be)*SvR(3) 
+            SvR3=-DSIN(be)*SvR(2) + DCOS(be)*SvR(3) 
+            SvR(2)= SvR2
+            SvR(3)= SvR3
+
+*----------------------------------------------------------------------------
+*           Compute the local degree of polarisation P:
+*----------------------------------------------------------------------------
+            IF (DABS(Svr(1)).LT.1.D-6) THEN
+                P=0.D0
+            ELSEIF (DABS(SvR(3)).LT.1.D-6) THEN
+                P= -SvR(2)/SvR(1)
+            ELSE
+                P= DSQRT(SvR(2)*SvR(2)+SvR(3)*SvR(3))/SvR(1)
+            ENDIF
+            IF (DABS(P).LT.1.D-6) P=0.D0
+
+*----------------------------------------------------------------------------
+*           Add the Stokes elements of the pixel to an array:
+*           Multiply with mu and the actual pixel area to obtain stokes elements
+*----------------------------------------------------------------------------
+            DO k=1,nmat
+                Sarr(i,k) = SvR(k)*mu * apix(i)
+            ENDDO
+        
+            Sarr(i,nmat+1) = P
+
+*----------------------------------------------------------------------------
+*           Next pixel:
+*----------------------------------------------------------------------------
+        ENDDO
+      ENDIF
       
 *-------------------------------------------------------------------------------
       RETURN
       END
 
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      SUBROUTINE interpbilinear(mu0,mu,phi,xmu,i1,j1,
+     .                          nmugs,nmat,nfou,rfour,RM)
+
+*****************************************************************************
+      IMPLICIT NONE
+
+      DOUBLE PRECISION pi,radfac
+      PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
+
+      INTEGER nmugs,nmat,nfou,m,k,jbase,i1,j1
+
+      DOUBLE PRECISION x1,x2,y1,y2,w1,w2,w3,w4,
+     .                 fac,mu,mu0,phi
+
+      DOUBLE PRECISION xmu(nmugs),
+     .                 rfour(nmat*nmugs,nmugs,0:nfou),
+     .                 rfm(nmat),RM(nmat),Bplus(4),
+     .                 r1(nmat),r2(nmat),r3(nmat),r4(nmat)
+
+Cf2py intent(in) mu0, mu, phi, xmu, i1, j1 
+Cf2py intent(in) nmugs, nmat, nfou, rfour
+Cf2py intent(out) RM
+Cf2py depend(nmat) rfour, RM
+Cf2py depend(nmugs) rfour, xmu
+Cf2py depend(nfou) rfour
+
+*----------------------------------------------------------------------------
+*     Initialize the 1st column of the reflection matrix and the 
+*     Stokes vector of the reflected light:
+*----------------------------------------------------------------------------
+      DO k=1,nmat
+         RM(k)= 0.D0
+      ENDDO
+      
+*----------------------------------------------------------------------------
+*     Loop over the Fourier coefficients:
+*----------------------------------------------------------------------------
+      DO m=0,nfou
+
+         fac=1.D0
+         IF (m.EQ.0) fac=0.5D0
+
+         IF (j1.NE.nmugs) THEN
+            x1= xmu(j1)
+            x2= xmu(j1+1)
+               
+            jbase= (j1-1)*nmat
+
+            IF (i1.NE.nmugs) THEN
+               y1= xmu(i1)
+               y2= xmu(i1+1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1,m)
+                  r2(k)= rfour(jbase+k,i1+1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1+1,m)
+               ENDDO
+            ELSE
+               y1= xmu(i1-1)
+               y2= xmu(i1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1-1,m)
+                  r2(k)= rfour(jbase+k,i1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1-1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1,m)
+               ENDDO
+            ENDIF
+         ELSE
+            x1= xmu(j1-1)
+            x2= xmu(j1)
+
+            jbase= (j1-2)*nmat
+
+            IF (i1.NE.nmugs) THEN
+               y1= xmu(i1)
+               y2= xmu(i1+1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1,m)
+                  r2(k)= rfour(jbase+k,i1+1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1+1,m)
+               ENDDO
+            ELSE
+               y1= xmu(i1-1)
+               y2= xmu(i1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1-1,m)
+                  r2(k)= rfour(jbase+k,i1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1-1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1,m)
+               ENDDO
+            ENDIF
+         ENDIF
+
+         w1=(x2-mu)*(y2-mu0)/((x2-x1)*(y2-y1))
+         w2=(x2-mu)*(mu0-y1)/((x2-x1)*(y2-y1))
+         w3=(mu-x1)*(y2-mu0)/((x2-x1)*(y2-y1))
+         w4=(mu-x1)*(mu0-y1)/((x2-x1)*(y2-y1))
+
+         DO k=1,nmat
+            rfm(k)= w1*r1(k)+w2*r2(k)+w3*r3(k)+w4*r4(k)
+         ENDDO
+
+*--------------------------------------------------------------------
+*        Calculate the 1st column of the reflection matrix: 
+*--------------------------------------------------------------------
+         Bplus(1)= COS(m*phi)
+         Bplus(2)= COS(m*phi)
+         Bplus(3)= SIN(m*phi)
+         Bplus(4)= SIN(m*phi)
+
+         DO k=1,nmat
+            RM(k)= RM(k) + 2.D0*Bplus(k)*fac*rfm(k)
+         ENDDO
+
+*----------------------------------------------------------------------------
+*     Next Fourier coefficient:
+*----------------------------------------------------------------------------
+      ENDDO
+
+*----------------------------------------------------------------------------
+      RETURN
+      END
+      
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

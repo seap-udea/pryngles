@@ -1,0 +1,36 @@
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file body
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def spangle_body(self):
+        """
+        Spangle the surface of the body
+        """
+        
+        #Create spangler
+        self.sg=Spangler(
+            nspangles=self.nspangles,
+            name=self.name,
+            n_equ=self.n_equ,
+            alpha_equ=self.alpha,
+            w=self.wrot,
+            q0=self.q0,
+        )
+        
+        #Populate spangler
+        self.sg.populate_spangler(
+            shape=self.shape,
+            spangle_type=self.spangle_type,
+            scale=self.radius,
+            seed=self.seed,
+            preset=self.preset,
+            **self.geometry_args,
+        )
+        
+        #Additional properties in the Spangler DataFrame
+        if self.kind=="Star":
+            self.sg.data.source=True
+        
+        self.sg.set_observer()
+        self.sg.set_luz()

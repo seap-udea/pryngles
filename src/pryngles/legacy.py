@@ -1161,10 +1161,17 @@ class RingedPlanet(object):
         limb_cs=[0.6550],
         #Scatterer extension
         extension="cpixx",
+        #Fourier coefficient files
+        fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
+        fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat"),
     )
     _behavior=dict(
         #Include shadows in computations and plots?
         shadows=True,
+        #Type of interpolation method, spline or bilinear for planet
+        interp_method_planet = "spline",
+        #Type of interpolation method, spline or bilinear for ring
+        interp_method_ring = "bilinear",
     )
 
     ##############################################################
@@ -1185,11 +1192,7 @@ class RingedPlanet(object):
                  #Behavior
                  behavior=dict(),
                  #Physical properties
-                 physics=dict(),
-                 #Fourier coefficient files
-                 #fname_planet = Misc.get_data("fou_gasplanet.dat"),
-                 fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
-                 fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat")
+                 physics=dict()
                 ):
         """
         The initialization routine only sets the basic geometric properties of the ring
@@ -1262,14 +1265,14 @@ class RingedPlanet(object):
         self.physics.update(physics)
         self.updatePhysicalProperties(physics)
         
+        # Read data
+        self.readData(self.fname_planet, self.fname_ring)
+        
         #Update several optical factors (projected areas, stellar fluxes, albedos, etc.)
         self.updateOpticalFactors()
 
         #Plot options
         self._resetPlot()
-        
-        # Read data
-        self.readData(fname_planet, fname_ring)
 
     def updateProperties(self):
         """
@@ -2648,6 +2651,12 @@ class RingedPlanet(object):
         #Limb darkening coefficients
         self.limb_cs=self.physics["limb_cs"]
         self.normlimb=Util.limbDarkeningNormalization(self.limb_cs)  
+        
+        self.extension=self.physics["extension"]
+        
+        #Fourier coefficient files
+        self.fname_planet = self.physics["fname_planet"]
+        self.fname_ring = self.physics["fname_ring"]
     
     ##############################################################
     # FLUX RELATED ROUTINES
@@ -2872,6 +2881,8 @@ class RingedPlanet(object):
         Update:
             - updateOpticalFactors
         """
+        if self.physics["extension"] == "pixx":
+            import pryngles.pixx as pixx
         #Constants
         angle_eps = 1e-3 # Cutoff angle
         planet_used = False
@@ -2914,9 +2925,11 @@ class RingedPlanet(object):
             planet_used = True
             if self.physics["extension"] == "pixx":
                 self.Stokesp[cond,:] = pixx.reflection(cond.sum(), self.phidiffps[cond], self.betaps[cond],
-                                                        abs(self.etaps[cond]), abs(self.zetaps[cond]),
-                                                        self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
-                                                        np.ones(cond.sum())*self.normp*self.afp)
+                                                       abs(self.etaps[cond]), abs(self.zetaps[cond]),
+                                                       self.nmugsp,self.nmatp,self.nfoup,self.xmup,self.rfoup,
+                                                       np.ones(cond.sum())*self.normp*self.afp,
+                                                       self.behavior["interp_method_planet"]
+                                                      )
                 """This code is used for debugging purposes
                 self.save_values+=[
                             dict(
@@ -2987,9 +3000,11 @@ class RingedPlanet(object):
             if back:
                 if self.physics["extension"] == "pixx":
                     self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
-                                                            abs(self.etars[cond]), abs(self.zetars[cond]),
-                                                            self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
-                                                            np.ones(cond.sum())*self.normr*self.afr)
+                                                           abs(self.etars[cond]), abs(self.zetars[cond]),
+                                                           self.nmugsr,self.nmatr,self.nfour,self.xmur,self.tfour,
+                                                           np.ones(cond.sum())*self.normr*self.afr,
+                                                           self.behavior["interp_method_ring"]
+                                                          )
                     """This code is used for debugging purposes
                     self.save_values+=[
                             dict(
@@ -3014,9 +3029,11 @@ class RingedPlanet(object):
             else:
                 if self.physics["extension"] == "pixx":
                     self.Stokesr[cond,:] = pixx.reflection(cond.sum(), self.phidiffrs[cond], self.betars[cond],
-                                                            abs(self.etars[cond]), abs(self.zetars[cond]),
-                                                            self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
-                                                            np.ones(cond.sum())*self.normr*self.afr)
+                                                           abs(self.etars[cond]), abs(self.zetars[cond]),
+                                                           self.nmugsr,self.nmatr,self.nfour,self.xmur,self.rfour,
+                                                           np.ones(cond.sum())*self.normr*self.afr,
+                                                           self.behavior["interp_method_ring"]
+                                                          )
                     self.save_values+=[
                             dict(
                                 obj="ring forward",
@@ -3038,7 +3055,6 @@ class RingedPlanet(object):
             Sr = self.Stokesr[:,:-1]
             self.Pir[cond] = self.Stokesr[cond,-1]
             
-            # To normalize: /np.pi*(self.Rp**2)) # For ppm: /(4*np.pi*self.rstar**2)*1e6
             if normalize:
                 self.Rir[cond] = Sr[cond,0]/(np.pi*(self.Rp**2)) 
             else:

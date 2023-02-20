@@ -1,0 +1,205 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Sampler
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Sampler(PrynglesCommon):
+    """    Fibonacci sampling of disks and spheres.
+        
+        Initialization attributes:
+            N: integer:
+                Number of points (points).
+            
+        Optional attibutes:
+        
+            seed: integer. default = 0:
+                Value of the integer seed of random number generation (if 0 no random seed is set).
+                If a non-zero seed is used the position of the points for a given geometry will be 
+                always the same.
+                
+            filename: string, default = None:
+                Load object from a binary file.  The binary file should be previously prepared with
+                the method .save_to of the class.
+    
+        Atributes to load data from presets:
+    
+            preset: tupe, default = None:
+                If set, we load a preset sample from disk of the type preset.
+                preset should have two components: 
+    
+                    geometry: string:
+                        Possible values: "sphere", "circle", "ring"
+    
+                    geometry_args: dict:
+                        Arguments of the routine to generate sample from preset.  Example:
+    
+                            ri: float, default = 0:
+                                Inner radius of the ring when preset = "ring"
+                    
+        Secondary attributes:
+        
+            dim: integer. 
+                Dimension of sampling.
+                
+            ss: numpy array (Nx3).
+                Position of the points in cartesian coordinates, 
+                
+            pp: numpy array (Nx3).
+                Position of the points in spherical coordinates (r,theta,phi), 
+                where theta is azimutal angle (angle with respecto to x-axis) and phi is "elevation" 
+                (complement of polar angle).
+    
+                Notice that this convention is different than that of regular vectorial calculus
+                where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
+                the azimutal one.
+                
+            purged: boolean. default = False:
+                Is the sample purged?.  Purge is the process by which points too close are
+                removed until the average distance between points is similar.
+            
+            dmin, dmed, dmax: float
+                Minimum, median and maximum distance between points.
+            
+            ds: numpy array (N).
+                Distance to the nearest neighbor for all the points.
+                
+            dran: float.
+                Range of distances between points (dmax-dmin).  While the smaller this quantity the better.
+                
+            dstar: float.
+                As measure of distances (sqrt(N)*dmed). Typically this value is between 2.4 and 3.4
+                (see source http://extremelearning.com.au/evenly-distributing-points-on-a-sphere)
+    
+        Other attributes:
+        
+            cargs: dictionary.  default = dict(color="k",fill=False,alpha=0.3): 
+                Arguments for plotting the circumference in polar.
+                       
+            wargs: dictionary. default = dict(color="k",lw=0.1): 
+                Arguments for plotting a sphere in 3d space.
+                
+        Notes:
+            
+            This class and module is based on fibpy by Martin Roberts, source code: 
+            https://github.com/matt77hias/fibpy
+        
+    """
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Bassic methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    def __init__(self,
+                 #Initialize from a file
+                 filename=None,
+                 #Initialize from a preset
+                 preset=None,
+                 #Initialize from parameters
+                 N=1000,seed=0):
+        
+        #If filename is provided load object from filename
+        if filename:
+            verbose(VERB_SIMPLE,f"Loading sampler from {filename}")
+            self.load_from(filename)
+            return
+        
+        #If preset is provided, read preset from file
+        if preset:
+            verbose(VERB_SIMPLE,f"Loading sampler from preset: {preset}")
+            
+            geometry = preset[0]
+            geometry_args = preset[1]
+            
+            if geometry not in SAMPLER_PRESETS:
+                raise ValueError(f"No presets for {geometry} available.  This are the available presets: {SAMPLER_PRESETS}.")
+            
+            #Modify N if it is a ring
+            qring = False
+            if geometry is "ring":
+                ri = geometry_args["ri"]
+                verbose(VERB_VERIFY,f"Original ring preset {N}")
+                N = int(N / (1-ri**2))
+                verbose(VERB_VERIFY,f"Computed ring preset {N}")
+                geometry = "circle"
+                qring = True
+            
+            #Calculate the closest Npreset
+            exec(f"self.Npreset=SAMPLER_{geometry.upper()}_PRESETS[abs({N}-SAMPLER_{geometry.upper()}_PRESETS).argmin()]")
+            
+            Npreset = self.Npreset
+            filename = Misc.get_data(f"sampler_presets/sample_{geometry}_N_{Npreset}.pkl")
+            verbose(VERB_SYSTEM,f"Reading preset data from {filename}")
+            self.load_from(filename)
+            self.Npreset = Npreset
+            self.filename = filename
+            
+            #If the preset is a ring cut a hole
+            if qring:
+                verbose(VERB_VERIFY,f"Cutting hole with ri = {ri}")
+                self._cut_hole(ri) 
+            return
+        
+        #Basic
+        self.N = N
+        self.seed = seed
+        
+        #Derivative
+        self.dim = 0
+        self.geometry = -1
+        self.ss = None
+        self.pp = None
+        self.ns = None
+        self.dmin = self.dmed = self.dmax = self.dran = self.dstar = 0
+        
+        #Purge
+        self.purged = False
+        
+        #Plotting
+        self.cargs = dict(color="k", fill=False, alpha=0.1) # 2d plot
+        self.wargs = dict(color="k", lw=0.1) # 3d plot
+        
+        #Random seed
+        self._seed_sampler()
+
+    def _get_min_distance(self,r,rs):
+        """
+        Get the minimum distance from point r to points rs
+        
+        Parameter:
+            r: numpy array (3):
+                coordinates of the point.
+            rs: numpy array (N)
+                coordinates of the points.
+        
+        Return:
+            dmin: float
+                minimum distance.
+        """
+        deltas = rs - r
+        dist = np.einsum('ij,ij->i', deltas, deltas)
+        imin = np.argsort(dist)[1]
+        return np.sqrt(dist[imin])
+
+    def _calc_distances(self):
+        """
+        Calculate the minimum distances of all points in the sample.
+        
+        Update:
+            ds,dmin,dmax,dmed,dran,dstar.
+        """
+        self.ds = np.array([self._get_min_distance(self.ss[i],self.ss) for i in range(len(self.ss))])
+        self.dmin = self.ds.min()
+        self.dmax = self.ds.max()
+        self.dmed = np.median(self.ds)
+        self.dran = self.dmax-self.dmin
+        self.dstar = np.sqrt(self.N)*self.dmed
+        
+        #Area of each spangle
+        self.aes = self.A/self.N
+
+        #Effective diameter
+        self.deff = 2*(self.aes/np.pi)**0.5
+
+    def _seed_sampler(self):
+        if self.seed:
+            np.random.seed(self.seed)
+            

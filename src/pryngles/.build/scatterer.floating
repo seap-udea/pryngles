@@ -1,0 +1,85 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Pryngles module: scatterer
+
+# ## External modules
+
+
+# ## Constants
+
+
+# ## Scatterer Class Interface
+
+# ### Docstring
+
+
+
+"""
+class MySurface(Scatterer):
+    def __init__(self,**params):
+        if self.register(self,params):
+            verbose(VERB_SIMPLE,f"Initializing {self.params['name']} with hash {self.hash}")
+            #Read parameters of the scatterer
+            self.A=params["A"]
+            #Initialize scatterer
+            self._initialize_scatterer()
+
+    #Mandatory methods
+    def get_albedo(self,eta,zeta,delta,lamb,**params):
+        albedo=self.AA*eta
+        return albedo
+
+    # Private methods to prepare scatterer
+    def _initialize_scatterer(self):
+        self.AA=self.A**2
+        
+Scatterer.reset_catalogue()
+SCATTERERS_CATALOGUE
+
+MySurface(A=1)
+
+MySurface(A=1)
+
+MySurface(A=1,B=2)
+#""";
+
+
+# ## Specific Scatterer Interfaces
+
+# ### Neutral surface
+
+
+
+
+# ### Lambertian gray suface
+
+
+
+# ### Lambertian gray atmosphere
+
+
+
+
+# ## Update scatterers
+
+
+System.update_scatterers=update_scatterers
+
+
+# ### The end
+

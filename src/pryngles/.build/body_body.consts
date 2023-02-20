@@ -1,0 +1,111 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module body
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BODY_KINDS=[]
+
+"""
+These are the default attributes for any body.
+"""
+BODY_DEFAULTS=dict()
+BODY_DEFAULTS.update(odict(
+    
+    name=None,
+    name_by_kind=False,
+    source=None,
+    
+    #Orbit
+    m=1,
+
+    #Physics
+    radius=1,
+    prot=1,
+    i=0, #Inclination of the rotational axis
+    roll=0,
+    alpha=0, #Zero meridian
+    q0=0,
+    
+    #Optics
+    nspangles=1000,
+    spangle_type=SPANGLE_SOLID_ROCK,
+    shape="sphere",
+    geometry_args=dict(),
+    seed=0,
+    preset=True,
+    
+    albedo_gray_spherical=1,
+    albedo_gray_normal=1,
+    tau_gray_optical=0,
+    
+    #Legacy
+    primary=None,
+    optics=dict(),
+    orbit=dict(),
+    physics=dict(),
+))
+
+BODY_KINDS=[]
+
+"""
+These are the default attributes for bodies of the kind 'Star'.
+"""
+STAR_DEFAULTS=deepcopy(BODY_DEFAULTS)
+STAR_DEFAULTS.update(odict(
+
+    #Orbit: update
+    #Same as body
+    radius=0.1,
+    
+    #Physics: update
+    #Same as Body
+    
+    #Optical properties: update
+    limb_coeffs=[],
+    spangle_type=SPANGLE_STELLAR,
+    shape="sphere",
+))
+BODY_KINDS+=["Star"]
+
+"""
+These are the default attributes for bodies of the kind 'Planet'.
+"""
+PLANET_DEFAULTS=deepcopy(BODY_DEFAULTS)
+PLANET_DEFAULTS.update(odict(
+    
+    #Orbit: update
+    a=1,e=0,
+    
+    #Physics: update
+    #Same as Body
+    radius=0.1,
+    
+    #Optical: update
+    spangle_type=SPANGLE_SOLID_ROCK,
+    geometry="sphere",
+))
+BODY_KINDS+=["Planet"]
+
+RING_DEFAULTS=deepcopy(BODY_DEFAULTS)
+RING_DEFAULTS.update(odict(
+
+    #Orbit: update
+    #Same as Body altough ring has not orbit properties
+    
+    #Physics: update
+    #Same as Body
+    fi=1.5,
+    fe=2.0,
+    
+    #Optics: update
+    spangle_type=SPANGLE_GRANULAR,
+    shape="ring",
+))
+
+BODY_KINDS+=["Ring"]
+
+OBSERVER_DEFAULTS=deepcopy(BODY_DEFAULTS)
+OBSERVER_DEFAULTS.update(odict(
+    lamb=0,
+    beta=0,
+))
+BODY_KINDS+=["Observer"]

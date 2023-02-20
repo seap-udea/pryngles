@@ -1,0 +1,89 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Scatterer
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Scatterer(PrynglesCommon,ABC):
+    """An scatterer surface
+    
+    Initialization attributes:
+    
+         params: dictionary:
+             Other parameters of the phase law.
+    
+    Mandatory methods:
+    
+        __init__(self,phase_law:lambda,**params)->int:
+            This method should return a hash of the object.
+            
+        get_albedo(eta:float,zeta:float,delta:float,lamb:float,**params)->float
+            This method must provide the albedo.
+        
+    Class methods:
+    
+        register(scatterer,params):
+            Register scatterer for future uses.
+    
+        reset_catalogue():
+            Reset the catalogue of scatterers.
+            
+            Usage: Scatterer.reset_catalogue()
+    
+    Usage:
+        You can create a Scatterer which implements this class:
+    
+            class MySurface(Scatterer):
+                def __init__(self,**params):
+                    if self.register(self,params):
+                        #Read parameters of the scatterer
+                        self.A=params["A"]
+                        #Initialize scatterer
+                        self._initialize_scatterer()
+    
+                #Mandatory methods
+                def get_albedo(self,eta,zeta,delta,lamb,**params):
+                    albedo=self.AA*eta
+                    return albedo
+    
+                # Private methods to prepare scatterer
+                def _initialize_scatterer(self):
+                    self.AA=self.A**2
+    
+    
+    """
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Bassic methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    @abstractmethod
+    def __init__(self,**params)->str:
+        pass
+    
+    @abstractmethod
+    def get_albedo(self,eta:float,zeta:float,delta:float,lamb:float,**params)->float:
+        pass
+    
+    @classmethod
+    def register(self,scatterer,params):
+        """Register scatterer
+        """
+        scatterer.params=params
+        scatterer.params["name"]=scatterer.__class__.__name__
+        scatterer.hash=Misc.calc_hash(params)
+        if scatterer.hash in SCATTERERS_CATALOGUE:
+            verbose(VERB_SIMPLE,f"Scatterer with name {scatterer.params['name']} and hash {scatterer.hash} already exist at {id(SCATTERERS_CATALOGUE)}")
+            scatterer.__dict__=deepcopy(SCATTERERS_CATALOGUE[scatterer.hash].__dict__)
+            return False
+        else:
+            verbose(VERB_SIMPLE,f"Creating a new scatterer with name {scatterer.params['name']} and hash {scatterer.hash}")
+            scatterer.params["hash"]=scatterer.hash
+            SCATTERERS_CATALOGUE[scatterer.hash]=scatterer
+            return True
+        
+    @classmethod
+    def reset_catalogue(self):
+        """Reset catalogue of scatterers
+        """
+        SCATTERERS_CATALOGUE=dict()
+        

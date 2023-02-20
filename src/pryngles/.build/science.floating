@@ -1,0 +1,58 @@
+##################################################################
+#                                                                #
+#.#####...#####...##..##..##..##...####...##......######...####..#
+#.##..##..##..##...####...###.##..##......##......##......##.....#
+#.#####...#####.....##....##.###..##.###..##......####.....####..#
+#.##......##..##....##....##..##..##..##..##......##..........##.#
+#.##......##..##....##....##..##...####...######..######...####..#
+#................................................................#
+#                                                                #
+# PlanetaRY spanGLES                                             #
+#                                                                #
+##################################################################
+# License http://github.com/seap-udea/pryngles-public            #
+##################################################################
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Pryngles module: Science
+
+# ## External modules
+
+
+# ## Constants
+
+
+# ## The Science class
+# 
+# The Science class is a class with routines intended to perform a wide diversity of mathematical, physical and astronomical calculations.
+
+
+# ### Cartesian to spherical
+
+        
+Science.spherical=spherical
+Science.cospherical=cospherical
+Science.pcylindrical=pcylindrical
+Science.cartesian=cartesian
+Science.direction=direction
+
+
+
+Science.rotation_matrix=rotation_matrix
+
+
+
+Science.limb_darkening=limb_darkening
+
+
+
+Science.get_convexhull=get_convexhull
+Science.points_in_hull=points_in_hull
+
+
+# ## Plane
+
+Science.Plane=Plane
+
+

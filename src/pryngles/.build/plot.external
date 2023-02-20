@@ -1,0 +1,19 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+from pryngles import *
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+from colorsys import hls_to_rgb
+import rebound as rb
+from tqdm import tqdm
+
+#Plotting in 3d
+import mpl_toolkits.mplot3d.art3d as art3d
+from matplotlib.patches import Circle, PathPatch
+from mpl_toolkits import mplot3d
+from scipy.spatial.transform import Rotation
+from matplotlib import animation

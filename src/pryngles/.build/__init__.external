@@ -1,0 +1,19 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+import unittest
+import warnings
+import dill
+import inspect
+import sigfig
+from copy import deepcopy
+import sys
+from collections import OrderedDict as odict
+warnings.filterwarnings('ignore')
+
+#JupDev: Jupyter compatibility
+from IPython.display import HTML, Image, display
+import IPython.core.autocall as autocall
+from IPython import get_ipython

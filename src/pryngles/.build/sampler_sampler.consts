@@ -1,0 +1,32 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module sampler
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+""" Sampler presets are the values of N 
+    for which there are already stored samples
+"""
+SAMPLER_PRESETS = ["sphere", "circle", "ring"]
+
+SAMPLER_SPHERE_PRESETS = np.array(
+    list(np.arange(100, 1000, 100))+\
+    list(np.arange(1000, 2000, 200))+\
+    list(np.arange(2000, 3000, 300))+\
+    list(np.arange(3000, 4000, 400))+\
+    list(np.arange(4000, 5000, 500))+\
+    [5000]
+)
+SAMPLER_CIRCLE_PRESETS = np.arange(100, 6000, 100)
+
+SAMPLER_MIN_RING = 10
+
+#Geometries
+SAMPLER_GEOMETRY_CIRCLE=0
+SAMPLER_GEOMETRY_SPHERE=1
+
+SAMPLE_SHAPES=[]
+
+SAMPLE_SHAPES+=["circle"]
+
+SAMPLE_SHAPES+=["ring"]
+
+SAMPLE_SHAPES+=["sphere"]

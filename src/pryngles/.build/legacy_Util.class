@@ -1,0 +1,420 @@
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Util
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Util(object):
+    def solveKeplerEquation(M,e):
+        """
+        Solves Kepler Equation
+
+        Parameters:
+            M: Mean anomaly, float [rad]
+            e: Eccentricity, float [adim]
+         
+        Return:
+            E: Eccentric anomaly
+        """
+        return sp.optimize.newton(lambda E:E-e*mh.sin(E)-M,M)
+
+    def convertf2E(f,e):
+        """
+        From true anomaly to eccentric anomaly
+
+        Parameters:
+            f: True anomaly, float [rad]
+            e: Eccentricity, float [adim]
+         
+        Return:
+            E: Eccentric anomaly, float [rad]
+        """
+        return 2*mh.arctan(mh.sqrt((1-e)/(1+e))*mh.tan(f/2))
+
+    def convertE2f(E,e):
+        """
+        From eccentric anomaly to true anomaly
+
+        Parameters:
+            E: Eccentric anomaly, float [rad]
+            e: Eccentricity, float [adim]
+         
+        Return:
+            g: True anomaly, float [rad]
+        """
+        return 2*mh.arctan(mh.sqrt((1+e)/(1-e))*mh.tan(E/2))
+
+    def transformRecLat(rvec):
+        """
+        Convert from rectangular to sky coordinates (right quadrant)
+
+        Parameters:
+            rvec: rectangular coordinates, numpy array (3)
+         
+        Return:
+            longitude: longitude (acimutal angle), float [rad]
+            latitude: latitude (elevation angle), float [rad]
+        """
+        r,long,lat=spy.reclat(rvec)
+        long=2*mh.pi+long if long<0 else long
+        return long,lat
+
+    def checkAngle(target,center,delta):
+        """
+        Check if angle target satisfy:  center-delta <= target <= center+delta
+
+        Parameters:
+            target: target angle, float [rad]
+            center: center angle, float [rad]
+            distance: distance angle, float [rad]
+            
+        Return:
+            condition: true if condition is satisfied, boolean.
+        """
+        dot=np.cos(center)*np.cos(target)+np.sin(center)*np.sin(target)
+        sep=np.arccos(dot)
+        return sep<=delta
+    
+    def difAngles(angle1,angle2):
+        """
+        Compute the minimum difference between two angles.        
+        
+        Parameters:
+            angle1,angle2: angles, float [rad]
+            
+        Return:
+            difference: angle1-angle2, float [rad]
+        """
+        try:
+            return mh.arctan2(mh.sin(angle1-angle2),mh.cos(angle1-angle2))
+        except:
+            return np.arctan2(np.sin(angle1-angle2),np.cos(angle1-angle2))
+
+    def transfromLoc2Equ(r,Ra=1,Rb=1,Rc=1):
+        """
+        Generate transformation matrices to going from local coordinates (referred to horizon of a point in a body)
+        to equatorial coordinates (referred to equator of the body)
+
+        Parameters:
+            r {equ}: position of the point on the surface, numpy array (3)
+            
+        Options:
+            Ra=1: Equatorial radius in the direction of the x-axis, float [cu]
+            Rb=1: Equatorial radius in the direction of the y-axis, float [cu]
+            Rc=1: Polar radius, float [cu]
+
+        Return:
+            M_loc2equ, M_equ2loc: transform from local to equatorial and viceversa, 
+            numpy matrix (3x3)
+        """
+        if (Ra+Rb)!=2*Rc:
+            uz=spy.surfnm(Ra,Rb,Rc,r)
+        else:
+            uz=r/spy.vnorm(r)
+        uy=np.array([-uz[1],+uz[0],0])/(uz[0]**2+uz[1]**2)**0.5 # uy = [0,0,1] x uz / |uy|
+        ux=spy.ucrss(uz,uy)
+        M_loc2equ=np.array(np.vstack((ux,uy,uz)).transpose().tolist())
+        M_equ2loc=spy.invert(M_loc2equ)
+        return M_loc2equ,M_equ2loc
+
+    def transformLoc2EquSpherical(r,R=1):
+        """
+        Generate transformation matrices to going from local coordinates (referred to horizon of a point in a body)
+        to equatorial coordinates (referred to equator of the body)
+
+        Parameters:
+            r {equ}: position of the point on the surface, numpy array (3)
+
+        Options:
+            R=1: Radius of the planet, float [cu]
+
+        Return:
+            M_loc2equ, M_equ2loc: transform from local to equatorial and viceversa, 
+            numpy matrix (3x3)
+            
+        Test:
+            rps=array([ 0.44264092, -0.8924685 ,  0.087     ])
+            Mx[1,0,0] = (array([-0.03865633,  0.07794028,  0.99620831]),
+            Mx[0,1,0] = array([0.89586534, 0.44432566, 0.        ]),
+            Mx[0,0,1] = array([ 0.44264092, -0.8924685 ,  0.087     ]))        
+        """
+        uz,rnorm=spy.unorm(r)
+        uy=np.array([-uz[1],+uz[0],0])/(uz[0]**2+uz[1]**2)**0.5 
+        ux=spy.ucrss(uz,uy)
+        M_loc2equ=np.array(np.vstack((ux,uy,uz)).transpose().tolist())
+        M_equ2loc=spy.invert(M_loc2equ)
+        return M_loc2equ,M_equ2loc
+    
+    def calcAngularDistance(pos1,pos2):
+        """
+        Angular distance from pos1:(lon1,lat1) to pos2:(lon2,lat2) using Haversine
+        
+        Parameters:
+            pos1, pos2: [longitude,latitude], tuple|list|numpy array (2) [rad] 
+         
+        Return:
+            distance: angular distance, float [rad]
+
+        """
+        lon1,lat1=pos1
+        lon2,lat2=pos2
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = mh.sin(dlat/2)**2 + mh.cos(lat1) * mh.cos(lat2) * mh.sin(dlon/2) **2
+        c = 2 * mh.arctan2(a**0.5, (1-a)**0.5)
+        return c
+    
+    def limbDarkeningNormalization(cs=[0.6562]):
+        integrand=lambda rho:Util.limbDarkening(rho,1,cs)*2*mh.pi*rho
+        N=quad(integrand,0.0,1.0,epsrel=1e-5)[0]
+        return N
+    
+    def limbDarkening(rho,Rs=1,cs=[0.6562],N=1):
+        """
+        Notes: 
+            Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
+            Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
+
+        Test code:
+            fig=plt.figure()
+            ax=fig.gca()
+            rhos=np.linspace(0,1,100)
+            Rs=1
+            coefs=[0.6550]
+            N=Util.limbDarkeningNormalization(coefs)
+            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
+            coefs=[0.6022,0.0654]
+            N=Util.limbDarkeningNormalization(coefs)
+            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
+            coefs=[0.9724,-0.4962,0.2029]
+            N=Util.limbDarkeningNormalization(coefs)
+            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))        
+        """
+        mu=(1-rho**2/Rs**2)**0.5
+        order=len(cs)
+        if order==0:
+            I=np.ones_like(rho)
+        elif order==1:
+            I=1-cs[0]*(1-mu)
+        elif order==2:
+            I=1-cs[0]*(1-mu)-cs[1]*(1-mu)**2
+        elif order==3:
+            I=1-cs[0]*(1-mu)-cs[1]*(1-mu**1.5)-cs[2]*(1-mu**2)
+        elif order==4:
+            I=1-cs[0]*(1-mu**0.5)-cs[1]*(1-mu)-cs[2]*(1-mu**1.5)-cs[3]*(1-mu**2)
+        else:
+            raise ValueError(f"Limb darkening not implemented for order {order}")
+        return I/N
+    
+    def saveObject(obj,objfile):
+        dill.dump(obj,open(objfile,"wb"))
+
+    def loadObject(objfile):
+        obj=dill.load(open(objfile,"rb"))
+        return obj
+    
+    def divArray(a,b,default=0):
+        """
+        Divide two arrays
+        
+        Parameters:
+            a,b: arrays, numpy arrays.
+            
+        Optional parameters:
+            default=0: default value to return when b=0.
+            
+        Return: 
+            d: result of dividing a/b.  If b is zero the value returned is default.
+        """
+        return np.divide(a,b,out=default*np.ones_like(b),where=(b!=0))
+    
+    def attenuationFactor(mu,taug,diffraction=True):
+        """
+        Compute the attenuation factor of diffusely transmitted flux by a plane parallel layer of 
+        particles with geometrical opacity taug and single scattering albedo wo=0.5 (only diffraction).
+
+        Parameters:
+            mu: cosine of the incident angle.  mu=1 when incidence is normal and 0 when is surficial, 
+                numpy array.
+            taug: geometrical 
+            
+        Optional parameters:
+            diffraction=True: include diffraction?, bool
+            
+        Return:
+            factor: attenuation factor 1/mu*exp(-2*taug/mu) if including diffraction, or simply exp(-2*taug/mu),
+                    numpy array
+
+        Examples:
+            %timeit Util.attenuationFactor(betas,taug,False)
+        
+            fig=plt.figure()
+            ax=fig.gca()
+            taug=1.0
+            ax.plot(betas,Util.attenuationFactor(betas,taug),label='With diffraction')
+            ax.plot(betas,Util.attenuationFactor(betas,taug,False),label='No diffracion')
+            ax.legend()            
+
+        Notes:
+            Taken from French & Nicholson (2000), Eq. (7)
+        """
+        argument=Util.divArray(taug,np.array(mu),default=1e100)
+        if diffraction:
+            return argument*np.exp(-2*argument)
+        else:
+            return np.exp(-2*argument)
+    
+    def setAxis2dEqual(ax,values=(),margin=0,xcm=None,ycm=None,xmin=None,ymin=None):
+        """
+        Set axis to equal aspect ratio.
+        
+        Parameters:
+            ax: axis to set, matplotlib axis.
+            values: values represented, tuple, list or numpy array.
+            
+        Optional parameters:
+            margin=0: margin between plot and border, same units as values, float.
+            xcm=0,ycm=0: position of the center of the plot, float.
+            xmin=None, ymin=None: minimum values of abcisa and ordinate, float. 
+         
+        Return:
+            None
+
+        """
+        #values
+        vals=np.array([])
+        for value in values:
+            vals=np.append(vals,np.array(value).flatten())
+        #Center of values
+        rcm=vals.mean()
+        vals=vals-rcm
+
+        if xcm is None:
+            xcm=rcm
+        if ycm is None:
+            ycm=rcm
+
+        fig=ax.figure
+        bbox=ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+        width,height=bbox.width,bbox.height
+        fx=width/height
+        fy=1
+        if fx<1:
+            factor=fy
+            fy=(1+margin)*1/fx
+            fx=(1+margin)*factor
+        else:
+            fx*=(1+margin)
+            fy*=(1+margin)
+
+        max_value=np.abs(vals).max()
+        ax.set_xlim((xcm-fx*max_value,xcm+fx*max_value))
+        ax.set_ylim((ycm-fy*max_value,ycm+fy*max_value))
+
+        if xmin is not None:
+            xinf,xsup=ax.get_xlim()
+            dx=xsup-xinf
+            ax.set_xlim((xmin,xmin+dx))
+
+        if ymin is not None:
+            yinf,ysup=ax.get_ylim()
+            dy=ysup-yinf
+            ax.set_ylim((ymin,ymin+dy))
+            
+    def calcRingedPlanetArea(Rp,fi,fe,ir,beta=1):
+        """
+        Compute the projected ringed planet area.
+        
+        Parameters:
+            Rp: Planetary radius, float [Rs, stellar radius]
+            fi: Inner ring border radius, float [Rp]
+            fe: Outer ring border radius, float [Rp]
+            ir: Effective inclination of the ring (pi/2 for an edge on ring), float [rad]
+            
+        Return:
+            delta: projected ring area, float [As, stella area]
+            
+        Notes:
+            Taken from Zuluaga et al. (2015)
+        """        
+        #AUXILIAR VARIABLES
+        cosir=np.cos(ir)
+        sinir=np.sin(ir)
+
+        #INTERNAL RING EFFECTIVE RADIUS
+        if fi*cosir>1:
+            ri2=fi**2*cosir-1
+        else:
+            yi=np.sqrt(fi**2-1)/(fi*sinir)
+            ri2=fi**2*cosir*2/np.pi*np.arcsin(yi)-                2/np.pi*np.arcsin(yi*fi*cosir)
+        ri2=beta*ri2
+
+        #EXTERNAL RING EFFECTIVE RADIUS
+        if fe*cosir>1:
+            re2=fe**2*cosir-1
+        else:
+            ye=np.sqrt(fe**2-1)/(fe*sinir)
+            re2=fe**2*cosir*2/np.pi*np.arcsin(ye)-                2/np.pi*np.arcsin(ye*fe*cosir)
+        re2=beta*re2
+
+        #RINGED-PLANET AREA
+        ARp=np.pi*Rp**2+np.pi*(re2-ri2)*Rp**2
+
+        return ARp
+    
+    def calcStartingPosition(orbit_i,
+                             ring_i,
+                             ring_l):
+        """
+        Function that calculates the starting true anomaly and observer location(longitude, inclination) 
+        to generate an orbit with the given orbit inclination, ring inclination, ring longitude rotation
+        and one that starts with the planet situated below the star, all with respect to the observer.
+        
+        Input parameters:
+            -orbit_i: Orbital inclination with respect to the observer, 0 is seeing the orbit face-on and
+                      90 is seeing the orbit edge-on.
+            -ring_i:  Ring inclination with respect to the observer, 0 is face-on and 90 is edge-on.
+            -ring_l:  Ring longitude rotation, 0 is face-on, so no rotation, and 90 is edge-on.
+            
+        Output parameters:
+            -gamma:     Given ring inclination with respect to the ecliptic system
+            -beta_obs:  Inclination of the observer with respect to the ecliptic system
+            -lamb_obs:  Longitude of the observer with respect to the ecliptic system
+            -lamb_star: Starting true anomaly of the star to ensure the planet is situated under the star
+            
+        IMPORTANT:
+            All input parameters are in degrees while the output is in radians
+            output is rounded to the eight decimal to decrease numerical errors
+        """
+        orbit_i = orbit_i*DEG
+        ring_i = ring_i*DEG
+        ring_l = ring_l*DEG
+
+        if abs(ring_l) < 0.01:
+            beta_obs = np.pi/2 - orbit_i
+            lamb_obs = np.pi/2
+            gamma = orbit_i - ring_i
+            if gamma > np.pi/2:
+                gamma -= np.pi
+            elif gamma < -np.pi/2:
+                gamma += np.pi  
+        else:
+            res = least_squares(Util.funcNormalRing, np.array([np.pi/4,ring_l,np.pi/2 - orbit_i]), args=(ring_i,ring_l,orbit_i))
+            gamma,lamb_obs,beta_obs = res.x
+            lamb_obs = lamb_obs - int(lamb_obs/(2*np.pi)) * 2*np.pi # Ensure longitude stays within [-2*pi,2*pi]
+            verbose(VERB_DEEP, "gamma, lamb, beta: ", gamma/DEG, lamb_obs/DEG, beta_obs/DEG)
+            verbose(VERB_DEEP, "Check: ",Util.funcNormalRing(np.array([gamma,lamb_obs,beta_obs]),ring_i,ring_l,orbit_i))
+
+        lamb_star = np.pi - abs(lamb_obs)
+        if lamb_obs >= 0:
+            lamb_star *= -1
+        return round(gamma,8), round(beta_obs,8), round(lamb_obs,8), round(lamb_star,8)
+    
+    def funcNormalRing(x,a,b,c):
+        """
+        Equates the normal vector of the ring in the ecliptic system to the 
+        normal vector of the ring in the observer system. 
+        """
+        return [np.sin(x[1]+np.pi/2)*np.sin(x[0]) - np.sin(b)*np.cos(a),
+                np.cos(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) + np.sin(np.pi/2-x[2])*np.cos(x[0]) - np.sin(a),
+                np.cos(np.pi/2-x[2])*np.cos(x[0]) - np.sin(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) - np.cos(b)*np.cos(a),
+                x[2] - np.pi/2 + c]

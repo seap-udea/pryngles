@@ -1,0 +1,13 @@
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# External required packages
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+from pryngles import *
+
+import ctypes
+import glob
+
+#Load library
+libfile = glob.glob(Misc.get_data('../cpixx*.so'))[0]
+cpixx_ext=ctypes.CDLL(libfile)
