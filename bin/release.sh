@@ -67,9 +67,9 @@ echo "Success. Package ready to be released."
 ##################################################################
 # Update setup.py file
 ##################################################################
-sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py 
-sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py.pixx 
-sed -i.bak "s/version=\'[0-9\.]*\'/version='$version'/gi" setup.py.cpixx 
+sed -i.bak "s/version=.*/version='$version',/gi" setup.py 
+sed -i.bak "s/version=.*/version='$version',/gi" setup.py.pixx 
+sed -i.bak "s/version=.*/version='$version',/gi" setup.py.cpixx 
 mv setup*.bak tmp/
 
 ##################################################################

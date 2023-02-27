@@ -4,7 +4,12 @@
 # Class RingedPlanet
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class RingedPlanet(object):
+<<<<<<< HEAD
     """
+=======
+    """RingedPlanet_doc=\
+    
+>>>>>>> 94ebd9c23aea8e625e3a9b6e7041aa3df2ae2751
     Class Ringed Planet.
     
     Conventions:
@@ -773,12 +778,22 @@ class RingedPlanet(object):
         #Check side of the star
         side=self.rstar_obs[2]>0
         #Planet
+<<<<<<< HEAD
         self.rhops=((self.rps_obs[:,0]-self.rstar_obs[0])**2+                    (self.rps_obs[:,1]-self.rstar_obs[1])**2)**0.5
+=======
+        self.rhops=((self.rps_obs[:,0]-self.rstar_obs[0])**2+\
+                    (self.rps_obs[:,1]-self.rstar_obs[1])**2)**0.5
+>>>>>>> 94ebd9c23aea8e625e3a9b6e7041aa3df2ae2751
         sp=(self.rhops<=self.Rs)*(self.rps_obs[:,2]>=0)
         self.tp=sp if ~side else self.tp
         self.cp=sp if side else self.cp
         #Ring
+<<<<<<< HEAD
         self.rhors=((self.rrs_obs[:,0]-self.rstar_obs[0])**2+                    (self.rrs_obs[:,1]-self.rstar_obs[1])**2)**0.5
+=======
+        self.rhors=((self.rrs_obs[:,0]-self.rstar_obs[0])**2+\
+                    (self.rrs_obs[:,1]-self.rstar_obs[1])**2)**0.5
+>>>>>>> 94ebd9c23aea8e625e3a9b6e7041aa3df2ae2751
         sr=(self.rhors<=self.Rs)
         self.tr=sr if ~side else self.tr
         self.cr=sr if side else self.cr

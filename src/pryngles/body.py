@@ -29,7 +29,8 @@ from anytree import NodeMixin,RenderTree
 # Class Body
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Body(Orbody):
-    """A general body.  This class is not intended to be used independently, just for inheritance purposes.
+    """Body_doc=\
+    A general body.  This class is not intended to be used independently, just for inheritance purposes.
         
     Initialization attributes:
     

@@ -27,7 +27,8 @@ from tqdm import tqdm
 # Class System
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class System(PrynglesCommon):
-    """Creates a planetary system.
+    """System_doc=\
+    f    Creates a planetary system.
     
         Initialization attributes:
     
@@ -833,9 +834,10 @@ class System(PrynglesCommon):
             behavior=dict(shadows=True),
             
             #Units
-            CU=CanonicalUnits(UL=self.ul,UM=self.um),
+            CU=CanonicalUnits(G=self.G,UL=self.ul,UM=self.um,UT=self.ut),
     
             #Basic
+            Mstar=self.bodies["Star"].m,
             Rstar=self.bodies["Star"].radius,
             Rplanet=self.bodies["Planet"].radius,
     
@@ -846,7 +848,7 @@ class System(PrynglesCommon):
             a=self.bodies["Planet"].a,e=self.bodies["Planet"].e,
     
             #Orbit 
-            Mstar=1,x=0,lambq=0,t0=0,kepler=False,
+            x=0,lambq=0,t0=0,kepler=False,
     
             #Observer
             eobs_ecl=np.array([lamb,beta]),
