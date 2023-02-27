@@ -30,6 +30,7 @@ from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection
 from matplotlib import animation
+from celluloid import Camera # getting the camera
 import itertools
 from tqdm import tqdm
 
@@ -39,8 +40,7 @@ from tqdm import tqdm
 # Class Spangler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Spangler(PrynglesCommon):
-    """Spangler_doc=\
-    A Spangler associated to an object or set of objects.
+    """A Spangler associated to an object or set of objects.
         
        There are two ways to initialize a Spangler:
         
@@ -334,8 +334,7 @@ class Spangler(PrynglesCommon):
             verbose(VERB_VERIFY,f"Updating rotations at t = {t}")
 
             self.data["q_equ"]=[q+q0+w*t for q,w,q0 in zip(self.data.q_equ,self.data.w,self.data.q0)]
-            self.data[["x_equ","y_equ","z_equ"]]=\
-                [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
+            self.data[["x_equ","y_equ","z_equ"]]=                [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
 
             qupdate=True
 
@@ -355,9 +354,7 @@ class Spangler(PrynglesCommon):
 
         #Convert from equatorial to ecliptic
         verbose(VERB_VERIFY,f"Converting to equatorial")
-        self.data[["x_ecl","y_ecl","z_ecl"]]=\
-            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl\
-             for sph,r,cequ,cecl in zip(self.data.name,
+        self.data[["x_ecl","y_ecl","z_ecl"]]=            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl             for sph,r,cequ,cecl in zip(self.data.name,
                                         np.array(self.data[["x_equ","y_equ","z_equ"]]),
                                         self.data.center_equ,self.data.center_ecl)]
         
@@ -372,10 +369,8 @@ class Spangler(PrynglesCommon):
         if sum(cond)>0:
             verbose(VERB_VERIFY,f"Setting local vectors based on ns: {sum(cond)}")
             #wy = ez x ns because with this definition seen from above the system is oriented as usual
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0] \
-                                                    for ns in self.data[cond].ns_ecl],dtype=object).values
-            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns) \
-                                                    for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0]                                                     for ns in self.data[cond].ns_ecl],dtype=object).values
+            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns)                                                     for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
                                                    dtype=object).values
             cond=~cond
         else:
@@ -385,8 +380,7 @@ class Spangler(PrynglesCommon):
         if sum(cond)>0:
             verbose(VERB_VERIFY,f"Setting local matrix based on ex: {sum(cond)}")
             self.data.loc[cond,"wx_ecl"]=pd.Series([[1,0,0]]*sum(cond),dtype=object).values
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0] \
-                                                    for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0]                                                     for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
                                                    dtype=object).values
             
         #Update velocities
@@ -881,12 +875,10 @@ class Spangler(PrynglesCommon):
             return
             
         #Update positions in the intersection reference frame
-        self.data.loc[cond,["x_int","y_int","z_int"]]=\
-            [np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
+        self.data.loc[cond,["x_int","y_int","z_int"]]=        [np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
         
         #Center of the object in the observer reference system
-        center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)\
-                   for sp,c_ecl,c_equ in zip(self.data[cond].name,
+        center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)               for sp,c_ecl,c_equ in zip(self.data[cond].name,
                                              np.array(self.data[cond].center_ecl),
                                              np.array(self.data[cond].center_equ))]
         self.data.loc[cond,"center_int"]=pd.Series(center_int).values
@@ -898,9 +890,7 @@ class Spangler(PrynglesCommon):
             self.data.loc[cond,"z_cen_int"]=np.array(center_int)[:,2]
     
         #Pseudo-cylindrical coordinates in the observer system
-        self.data.loc[cond,["rho_int","az_int","cosf_int"]]=\
-            [sci.pcylindrical(r) for r in \
-             np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
+        self.data.loc[cond,["rho_int","az_int","cosf_int"]]=        [sci.pcylindrical(r) for r in          np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
     
         #Compute distance to intersection of each spangle and the 
         if self.infinite:
@@ -933,8 +923,7 @@ class Spangler(PrynglesCommon):
             self.data.loc[cond,"cos_int"]=[spy.vdot(n_ecl,n_int) for n_ecl in self.data.ns_ecl[cond]]
         else:
             #In this case n_int is a per-spangle variable
-            self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int) \
-                                           for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
+            self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int)                                        for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
             
         #Set areas
         self.data.loc[cond,"asp_int"]=self.data.loc[cond,"asp"]
@@ -1061,12 +1050,7 @@ class Spangler(PrynglesCommon):
                 | Spangle type is semitransparent
             )
         """
-        cond=\
-        (~self.data.hidden)&\
-        ((self.data.z_cen_obs+self.data.scale)<0)&\
-        (\
-            (self.data.cos_obs>0)|\
-            (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
+        cond=    (~self.data.hidden)&    ((self.data.z_cen_obs+self.data.scale)<0)&    (        (self.data.cos_obs>0)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
         )
         self.data.loc[cond,"visible"]=True
         
@@ -1135,15 +1119,7 @@ class Spangler(PrynglesCommon):
                 | cos_luz > 0: spangle it is towards the light source
             )
         """
-        cond=\
-        cond&\
-        (~self.data.hidden)&\
-        ((self.data.z_cen_luz+self.data.scale)<0)&\
-        (\
-            (self.data.geometry==SAMPLER_GEOMETRY_CIRCLE)|\
-            (self.data.cos_luz>0)|\
-            (self.data.spangle_type==SPANGLE_STELLAR)|\
-            (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
+        cond=    cond&    (~self.data.hidden)&    ((self.data.z_cen_luz+self.data.scale)<0)&    (        (self.data.geometry==SAMPLER_GEOMETRY_CIRCLE)|        (self.data.cos_luz>0)|        (self.data.spangle_type==SPANGLE_STELLAR)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
         )
         self.data.loc[cond,"illuminated"]=True
     
@@ -1157,12 +1133,7 @@ class Spangler(PrynglesCommon):
         
         ATTENTION: TRANSMISSION IS ONLY PROPERLY SET IF OBSERVER HAVE BEEN PREVIOUSLY SET.
         """
-        cond=\
-        cond&\
-        (~self.data.hidden)&\
-        (\
-         (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))&\
-         ((self.data.cos_luz*self.data.cos_obs)<=0)
+        cond=    cond&    (~self.data.hidden)&    (     (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))&     ((self.data.cos_luz*self.data.cos_obs)<=0)
         )
         self.data.loc[cond,"transmit"]=True
         
@@ -1519,13 +1490,7 @@ class Spangler(PrynglesCommon):
             verbose(VERB_SIMPLE,f"Points included in calculation: {cond_included.sum()}")
         
         #Under the current circumstances all this spangles are intersecting 
-        cond=\
-        (~self.data.hidden)&\
-        (\
-         (self.data.cos_int>0)|\
-         (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))\
-        )&\
-        (cond_included)
+        cond=    (~self.data.hidden)&    (     (self.data.cos_int>0)|     (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))    )&    (cond_included)
         
         self.data.loc[cond,"intersect"]=True
         self.data.hidden_by_int=""
@@ -1620,8 +1585,7 @@ class Spangler(PrynglesCommon):
                 self.data.loc[below,"hidden_by_int"]=self.data.loc[below,"hidden_by_int"]+f"{name}:{zord:.3e}&"
                     
                 #Compute distance to center for transiting spangles
-                self.data.loc[above,"string_int"]=[f"{name}:{zord:.3e}:{((r[0]-xcen)**2+(r[1]-ycen)**2)**0.5/scale:.3e}&" \
-                                                   for r in self.data[above][["x_int","y_int"]].values]
+                self.data.loc[above,"string_int"]=[f"{name}:{zord:.3e}:{((r[0]-xcen)**2+(r[1]-ycen)**2)**0.5/scale:.3e}&"                                                for r in self.data[above][["x_int","y_int"]].values]
                 self.data.loc[above,"transit_over_int"]=self.data.loc[above,"transit_over_int"]+self.data.loc[above,"string_int"]
                 
                 hull["inhull"]=sum(inhull)
@@ -1674,9 +1638,7 @@ class Spangler(PrynglesCommon):
                 | Spangle type is semitransparent
             )
         """
-        self.data.shadow=\
-        (self.data.shadow)|\
-        (
+        self.data.shadow=    (self.data.shadow)|    (
             (~self.data.intersect)&\
             (
                 (self.data.cos_int>0)|

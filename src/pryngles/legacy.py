@@ -79,30 +79,21 @@ DEG=Const.deg
 
 
 class CanonicalUnits(object):
-    def __init__(self,G=None,UL=0,UT=0,UM=0):
-
-        if G:
-            self.G=G
-            self.UL=UL
+    def __init__(self,UL=0,UT=0,UM=0):
+        if (UL==0)+(UT==0)+(UM==0)!=1:
+            raise AssertionError("You should provide at least two units.")
+        if (UL==0):
             self.UM=UM
             self.UT=UT
-
-        else:
-            self.G=1
-            if (UL==0)+(UT==0)+(UM==0)!=1:
-                raise AssertionError("You should provide at least two units.")
-            if (UL==0):
-                self.UM=UM
-                self.UT=UT
-                self.UL=(Const.G*UM*UT)**(1./3)
-            elif (UT==0):
-                self.UM=UM
-                self.UL=UL
-                self.UT=(UL**3/(Const.G*UM))**0.5
-            elif (UM==0):
-                self.UL=UL
-                self.UT=UT
-                self.UM=(UL**3/(Const.G*UT))**0.5
+            self.UL=(Const.G*UM*UT)**(1./3)
+        elif (UT==0):
+            self.UM=UM
+            self.UL=UL
+            self.UT=(UL**3/(Const.G*UM))**0.5
+        elif (UM==0):
+            self.UL=UL
+            self.UT=UT
+            self.UM=(UL**3/(Const.G*UT))**0.5
 
         #Derived units
         self.UV=self.UL/self.UT #Velocity
@@ -112,6 +103,7 @@ class CanonicalUnits(object):
         self.UF=self.UM*self.UA #Force
         self.UE=self.UF*self.UA #Energy
         self.UN=1/self.UT #Angular frequency
+
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Util
@@ -458,8 +450,7 @@ class Util(object):
             ri2=fi**2*cosir-1
         else:
             yi=np.sqrt(fi**2-1)/(fi*sinir)
-            ri2=fi**2*cosir*2/np.pi*np.arcsin(yi)-\
-                2/np.pi*np.arcsin(yi*fi*cosir)
+            ri2=fi**2*cosir*2/np.pi*np.arcsin(yi)-                2/np.pi*np.arcsin(yi*fi*cosir)
         ri2=beta*ri2
 
         #EXTERNAL RING EFFECTIVE RADIUS
@@ -467,8 +458,7 @@ class Util(object):
             re2=fe**2*cosir-1
         else:
             ye=np.sqrt(fe**2-1)/(fe*sinir)
-            re2=fe**2*cosir*2/np.pi*np.arcsin(ye)-\
-                2/np.pi*np.arcsin(ye*fe*cosir)
+            re2=fe**2*cosir*2/np.pi*np.arcsin(ye)-                2/np.pi*np.arcsin(ye*fe*cosir)
         re2=beta*re2
 
         #RINGED-PLANET AREA
@@ -938,8 +928,7 @@ class Sample(object):
 # Class RingedPlanet
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class RingedPlanet(object):
-    """RingedPlanet_doc=\
-    
+    """
     Class Ringed Planet.
     
     Conventions:
@@ -1227,7 +1216,7 @@ class RingedPlanet(object):
         self.Rs=1.0
 
         #Planetary and stellar properties
-        self.mu=self.CU.G*self.Mstar
+        self.mu=self.Mstar
         self.Rplanet=Rplanet
         self.Rp=self.Rplanet/self.Rstar #All lengths will be in units of Rs
 
@@ -1708,14 +1697,12 @@ class RingedPlanet(object):
         #Check side of the star
         side=self.rstar_obs[2]>0
         #Planet
-        self.rhops=((self.rps_obs[:,0]-self.rstar_obs[0])**2+\
-                    (self.rps_obs[:,1]-self.rstar_obs[1])**2)**0.5
+        self.rhops=((self.rps_obs[:,0]-self.rstar_obs[0])**2+                    (self.rps_obs[:,1]-self.rstar_obs[1])**2)**0.5
         sp=(self.rhops<=self.Rs)*(self.rps_obs[:,2]>=0)
         self.tp=sp if ~side else self.tp
         self.cp=sp if side else self.cp
         #Ring
-        self.rhors=((self.rrs_obs[:,0]-self.rstar_obs[0])**2+\
-                    (self.rrs_obs[:,1]-self.rstar_obs[1])**2)**0.5
+        self.rhors=((self.rrs_obs[:,0]-self.rstar_obs[0])**2+                    (self.rrs_obs[:,1]-self.rstar_obs[1])**2)**0.5
         sr=(self.rhors<=self.Rs)
         self.tr=sr if ~side else self.tr
         self.cr=sr if side else self.cr
@@ -1795,16 +1782,16 @@ class RingedPlanet(object):
         self._resetActivity()
 
         #Planet active facets
-        self.ap=(~((~self.vp)+((self.cp)+((~self.ip)*(~self.tp)*(~self.np)))))
+        self.ap=(~((~self.vp)+((self.cp)+((~self.ip)*(~self.tp)))))#tp*(~self.np)
         
         # Facets that are illuminated through the rings
-        self.apsr=(~((~self.vp)+((self.cp)+((~self.ips)*(~self.tp)*(~self.np)))))
+        self.apsr=(~((~self.vp)+((self.cp)+((~self.ips)*(~self.tp)))))#tp*(~self.np)
         
         # Facets that are visible but the line of sight is blocked by the rings
-        self.apso=(~((~self.vps)+((self.cp)+((~self.ip)*(~self.tp)*(~self.np)))))
+        self.apso=(~((~self.vps)+((self.cp)+((~self.ip)*(~self.tp)))))#*(~self.np)
         
-        # Facets that are both of the above
-        self.apsb=(~((~self.vps)+((self.cp)+((~self.ips)*(~self.tp)*(~self.np)))))
+        # Facets that are both of the above, cant happen during transit
+        self.apsb=(~((~self.vps)+((self.cp)+((~self.ips)*(~self.tp)))))#*(~self.np)
         
         #Ring active facets
         self.ar=(~((~self.vr)+((self.cr)+((~self.ir)*(~self.tr)))))+(self.fr)
@@ -2897,7 +2884,8 @@ class RingedPlanet(object):
         if self.physics["extension"] == "pixx":
             import pryngles.pixx as pixx
         #Constants
-        angle_eps = 1e-3 # Cutoff angle
+        angle_eps = 1e-3 # Cutoff angle in deg for shadowing
+        angle_eps2 = 1e-1 # Cutoff angle in deg for bilinear interpolation
         planet_used = False
         ring_used = False
         self.taur = taur
@@ -2930,7 +2918,7 @@ class RingedPlanet(object):
         condspo = (self.apso)*(self.ip)
         
         # Facets that are both of the above
-        condspb = self.apsb
+        condspb = (self.apsb)*(~self.tp)
         
         cond = condo + condspr + condspo + condspb
         
@@ -3000,7 +2988,16 @@ class RingedPlanet(object):
         
         #Ring conditions
         cond=(self.ar)*(self.ir)
-
+                             
+        # If using bilinear interpolation there is a risk of singularities at small angles
+        # Reject cases with small angles
+        side_cond = True
+        if self.behavior["interp_method_ring"] == "bilinear":
+            vcheck = abs(np.arccos(self.cosio)*180/np.pi - 90.0) < angle_eps2 # seen
+            icheck = abs(np.arccos(self.etars[0])*180/np.pi - 90.0) < angle_eps2 # illuminated
+            if vcheck or icheck:
+                side_cond = False
+                             
         # Check if the back or front of the ring is visible
         back = False 
         if (np.inner(self.nstar_equ,self.nr_equ) < 0) ^ (np.inner(self.nobs_equ,self.nr_equ) < 0):
@@ -3008,7 +3005,7 @@ class RingedPlanet(object):
             cond = (self.fr)
             verbose(VERB_DEEP,"Back visible: ", back) 
        
-        if cond.sum() > 0:
+        if cond.sum() > 0 and side_cond:
             ring_used = True
             if back:
                 if self.physics["extension"] == "pixx":
@@ -3111,7 +3108,7 @@ class RingedPlanet(object):
             self.Ptotp = Ptotp
             verbose(VERB_DEEP,"Ftot planet: ", Stotp[0], ",  Ptot planet: ", Ptotp)
         else:
-            Stot = np.zeros(4)
+            Stot = np.zeros(np.max([self.nmatp,self.nmatr]))
         
         if abs(Stot[0]) < 1e-6:
             Ptot = 0.0
@@ -3131,6 +3128,7 @@ class RingedPlanet(object):
     def lambertian_test(self,alpha):
         """
         Simple, analytical model for the normalized reflected light coming of a lambertian planet
+        with a surface albedo of 1
         """
         F = 2*(np.sin(alpha)+(np.pi-alpha)*np.cos(alpha))/3
         return F/np.pi
@@ -3153,9 +3151,9 @@ class RingedPlanet(object):
 
         #Ring
         self.Tir=np.zeros(self.Nrt)
-        cond=(self.fr)*(self.tr)
-        mus=np.cos(self.io)*np.ones_like(self.rhors)
-        self.betas=1-Util.attenuationFactor(mus[cond],self.taueff)
+        cond=self.tr
+        #mus=np.cos(self.io)*np.ones_like(self.rhors)
+        self.betas=1-np.exp(-self.taur/abs(self.etars[0]))#Util.attenuationFactor(mus[cond],self.taueff)
         self.Tir[cond]=self.betas*Util.limbDarkening(self.rhors[cond],1,self.limb_cs,self.normlimb)*self.afrs[cond]
 
     def _getFacetsOnSky(self,r_equ,observing_body="planet"):

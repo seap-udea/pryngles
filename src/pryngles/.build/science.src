@@ -26,10 +26,6 @@ import math as mh
 import spiceypy as spy
 from scipy.integrate import quad
 from scipy.spatial import ConvexHull
-<<<<<<< HEAD
-from celluloid import Camera # getting the camera
-=======
->>>>>>> 94ebd9c23aea8e625e3a9b6e7041aa3df2ae2751
 import rebound as rb
 import matplotlib.pyplot as plt
 #@end:external
