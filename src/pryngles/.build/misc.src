@@ -31,12 +31,7 @@ from sys import maxsize as HASH_MAXSIZE
 # ## Miscelaneous Class
 
 #@docstring:Misc
-<<<<<<< HEAD
 Misc_doc="""
-=======
-Misc_doc=\
-"""
->>>>>>> 94ebd9c23aea8e625e3a9b6e7041aa3df2ae2751
 Miscelaneous routines.
 
 This is a set of util routines intended for a diversity of purposes.

@@ -16,6 +16,7 @@ from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection
 from matplotlib import animation
+from celluloid import Camera # getting the camera
 import itertools
 from tqdm import tqdm
 

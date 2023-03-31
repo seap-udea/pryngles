@@ -12,9 +12,10 @@ import matplotlib.ticker as ticker
 from scipy.optimize import minimize, differential_evolution,least_squares
 import cv2 as cv
 
-def pool_handler(loc_num, params, func, multiplier):
-
-    max_process = math.floor(mp.cpu_count()*multiplier)
+def pool_handler(loc_num, params, func, multiplier,max_process=None):
+    
+    if max_process is None:
+        max_process = math.floor(mp.cpu_count()*multiplier)
     
     # Max allowed thread count on the server is 14
     if max_process>14: max_process=14
@@ -67,6 +68,19 @@ def crossCalc(ring_l,ring_i,orbit_i):
             break
     results = np.sort(results)
     return results*180/np.pi
+
+def normalConverter(i,phi):
+    def func(x,i,phi):
+        return [np.sin(x[1])*np.cos(x[0]) - np.sin(phi)*np.sin(i),
+                np.sin(x[0]) - np.cos(phi)*np.sin(i),
+                np.cos(x[1])*np.cos(x[0]) - np.cos(i)]
+    i_rad = i*np.pi/180
+    phi_rad = phi*np.pi/180
+    res = least_squares(func, np.array([60*np.pi/180,40*np.pi/180]), args=(i_rad,phi_rad))
+    ring_i, ring_l = res.x
+    print("Check ring orientation: ", func(np.array([ring_i,ring_l]),i_rad,phi_rad))
+    return np.array([ring_i,ring_l])
+    
 
 def parametersweepGeom(ring_i_arr: np.ndarray,
                        fou_file_ring: str,
@@ -223,7 +237,17 @@ def parameterSweep(fou_file_ring: str,
                    Ns: int = 30,
                    Nb: int = 0,
                    Np: int = 10000,
-                   Nr: int = 10000):
+                   Nr: int = 10000,
+                   a: float = 1,
+                   r_s: float = Consts.rsun,
+                   r_p: float = Consts.rsaturn,
+                   e: float = 0.0,
+                   theta_end: float = 360,
+                   n_theta: int = 361,
+                   allow_non_uni: bool = False,
+                   normalize: bool = True,
+                   lambq_offset: float = 0.0,
+                   limb_coeffs: list = [0.65]):
     
     # Announce start of function
     print (f"\n\n start run with: {name} = {value}") 
@@ -244,11 +268,11 @@ def parameterSweep(fou_file_ring: str,
       
     # Initialise the system
     pixx_sys = System()
-    s=pixx_sys.add(kind="Star",physics=dict(radius=Consts.rsun/pixx_sys.ul),optics=dict(limb_coeffs=[0.65]))
+    s=pixx_sys.add(kind="Star",physics=dict(radius=r_s/pixx_sys.ul),optics=dict(limb_coeffs=limb_coeffs))
     p=pixx_sys.add(kind="Planet", primary=s,
-                   radius=Consts.rsaturn/pixx_sys.ul,
-                   orbit=dict(a=1, e=0.0),
-                   physics=dict(radius=Consts.rsaturn/pixx_sys.ul),
+                   radius=r_p/pixx_sys.ul,
+                   orbit=dict(a=a, e=e),
+                   physics=dict(radius=r_p/pixx_sys.ul),
                    optics=dict(nspangles=Np))
     r=pixx_sys.add(kind="Ring", primary=p,
                    physics=dict(fi=ring_ri, fe=ring_re, i=gamma),
@@ -258,12 +282,27 @@ def parameterSweep(fou_file_ring: str,
                                 fname_planet=fou_file_planet,
                                 fname_ring=fou_file_ring)
     RP.behavior["interp_method_ring"] = interpr
+    RP.behavior["allow_non_uni"] = allow_non_uni
     RP.reference_plane = reference_plane
     
     lamb_initial = lamb_star
-    lamb_final = lamb_initial + 360*Consts.deg
-    lambs = np.linspace(lamb_initial,lamb_final,361)
-        
+    lamb_final = lamb_initial + theta_end*Consts.deg
+    lambs = np.linspace(lamb_initial,lamb_final,n_theta)
+    
+    # Determine starting position in eccentric orbit, default is apocenter
+    if e >= 0.05:
+        lq = np.linspace(0,2*np.pi,2000)
+        d_max = 0
+        lambq_max = 0
+        for ii,l in enumerate(lq):
+            RP.lambq = l
+            RP.changeStellarPosition(lamb_initial)
+            d = RP.rstar
+            if d >= d_max:
+                d_max = d
+                lambq_max = l
+        RP.lambq = lambq_max + lambq_offset*np.pi/180     
+    
     # Initialise the starting position
     RP.changeObserver([lamb_obs,beta_obs])
     RP.changeStellarPosition(lamb_initial)
@@ -289,6 +328,9 @@ def parameterSweep(fou_file_ring: str,
     Pp    = []
     Pr    = []
     alpha = []
+    vorbit= []
+    rstar = []
+    rstaro= []
 
     print("\n########################################")
     start_msg = f" Starting orbit simulation with: \n fou_file_planet = {RP.fname_planet} ,"+\
@@ -315,7 +357,7 @@ def parameterSweep(fou_file_ring: str,
         RP._updateGeometricalFactors()
         RP._updateIncomingStellarFlux()
         RP._updateObservedFacetAreas()
-        RP.updateReflection(taur=tau_ring)
+        RP.updateReflection(taur=tau_ring,normalize=normalize)
         print("used ring opacity: ", RP.taur)
         
         # Save the relevant data
@@ -326,6 +368,9 @@ def parameterSweep(fou_file_ring: str,
         Pp    += [RP.Ptotp]
         Pr    += [RP.Ptotr]
         alpha += [np.arccos(RP.alphaps)/Consts.deg]
+        vorbit+= [RP.vorbit]
+        rstar += [RP.rstar]
+        rstaro+= [RP.rstar_obs]
 
     true_anomaly = list((lambs-lamb_initial)/Consts.deg)
     parameters = {"Fourier planet": RP.fname_planet, "Fourier ring": RP.fname_ring,
@@ -337,9 +382,11 @@ def parameterSweep(fou_file_ring: str,
                   "Nr": RP.Nrt,
                   "Np": RP.Np,
                   "Ring opacity": tau_ring,
-                  "Ref plane": RP.reference_plane}
+                  "Ref plane": RP.reference_plane,
+                  "Planet radius": RP.Rp}
     save_dict = {"lambda": true_anomaly, "alpha": alpha, "Stot": Stot,
                  "Sp": Sp, "Sr": Sr, "Ptot": Ptot, "Pp": Pp, "Pr": Pr,
+                 "vorbit": vorbit, "rstar": rstar, "rstar_obs": rstaro,
                  "Param": parameters}
 
     # Pickle the data, if file already exists it will be overwritten
@@ -454,7 +501,174 @@ def opticalThicknessTest(fou_file_num,orbit_i_arr,ring_i,ring_l,reflection=False
     else:
         with open(f"/home/allard/Data/Optical_thickness/opt_thickness_{fou_file_num}.pkl", "wb") as f:
             pickle.dump(save_dict, f)
+
+def singleRun(fou_file_ring: str,
+              fou_file_planet: str,
+              orbit_i: float,
+              ring_i: float,
+              ring_l: float,
+              ring_ri: float,
+              ring_re: float,
+              name: str,
+              save: bool = False,
+              tau_ring: float = 0.4,
+              interpr: str = "spline",
+              reference_plane: str = "Detector", # "Detector" or "Planetary"
+              Ns: int = 30,
+              Nb: int = 0,
+              Np: int = 10000,
+              Nr: int = 10000,
+              a: float = 1,
+              r_s: float = Consts.rsun,
+              r_p: float = Consts.rsaturn,
+              e: float = 0.0,
+              theta_end: float = 360,
+              theta_int: float = 0.0,
+              n_theta: int = 361,
+              allow_non_uni: bool = False,
+              normalize: bool = True,
+              lambq_offset: float = 0.0,
+              limb_coeffs: list = [0.65],
+              transit: bool = False):
     
+    # Generate save location if necessary
+    if not os.path.isdir(f"/home/allard/Data/Single_runs/{name}"):      
+        os.makedirs(f"/home/allard/Data/Single_runs/{name}")
+    save_location = f"/home/allard/Data/Single_runs/{name}/"
+
+    # Calculate starting position of observer and star
+    gamma, beta_obs, lamb_obs, lamb_star = Util.calcStartingPosition(orbit_i,ring_i,ring_l)
+      
+    # Initialise the system
+    pixx_sys = System()
+    s=pixx_sys.add(kind="Star",physics=dict(radius=r_s/pixx_sys.ul),optics=dict(limb_coeffs=limb_coeffs))
+    p=pixx_sys.add(kind="Planet", primary=s,
+                   radius=r_p/pixx_sys.ul,
+                   orbit=dict(a=a, e=e),
+                   physics=dict(radius=r_p/pixx_sys.ul),
+                   optics=dict(nspangles=Np))
+    r=pixx_sys.add(kind="Ring", primary=p,
+                   physics=dict(fi=ring_ri, fe=ring_re, i=gamma),
+                   optics=dict(nspangles=Nr))
+    
+    RP=pixx_sys.ensamble_system(extension=extension,
+                                fname_planet=fou_file_planet,
+                                fname_ring=fou_file_ring)
+    RP.behavior["interp_method_ring"] = interpr
+    RP.behavior["allow_non_uni"] = allow_non_uni
+    RP.reference_plane = reference_plane
+    
+    if abs(theta_int) < 0.01:
+        lamb_initial = lamb_star
+        lamb_final = lamb_initial + theta_end*Consts.deg
+        lambs = np.linspace(lamb_initial,lamb_final,n_theta)
+    else:
+        lamb_initial = lamb_star - theta_int*Consts.deg
+        lamb_final = lamb_star + theta_end*Consts.deg
+        lambs = np.linspace(lamb_initial,lamb_final,n_theta)
+    
+    # Determine starting position in eccentric orbit, default is apocenter
+    if e >= 0.05:
+        lq = np.linspace(0,2*np.pi,2000)
+        d_max = 0
+        lambq_max = 0
+        for ii,l in enumerate(lq):
+            RP.lambq = l
+            RP.changeStellarPosition(lamb_initial)
+            d = RP.rstar
+            if d >= d_max:
+                d_max = d
+                lambq_max = l
+        RP.lambq = lambq_max + lambq_offset*np.pi/180  
+        
+    # Initialise the starting position
+    RP.changeObserver([lamb_obs,beta_obs])
+    RP.changeStellarPosition(lamb_initial)
+    RP._updateGeometricalFactors()
+    RP._updateIncomingStellarFlux()
+    RP._updateObservedFacetAreas()
+
+    # Save images showing the starting position of planet, ring and star
+    if save:
+        ecl_fig,obs_fig,star_fig = RP.plotRingedPlanet(showstar=True,showfig=False)
+        ecl_fig.savefig(save_location + \
+                        f"fig_with_{name}_and_oi_{orbit_i}_rl_{ring_l}_ri_{ring_i}_rin_{ring_ri}_rout_{ring_re}_ecl.png", dpi=300)
+        obs_fig.savefig(save_location + \
+                        f"fig_with_{name}_and_oi_{orbit_i}_rl_{ring_l}_ri_{ring_i}_rin_{ring_ri}_rout_{ring_re}_obs.png", dpi=300)
+        star_fig.savefig(save_location + \
+                         f"fig_with_{name}_and_oi_{orbit_i}_rl_{ring_l}_ri_{ring_i}_rin_{ring_ri}_rout_{ring_re}_star.png", dpi=300)
+        plt.close()
+
+    # Make lists
+    Stot  = []
+    Sp    = []
+    Sr    = []
+    Ptot  = []
+    Pp    = []
+    Pr    = []
+    alpha = []
+    
+    if transit:
+        ts = []
+        T  = []
+        Tp = []
+        Tr = []
+    
+    # Start the orbit
+    for lamb in lambs:
+        RP.changeStellarPosition(lamb)
+        print("True anomaly: ", (lamb-lamb_initial)/Consts.deg)
+        RP._updateGeometricalFactors()
+        RP._updateIncomingStellarFlux()
+        RP._updateObservedFacetAreas()
+        RP.updateReflection(taur=tau_ring, normalize=normalize)
+        
+        if transit:
+            RP.updateTransit()
+            ts += [RP.t*RP.CU.UT]
+            T  += [-RP.Tip.sum() - RP.Tir.sum() + RP.Stot[0]/1e6]
+            Tp += [-RP.Tip.sum()]
+            Tr += [-RP.Tir.sum()]
+            
+        # Save the relevant data
+        Stot  += [RP.Stot]
+        Sp    += [RP.Stotp]
+        Sr    += [RP.Stotr]
+        Ptot  += [RP.Ptot]
+        Pp    += [RP.Ptotp]
+        Pr    += [RP.Ptotr]
+        alpha += [np.arccos(RP.alphaps)/Consts.deg]
+
+    true_anomaly = list((lambs-lamb_initial)/Consts.deg)
+    parameters = {"Fourier planet": RP.fname_planet, "Fourier ring": RP.fname_ring,
+                  "Orbit inclinatie": orbit_i, "Ring roll": ring_l,
+                  "Ring inclinatie": ring_i, "Ring ri": RP.fi, "Ring re": RP.fe,
+                  "Observer inclinatie": RP.eobs_ecl[1]/Consts.deg, 
+                  "Observer longitude": RP.eobs_ecl[0]/Consts.deg,
+                  "Ring i_ecl": RP.i/Consts.deg,
+                  "Nr": RP.Nrt,
+                  "Np": RP.Np,
+                  "Ring opacity": tau_ring,
+                  "Ref plane": RP.reference_plane}
+    if transit:
+        ts = np.array(ts)
+        ts = (ts-ts[0])/Consts.day
+        save_dict = {"lambda": true_anomaly, "alpha": alpha, "Stot": Stot, "Sp": Sp, 
+                     "Sr": Sr, "Ptot": Ptot, "Pp": Pp, "Pr": Pr, "Param": parameters, 
+                     "Time": ts, "Ttot": T, "Tp": Tp, "Tr": Tr}
+    else:
+        save_dict = {"lambda": true_anomaly, "alpha": alpha, "Stot": Stot,
+                     "Sp": Sp, "Sr": Sr, "Ptot": Ptot, "Pp": Pp, "Pr": Pr,
+                     "Param": parameters}
+    
+    # Pickle the data, if file already exists it will be overwritten
+    if save:
+        with open(save_location + f"data_with_{name}.pkl", "wb") as f:
+            pickle.dump(save_dict, f)
+        return save_location + f"data_with_{name}.pkl"
+    else:
+        return "Nothing"
+        
 ################################################################
 ##################### PLOT TOOLS ###############################
 ################################################################
@@ -646,7 +860,7 @@ def transitFit(x,fitx,fity,run_num,save_everything=False):
     
     return res.fun
     
-def transitFitMie(x,fitx,fity,run_num,save_everything=False):
+def transitFitMie(x,fitx,fity,run_num,save_everything=False,allow_non_uni=True):
     """
     x = [b,ring_i,ring_l,r,a,e,fi,fe,lincoef,quadcoef,optical_th]
     x[0] = b ; impact parameter
@@ -666,11 +880,22 @@ def transitFitMie(x,fitx,fity,run_num,save_everything=False):
     fity = y-array of observations
     run_num = run number, manually added up
     """
-    optical_thickness_values = np.array([0.002,0.01,0.05,0.1,0.2,0.6,
+    optical_thickness_values = np.array([0.0,0.002,0.01,0.05,0.1,0.2,0.6,
                                          1.0,1.2,1.6,2.0,4.0,8.0])
+    optical_thickness_names = np.array(["0_0","0_002","0_01","0_05","0_1","0_2","0_6",
+                                        "1_0","1_2","1_6","2_0","4_0","8_0"])
     particle_r_names = np.array(["020","040","080"])
-    fname_ring = f"./fou_files/Ring/Mie/fou_file_mie_1.5_{particle_r_names[int(x[11])]}_4500_{optical_thickness_values[int(x[10])]}_0.3_60gaus.dat"
-    optical_thickness = optical_thickness_values[int(x[10])]
+    if int(x[10]) != 0:
+        if int(x[11]) == 2:
+            fname_ring = f"./fou_files/Ring/fou_ring_{optical_thickness_names[int(x[10])]}_0_3.dat"
+        else:
+            fname_ring = "./fou_files/Ring/Mie/fou_file_mie_1.5" + \
+                         f"_{particle_r_names[int(x[11])]}_4500_{optical_thickness_values[int(x[10])]}_0.3_60gaus.dat"
+
+        optical_thickness = optical_thickness_values[int(x[10])]
+    elif int(x[10]) == 0:
+        fname_ring = f"./fou_files/Ring/fou_ring_0_001_0_3.dat"
+        optical_thickness = 0.0
     
     pixx_sys = System()
     
@@ -692,13 +917,17 @@ def transitFitMie(x,fitx,fity,run_num,save_everything=False):
     RP=pixx_sys.ensamble_system(extension=extension, 
                                 fname_planet="./fou_files/Planet/fou_bmsca60.0_asurf0.5.dat",
                                 fname_ring=fname_ring)
+    RP.behavior["allow_non_uni"] = allow_non_uni
     thetas=RP.thetas
 
     lamb_initial=lamb_star - thetas - 4*RP.fe*RP.thetap
     lamb_final=lamb_star + thetas + 4*RP.fe*RP.thetap
-    lambs = np.linspace(lamb_initial,lamb_final,200)
+    if save_everything:
+        lambs = np.linspace(lamb_initial,lamb_final,400)
+    else:
+        lambs = np.linspace(lamb_initial,lamb_final,200)
     
-    lq = np.linspace(0,2*np.pi,200)
+    lq = np.linspace(0,2*np.pi,720)
     d_max = 0
     lambq_max = 0
     for ii,l in enumerate(lq):
@@ -730,6 +959,8 @@ def transitFitMie(x,fitx,fity,run_num,save_everything=False):
         Tp    = []
         Tr    = []
         alpha = []
+        tr    = []
+        betas = []
 
     for lamb in lambs:
         RP.changeStellarPosition(lamb)
@@ -737,9 +968,13 @@ def transitFitMie(x,fitx,fity,run_num,save_everything=False):
         RP._updateIncomingStellarFlux()
         RP._updateObservedFacetAreas()
         RP.updateReflection(taur=optical_thickness,normalize=False)
-        ts    += [RP.t*RP.CU.UT]
+        ts += [RP.t*RP.CU.UT]
         RP.updateTransit()
-        T  += [-RP.Tip.sum() - RP.Tir.sum() + RP.Stot[0]/1e6]
+        if int(x[10]) == 0:
+            T  += [-RP.Tip.sum() + RP.Stotp[0]/1e6]
+        else:
+            T  += [-RP.Tip.sum() - RP.Tir.sum() + RP.Stot[0]/1e6]
+            
         if save_everything:
             Stot  += [RP.Stot]
             Sp    += [RP.Stotp]
@@ -748,8 +983,10 @@ def transitFitMie(x,fitx,fity,run_num,save_everything=False):
             Pp    += [RP.Ptotp]
             Pr    += [RP.Ptotr]
             alpha += [np.arccos(RP.alphaps)/Consts.deg]
-            Tp += [-RP.Tip.sum()]
-            Tr += [-RP.Tir.sum()] 
+            Tp    += [-RP.Tip.sum()]
+            Tr    += [-RP.Tir.sum()] 
+            tr    += [RP.tr]
+            betas += [RP.betas]
         
     ts = np.array(ts)
     T = np.array(T)
@@ -768,14 +1005,15 @@ def transitFitMie(x,fitx,fity,run_num,save_everything=False):
                      "Sp": Sp, "Sr": Sr, "Ptot": Ptot, "Pp": Pp, "Pr": Pr,
                      "Ttot": T, "Tp": Tp, "Tr": Tr, "Time": ts, "x": x, 
                      "Fitness": res.fun, "Fitx": fitx, "Fity": fity,
-                     "Shift": res.x}
+                     "Shift": res.x, "tr cond": tr, "betas": betas, 
+                     "Foufile ring": fname_ring}
         #Pickle the data, if file already exists it will be overwritten
         if not os.path.isdir(f"/home/allard/Data/Transit_fit_checked/run_num{run_num}"):      
             os.makedirs(f"/home/allard/Data/Transit_fit_checked/run_num{run_num}")
         save_location = f"/home/allard/Data/Transit_fit_checked/run_num{run_num}/"
 
         save_name = save_location + \
-                    f"rn{run_num}_fitness%.6f_x1_%.1f_.pkl" % (res.fun,x[1])
+                    f"rn{run_num}_fitness%.8f_x1_%.1f_.pkl" % (res.fun,x[1])
         with open(save_name, "wb") as f:
             pickle.dump(save_dict, f)
     else:
@@ -787,7 +1025,7 @@ def transitFitMie(x,fitx,fity,run_num,save_everything=False):
         save_location = f"/home/allard/Data/Transit_fit/run_num{run_num}/"
 
         save_name = save_location + \
-                    f"rn{run_num}_fitness%.8f_x1_%.1f_x2_%.2f_fi%.2f_fe%.2f_e%.3f_.pkl" % (res.fun,x[1],x[2],x[6],x[7],x[5])
+                    f"rn{run_num}_fitness%.8f_x1_%.1f_x2_%.2f_fi%.2f_fe%.2f_e%.3f_x10_%.1f.pkl" % (res.fun,x[1],x[2],x[6],x[7],x[5],x[10])
         with open(save_name, "wb") as f:
             pickle.dump(save_dict, f)
     
