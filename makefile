@@ -103,15 +103,6 @@ cleandist:
 	@-rm -rf dist/
 	@-rm -rf build/
 
-cleanpack:
-	@-cp src/$(PACKNAME)/version.py tmp/
-	@-rm -rf src/$(PACKNAME)/*.py
-	@-cp tmp/version.py src/$(PACKNAME)/version.py
-	@-rm -rf src/$(PACKNAME)/tests/*.py
-	@-rm -rf src/$(PACKNAME)/.build/*
-	@-rm -rf src/$(PACKNAME)/*.so
-	@-rm -rf src/$(PACKNAME)/__pycache__
-
 ##################################################################
 #GIT
 ##################################################################
