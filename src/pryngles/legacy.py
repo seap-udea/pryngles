@@ -1,4 +1,4 @@
-##################################################################
+#############################A#####################################
 #                                                                #
 #.#####...#####...##..##..##..##...####...##......######...####..#
 #.##..##..##..##...####...###.##..##......##......##......##.....#
@@ -1153,6 +1153,7 @@ class RingedPlanet(object):
         #Ring geometrical opacity
         taug=1.0, #Geometrical opacity
         diffeff=1.0, #Diffraction efficiency
+        taur=0.4,
         #Law of diffuse reflection on ring surface
         reflection_rings_law=lambda x,y:x,
         #Observations wavelength
@@ -2696,6 +2697,7 @@ class RingedPlanet(object):
         #Opacity
         self.wavelength=self.physics["wavelength"]
         self.taug=self.physics["taug"]
+        self.taur=self.physics["taur"]
         self.diffeff=self.physics["diffeff"]
         self.taueff=self.diffeff*self.taug
         self.particles=self.physics["particles"]
@@ -3144,6 +3146,7 @@ class RingedPlanet(object):
                                                            np.ones(cond.sum())*self.normr*self.afr,
                                                            self.behavior["interp_method_ring"]
                                                           )
+                    """
                     self.save_values+=[
                             dict(
                                 obj="ring forward",
@@ -3156,6 +3159,7 @@ class RingedPlanet(object):
                                 stokes=self.Stokesr[cond,:],
                             )
                         ]
+                    """
                 elif self.physics["extension"] == "cpixx":
                     self.Stokesr[cond,:] = self.SCr.calculate_stokes(self.phidiffrs[cond], self.betars[cond],
                                                                      abs(self.etars[cond]), abs(self.zetars[cond]),
