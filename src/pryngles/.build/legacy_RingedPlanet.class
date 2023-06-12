@@ -210,13 +210,15 @@ class RingedPlanet(object):
         ip='y',#Color of illuminated side of the planet
         dp='w',#Color of dark side of the planet
         hp='b',#Color of shadow on the planet
-        tp='m',#Color of hidden but illuminated points on planet
+        tp='m',#Color of hidden but illuminated points on the planet
+        htp='r',#Color of hidden and shadowed on the planet
         sp=1.5,#Size of the points in planet
         #Ring
-        ir='c',#Color of illuminated side of the planet
-        dr='k',#Color of dark side of the planet
+        ir='c',#Color of reflecting ring
+        dr='k',#Color of dark side of the ring
         hr='b',#Color of shadow on the ring
-        sr=1.5,#Size of the points in planet
+        tr='g',#Color of transmitting ring
+        sr=1.5,#Size of the points in the ring
         #Invisible
         ci='r',#Color of invisible points
         si=3.0,#Size of invisible points
@@ -964,15 +966,18 @@ class RingedPlanet(object):
                 ip='y',#Color of illuminated side of the planet
                 dp='w',#Color of dark side of the planet
                 hp='b',#Color of shadow on the planet
+                tp='m',#Color of hidden but illuminated points on the planet
+                htp='r',#Color of hidden and shadowed on the planet
                 sp=1.5,#Size of the points in planet
                 #Ring
-                ir='c',#Color of illuminated side of the planet
-                dr='k',#Color of dark side of the planet
+                ir='c',#Color of reflecting ring
+                dr='k',#Color of dark side of the ring
                 hr='b',#Color of shadow on the ring
-                sr=1.5,#Size of the points in planet
+                tr='g',#Color of transmitting ring
+                sr=1.5,#Size of the points in the ring
                 #Invisible
                 ci='r',#Color of invisible points
-                si=3.0,#Size of invisible points         
+                si=3.0,#Size of invisible points        
         """
         fig1=fig2=fig3=None
         if not showfig:
@@ -1122,24 +1127,28 @@ class RingedPlanet(object):
         # Facets that are both of the above
         condspb = (self.apsb)*(~self.tp)
         
-        cond=(self.ap)*(self.ip)
+        # Plot planetary facets that are visible and illuminated
+        cond = (self.ap)*(self.ip)
         ax.scatter(self.rps_obs[cond,0]/self.Rp,
                    self.rps_obs[cond,1]/self.Rp,
                    color=self._plot["ip"],s=self._plot["sp"])
+        
+        # Plot planetary facets that are visible but not illuminated
         cond=(op)*(~self.ip)*(vp)
         ax.scatter(self.rps_obs[cond,0]/self.Rp,
                    self.rps_obs[cond,1]/self.Rp,
                    color=self._plot["dp"],s=self._plot["sp"],alpha=self._plot["da"])
+                             
         if self.behavior["shadows"]:
             ax.scatter(self.rps_obs[condspr,0]/self.Rp,
                        self.rps_obs[condspr,1]/self.Rp,
-                       color=self._plot["hp"],s=3*self._plot["sp"],alpha=self._plot["ha"])
+                       color=self._plot["hp"],s=3*self._plot["sp"])#,alpha=self._plot["ha"])
             ax.scatter(self.rps_obs[condspo,0]/self.Rp,
                        self.rps_obs[condspo,1]/self.Rp,
-                       color=self._plot["tp"],s=3*self._plot["sp"],alpha=self._plot["ha"])
+                       color=self._plot["tp"],s=3*self._plot["sp"])#,alpha=self._plot["ha"])
             ax.scatter(self.rps_obs[condspb,0]/self.Rp,
                        self.rps_obs[condspb,1]/self.Rp,
-                       color=self._plot["tp"],s=3*self._plot["sp"],alpha=self._plot["ha"])
+                       color=self._plot["htp"],s=3*self._plot["sp"])#,alpha=self._plot["ha"])
 
         #Activity
         if showactive:
@@ -1168,14 +1177,36 @@ class RingedPlanet(object):
 
         #Plot ring
         if showring:
-            cond=(self.ir)*(self.vr)*onlyrings
-            ax.scatter(self.rrs_obs[cond,0]/self.Rp,
-                       self.rrs_obs[cond,1]/self.Rp,
-                       color=self._plot["ir"],s=self._plot["sr"])
-            cond=(~self.ir)*(self.vr)*onlyrings
-            ax.scatter(self.rrs_obs[cond,0]/self.Rp,
-                       self.rrs_obs[cond,1]/self.Rp,
-                       color=self._plot["ir"],s=self._plot["sr"],alpha=self._plot["da"])
+            # Rings that are lit edge-on:
+            if abs(np.arccos(np.inner(self.nstar_equ,self.nr_equ))*180/np.pi-90.0) <= 5e-2:
+                cond = (self.vr)*(~self.sr)*onlyrings
+                ax.scatter(self.rrs_obs[cond,0]/self.Rp,
+                           self.rrs_obs[cond,1]/self.Rp,
+                           color=self._plot["dp"],s=self._plot["sr"],alpha=self._plot["da"])
+            elif abs(np.arccos(self.cosio)*180/np.pi - 90.0) <= 5e-2:
+                if np.sum(self.ir) > 1:
+                    cond = (self.ir)*(self.vr)*onlyrings
+                    colname = "ir"
+                else:
+                    cond = (~self.ir)*(self.vr)*onlyrings
+                    colname = "tr"
+                ax.scatter(self.rrs_obs[cond,0]/self.Rp,
+                           self.rrs_obs[cond,1]/self.Rp,
+                           color=self._plot[colname],s=self._plot["sr"],alpha=self._plot["ha"])
+            else:
+                # Transmitting ring spangles:
+                if (np.inner(self.nstar_equ,self.nr_equ) < 0) ^ (np.inner(self.nobs_equ,self.nr_equ) < 0):
+                    cond=(~self.ir)*(self.vr)*onlyrings
+                    ax.scatter(self.rrs_obs[cond,0]/self.Rp,
+                               self.rrs_obs[cond,1]/self.Rp,
+                               color=self._plot["tr"],s=self._plot["sr"],alpha=self._plot["ha"])
+                # Reflecting ring spangles:
+                else:
+                    cond=(self.ir)*(self.vr)*onlyrings
+                    ax.scatter(self.rrs_obs[cond,0]/self.Rp,
+                               self.rrs_obs[cond,1]/self.Rp,
+                               color=self._plot["ir"],s=self._plot["sr"],alpha=self._plot["ha"])     
+                             
             if self.behavior["shadows"]:
                 cond=(self.sr)*(self.vr)*onlyrings
                 ax.scatter(self.rrs_obs[cond,0]/self.Rp,
@@ -1452,7 +1483,7 @@ class RingedPlanet(object):
             ax.scatter(self.rrs_obs[cond,0]/self.Rp,
                        self.rrs_obs[cond,1]/self.Rp,
                        c=Rr[cond],norm=norm,
-                       cmap=cmap,s=self._plot["sr"])
+                       cmap=cmap,s=self._plot["sr"],alpha=self._plot["ha"])
             cond = self.fr
             ax.scatter(self.rrs_obs[cond,0]/self.Rp,
                        self.rrs_obs[cond,1]/self.Rp,
@@ -1513,7 +1544,7 @@ class RingedPlanet(object):
             cb.ax.yaxis.set_tick_params(color='white', labelcolor='white',labelsize=14)
 
             if showtype=='Flux':
-                cb.set_label('Flux [ppm/m$^2$]',color='white')
+                cb.set_label('Flux [ppm/$R_p^2$]',color='white')
                 y_major = LogLocator(base=10)
             elif showtype=='Degree':
                 cb.set_label('Degree of polarization [-]',color='white')
