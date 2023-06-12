@@ -101,9 +101,9 @@ def parametersweepGeom(ring_i_arr: np.ndarray,
     print (f"\n\n start run with: orbit i = {orbit_i}, ring l = {ring_l}") 
     
     # Generate save location if necessary
-    if not os.path.isdir(f"/home/allard/Data/Geom_series/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{ring_i_arr[0]}"):      
-        os.makedirs(f"/home/allard/Data/Geom_series/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{ring_i_arr[0]}")
-    save_location = f"/home/allard/Data/Geom_series/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{ring_i_arr[0]}/"
+    if not os.path.isdir(f"/home/allard/Data/Geom_series_new/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{ring_i_arr[0]}"):      
+        os.makedirs(f"/home/allard/Data/Geom_series_new/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{ring_i_arr[0]}")
+    save_location = f"/home/allard/Data/Geom_series_new/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{ring_i_arr[0]}/"
 
     # Save log file since no printing comes out of multiprocessing
     sys.stdout = open(save_location + "logfile.out", "w")
@@ -155,9 +155,9 @@ def parametersweepGeom(ring_i_arr: np.ndarray,
         print (f"\n\n start run with: orbit i = {orbit_i}, ring l = {ring_l}, ring i = {r_i}") 
         
         # Generate save location if necessary
-        if not os.path.isdir(f"/home/allard/Data/Geom_series/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{r_i}"):      
-            os.makedirs(f"/home/allard/Data/Geom_series/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{r_i}")
-        save_location = f"/home/allard/Data/Geom_series/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{r_i}/"
+        if not os.path.isdir(f"/home/allard/Data/Geom_series_new/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{r_i}"):      
+            os.makedirs(f"/home/allard/Data/Geom_series_new/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{r_i}")
+        save_location = f"/home/allard/Data/Geom_series_new/Orbit_i_{orbit_i}/Ring_L_{ring_l}/Ring_i_{r_i}/"
         
         # Save log file since no printing comes out of multiprocessing
         sys.stdout = open(save_location + "logfile.out", "w")
@@ -170,7 +170,7 @@ def parametersweepGeom(ring_i_arr: np.ndarray,
         RP._updateObservedFacetAreas()
         
         # Save images showing the starting position of planet, ring and star
-        ecl_fig,obs_fig,star_fig = RP.plotRingedPlanet(showstar=False,showfig=False,showtitle=False)
+        ecl_fig,obs_fig,star_fig = RP.plotRingedPlanet(showstar=False,showfig=False,showtitle=False,axis=False)
         ecl_fig.savefig(save_location + f"fig_with_oi_{orbit_i}_rl_{ring_l}_ri_{r_i}_ecl.png", dpi=300)
         obs_fig.savefig(save_location + f"fig_with_oi_{orbit_i}_rl_{ring_l}_ri_{r_i}_obs.png", dpi=300)
         star_fig.savefig(save_location + f"fig_with_oi_{orbit_i}_rl_{ring_l}_ri_{r_i}_star.png", dpi=300)
