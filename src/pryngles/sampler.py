@@ -34,8 +34,7 @@ import math
 # Class Sampler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Sampler(PrynglesCommon):
-    """\
-        Fibonacci sampling of disks and spheres.
+    """    Fibonacci sampling of disks and spheres.
         
         Initialization attributes:
             N: integer:

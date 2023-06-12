@@ -4,8 +4,7 @@
 # Class Spangler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Spangler(PrynglesCommon):
-    """Spangler_doc=\
-    A Spangler associated to an object or set of objects.
+    """A Spangler associated to an object or set of objects.
         
        There are two ways to initialize a Spangler:
         
@@ -299,8 +298,7 @@ class Spangler(PrynglesCommon):
             verbose(VERB_VERIFY,f"Updating rotations at t = {t}")
 
             self.data["q_equ"]=[q+q0+w*t for q,w,q0 in zip(self.data.q_equ,self.data.w,self.data.q0)]
-            self.data[["x_equ","y_equ","z_equ"]]=\
-                [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
+            self.data[["x_equ","y_equ","z_equ"]]=                [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
 
             qupdate=True
 
@@ -320,9 +318,7 @@ class Spangler(PrynglesCommon):
 
         #Convert from equatorial to ecliptic
         verbose(VERB_VERIFY,f"Converting to equatorial")
-        self.data[["x_ecl","y_ecl","z_ecl"]]=\
-            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl\
-             for sph,r,cequ,cecl in zip(self.data.name,
+        self.data[["x_ecl","y_ecl","z_ecl"]]=            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl             for sph,r,cequ,cecl in zip(self.data.name,
                                         np.array(self.data[["x_equ","y_equ","z_equ"]]),
                                         self.data.center_equ,self.data.center_ecl)]
         
@@ -337,10 +333,8 @@ class Spangler(PrynglesCommon):
         if sum(cond)>0:
             verbose(VERB_VERIFY,f"Setting local vectors based on ns: {sum(cond)}")
             #wy = ez x ns because with this definition seen from above the system is oriented as usual
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0] \
-                                                    for ns in self.data[cond].ns_ecl],dtype=object).values
-            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns) \
-                                                    for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0]                                                     for ns in self.data[cond].ns_ecl],dtype=object).values
+            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns)                                                     for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
                                                    dtype=object).values
             cond=~cond
         else:
@@ -350,8 +344,7 @@ class Spangler(PrynglesCommon):
         if sum(cond)>0:
             verbose(VERB_VERIFY,f"Setting local matrix based on ex: {sum(cond)}")
             self.data.loc[cond,"wx_ecl"]=pd.Series([[1,0,0]]*sum(cond),dtype=object).values
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0] \
-                                                    for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0]                                                     for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
                                                    dtype=object).values
             
         #Update velocities

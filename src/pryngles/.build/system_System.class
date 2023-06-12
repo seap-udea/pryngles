@@ -4,8 +4,7 @@
 # Class System
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class System(PrynglesCommon):
-    """System_doc=\
-    f    Creates a planetary system.
+    """Creates a planetary system.
     
         Initialization attributes:
     

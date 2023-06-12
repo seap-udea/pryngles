@@ -63,8 +63,7 @@ SAMPLE_SHAPES=[]
 # ## Sampler class
 
 #@docstring:Sampler
-Sampler_doc = f"""\
-    Fibonacci sampling of disks and spheres.
+Sampler_doc = f"""    Fibonacci sampling of disks and spheres.
     
     Initialization attributes:
         N: integer:

@@ -345,8 +345,7 @@ class Util(object):
             ri2=fi**2*cosir-1
         else:
             yi=np.sqrt(fi**2-1)/(fi*sinir)
-            ri2=fi**2*cosir*2/np.pi*np.arcsin(yi)-\
-                2/np.pi*np.arcsin(yi*fi*cosir)
+            ri2=fi**2*cosir*2/np.pi*np.arcsin(yi)-                2/np.pi*np.arcsin(yi*fi*cosir)
         ri2=beta*ri2
 
         #EXTERNAL RING EFFECTIVE RADIUS
@@ -354,8 +353,7 @@ class Util(object):
             re2=fe**2*cosir-1
         else:
             ye=np.sqrt(fe**2-1)/(fe*sinir)
-            re2=fe**2*cosir*2/np.pi*np.arcsin(ye)-\
-                2/np.pi*np.arcsin(ye*fe*cosir)
+            re2=fe**2*cosir*2/np.pi*np.arcsin(ye)-                2/np.pi*np.arcsin(ye*fe*cosir)
         re2=beta*re2
 
         #RINGED-PLANET AREA
