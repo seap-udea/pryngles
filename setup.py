@@ -81,5 +81,5 @@ setuptools.setup(
     # OPTIONS
     # ######################################################################
     include_package_data=True,
-    package_data={"": ["data/*.*", "tests/*.*"]},
+    package_data={"": ["data/*.*", "data/sampler_presets/*.*", "tests/*.*"]},
 )
