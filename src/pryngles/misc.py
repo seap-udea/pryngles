@@ -22,8 +22,21 @@ from collections import OrderedDict as odict
 from collections.abc import Iterable
 import inspect
 import os
+import gdown
+import pandas as pd
 from sys import maxsize as HASH_MAXSIZE
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module miscelaneous
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DATA_INDEX=dict(
+    baseurl = 'https://docs.google.com/feeds/download/spreadsheets/Export?exportFormat=xlsx&key=',
+    downurl = 'https://docs.google.com/uc?export=download&id=',
+    filename = 'pryngles_files_index.xlsx',
+    fileid = '17rgmzuENn_5jEO2rzDzngJLpZT1P9rPsQr3PNQGFkGs',
+    col_filename = 'filename',
+    col_fileid = 'fileid',
+)
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Misc
@@ -40,9 +53,8 @@ class Misc(object):
     """
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    # Bassic methods
+    # Data methods
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
     def get_data(path):
         """
         Get the full path of the `datafile` which is one of the datafiles provided with the package.
@@ -55,7 +67,65 @@ class Misc(object):
             
         """
         return os.path.join(ROOTDIR,'data',path);
+
+    def retrieve(datafile,path="/tmp/",quiet=False,overwrite=False):
+        """Retrieve a data file from public Pryngles repo, https://bit.ly/pryngles-data.
+
+        Parameters:
+        
+            datafile: string.
+                Name of the datafile to retrieve.
+
+            path: string, default = '/tmp/'
+                Path where the data files be retrieved.
+
+            quiet: bool, default = False
+                Is the downloading process quiet or not. This is a `gdown` option.
+
+        Return:
+            List of datafiles retrieve it.        
+        """
+        # Get the list of files
+        filename = path+'/'+DATA_INDEX['filename']
+        if not os.path.isfile(filename) or overwrite:
+            url = DATA_INDEX['baseurl']+DATA_INDEX['fileid']
+            gdown.download(url,filename,quiet=quiet)
+        else:
+            print(f"Index file {filename} already retrieved. For overwrite use overwrite = True.")
+            
+        files=pd.read_excel(filename,index_col=DATA_INDEX['col_filename'])
+        if not quiet:
+            print(f"There are {len(files)} files in data repository.")
+            
+
+        if isinstance(datafile,str):
+            datafile=[datafile]
+
+        dfiles=[]
+        for dfile in datafile:
+            # Look for file in the data index
+            if dfile in files.index:
+                fileid = files.loc[dfile,DATA_INDEX['col_fileid']]
+                # Download
+                url = DATA_INDEX['downurl']+fileid
+                filename = path+'/'+dfile
+                if not os.path.isfile(filename) or overwrite:
+                    gdown.download(url,filename,quiet=quiet)
+                else:
+                    if not quiet:
+                        print(f"File {filename} already retrieved. For overwrite use overwrite = True.")
+                dfiles+=[filename]
+            else:
+                raise ValueError(f"Datafile {dfile} not available in repository. List of available files:\n{list(files.index)}")
+
+        if not quiet:
+            print(f"Files downloaded: {dfiles}")
+
+        return dfiles
     
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Input/output methos
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     def print_df(df):
         """Print DataFrame.
         
@@ -65,6 +135,9 @@ class Misc(object):
         """
         display(HTML(df.to_html()))
         
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Array methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     def flatten(collection):
         """Flatten a list of objects
 
@@ -81,6 +154,9 @@ class Misc(object):
             else:
                 yield i
                 
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Programming methods
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     def get_methods(my_class):
         """Get a list of the methods for class my_class
         """

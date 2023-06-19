@@ -469,12 +469,14 @@ class Util(object):
     def calcStartingPosition(orbit_i,
                              ring_i,
                              ring_l):
-        """
-        Function that calculates the starting true anomaly and observer location(longitude, inclination) 
-        to generate an orbit with the given orbit inclination, ring inclination, ring longitude rotation
-        and one that starts with the planet situated below the star, all with respect to the observer.
+
+        """Function that calculates the starting true anomaly and
+        observer location(longitude, inclination) to generate an orbit
+        with the given orbit inclination, ring inclination, ring
+        longitude rotation and one that starts with the planet
+        situated below the star, all with respect to the observer.
         
-        Input parameters:
+        Parameters:
             -orbit_i: Orbital inclination with respect to the observer, 0 is seeing the orbit face-on and
                       90 is seeing the orbit edge-on.
             -ring_i:  Ring inclination with respect to the observer, 0 is face-on and 90 is edge-on.
@@ -2962,6 +2964,11 @@ class RingedPlanet(object):
         self.Sir=np.zeros(self.Nrt)
         self.Sip=np.zeros(self.Np)
 
+    def updateSpangles(self):
+        self._updateGeometricalFactors()
+        self._updateIncomingStellarFlux()
+        self._updateObservedFacetAreas()
+        
     def updateDiffuseReflection(self):
         """
         Update:

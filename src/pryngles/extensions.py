@@ -29,13 +29,6 @@ cpixx_ext=ctypes.CDLL(libfile)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Stand alone code of the module
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-#Sum structure
-cpixx_ext.sum_structure.restype = ctypes.c_double
-cpixx_ext.sum_structure.argtypes = [ctypes.Structure,
-                                    ctypes.c_int,ctypes.c_int,ctypes.c_int]
-
 #Calculate reflection
 cpixx_ext.reflection.restype = ctypes.c_int
 cpixx_ext.reflection.argtypes = [
@@ -45,7 +38,6 @@ cpixx_ext.reflection.argtypes = [
     PDOUBLE,PDOUBLE,PDOUBLE,PDOUBLE,PDOUBLE,
     PPDOUBLE
 ]
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class ExtensionUtil

@@ -6,6 +6,79 @@ In this guide you will find common procedures for developers.
 NOTE:
 - You will need /bin/bash installed for Makefile properly works.
 
+Pryngles Data Repository
+------------------------
+
+The newest versions of Pryngles depend on different sources of data.
+
+Data is stored in a Google Drive repository.
+
+This are the routines in Google Script for create a list of files:
+
+function generate_index_file() {
+  /*
+  Based in: https://stackoverflow.com/questions/72952526/convert-entire-google-sheet-to-xlsx-file
+  */
+  var index_file_id='10dESUJnwt4WSkGn-LaLeVM_xOmVwxrYb';
+
+  try {
+    var ss = SpreadsheetApp.getActive();
+    var url = 'https://docs.google.com/feeds/download/spreadsheets/Export?key=' + ss.getId() + '&exportFormat=xlsx';
+    //Folder: https://drive.google.com/drive/folders/1iZ0lpNQmzPE71j7ZcIgnZvFXwTJnVGoj?usp=drive_link
+    var folder = DriveApp.getFolderById('1iZ0lpNQmzPE71j7ZcIgnZvFXwTJnVGoj'); 
+
+    var params = {
+      method: 'get',
+      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true,
+    };
+
+    var blob = UrlFetchApp.fetch(url, params).getBlob();
+
+    blob.setName(ss.getName() + '.xlsx');
+    DriveApp.getFileById(index_file_id).update(blob);
+
+  } catch (f) {
+    Logger.log(f.toString());
+  }
+}
+
+function list_files() {
+    var sheet = SpreadsheetApp.getActive().getSheetByName('index');
+    sheet.clear();
+    var row = ["fullpath","filename","fileid","filesize_Mb","driveurl","downurl"];
+    sheet.appendRow(row);
+
+    var folder = DriveApp.getFolderById("1iZ0lpNQmzPE71j7ZcIgnZvFXwTJnVGoj") 
+    var nfiles = processFolder(folder,".",2);
+    
+    function processFolder(folder,parent,contador) {
+      var i = contador;
+      var files = folder.getFiles();
+      while (files.hasNext()) {
+        var file = files.next();
+        var row = [
+          parent+"/"+file.getName(),
+          file.getName(),
+          file.getId(),
+          file.getSize()/1e6,
+          '="https://drive.google.com/file/d/"&$C'+i+'&"/view?usp=drive_link"',
+          '="https://docs.google.com/uc?export=download&id="&$C'+i,
+          ];
+        Logger.log(row);
+        sheet.appendRow(row);
+        i++;
+      }
+      nfiles = i;
+      var folders = folder.getFolders();
+      while (folders.hasNext()){
+        folder = folders.next();
+        nfiles = processFolder(folder,parent+"/"+folder.getName(),nfiles);
+      }
+      return nfiles;
+    }
+}
+
 C Extension
 -----------
 

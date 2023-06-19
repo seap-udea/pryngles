@@ -25,96 +25,7 @@ struct FourierCoefficients{
 };
 
 //////////////////////////////////////////////////////////////
-// TEST ROUTINES
-//////////////////////////////////////////////////////////////
-double sum_structure(struct FourierCoefficients F,int n,int m,int p)
-{
-  double sum=0;
-  for(int i=0;i<n;i++){
-    for(int j=0;j<m;j++){
-      for(int k=0;k<p;k++){
-	sum+=F.rfou[i][j][k];
-	printf("%lf ",F.rfou[i][j][k]);
-	F.rfou[i][j][k]*=2;
-      }
-      printf("\n");
-    }
-    printf("\n");
-  }
-  return sum;
-}
-
-double sum_cube(double ***C,int n,int m,int p)
-{
-  double sum=0;
-  printf("%d\n",n);
-  for(int i=0;i<n;i++){
-    for(int j=0;j<m;j++){
-      for(int k=0;k<p;k++){
-	sum+=C[i][j][k];
-	printf("%lf\n",C[i][j][k]);
-	C[i][j][k]*=2;
-      }
-    }
-  }
-  return sum;
-}
-
-double sum_matrix(double **M,int n,int m)
-{
-  double sum=0;
-  printf("%d\n",n);
-  for(int i=0;i<n;i++){
-    for(int j=0;j<m;j++){
-      sum+=M[i][j];
-      printf("%lf\n",M[i][j]);
-      M[i][j]*=2;
-    }
-  }
-  return sum;
-}
-
-double sum_vector(double *v,int n)
-{
-  double sum=0;
-  printf("%d\n",n);
-  for(int i=0;i<n;i++){
-    sum+=v[i];
-    v[i]*=2;
-  }
-  return sum;
-}
-
-int reflection_test(struct FourierCoefficients F,int qreflection,int npix)
-{
-  int i,j,m;
-
-  printf("qreflection = %d, npix = %d\n",qreflection,npix);
-
-  //Check sum
-  printf("Size = %d\n",F.nmugs);
-
-  //Check xmu
-  for(i=0;i<F.nmugs;i++){
-    printf("xmu [%d] = %.16e\n",i,F.xmu[i]);
-  }
-  printf("%.16e\n",F.rfou[0][0][0]);
-  exit(0);
-
-  double checksum=0;
-  for(i=0;i<F.nmugs*F.nmat;i++){
-    for(j=0;j<F.nmugs;j++){
-      for(m=0;m<F.nfou;m++){
-	checksum+=F.rfou[i][j][m]+F.rtra[i][j][m];
-      }
-    }
-  }
-  printf("Checksum = %.16e\n",checksum);
-  return 0;
-}
-
-//////////////////////////////////////////////////////////////
-// ROUTINES
+// NUMERICAL ROUTINES
 //////////////////////////////////////////////////////////////
 double* zeros_vector(int n)
 {
@@ -236,6 +147,227 @@ double splint(double xa[],double ya[],double y2a[],int n,double x)
   return y;
 }
 
+/*
+*-------------------------------------------------------------------------------
+* PURPOSE:
+* Find a bracket around "el" in the first "n" elements of
+* "array".
+* 
+* INPUT:
+* 	el	: element to be bracketed
+* 	array   : array in which bracket must be found
+* 	n       : number of elements in array to be considered
+* 	ND      : dimension of array
+*
+* OUTPUT:
+*	i1	: index of left bracket element
+* 	i2	: index of right bracket element
+*
+*
+* COMMENTS:
+* If "el" is outside the range of "array", "i1" and "i2" are 
+* set to the appropriate extreme index value.    
+* If "el" is equal to one of the elements of "array", "i2" is
+* set to the appropriate index value.
+*-------------------------------------------------------------------------------
+*/  
+/*
+      SUBROUTINE bracks(theta,npix,xmu,nmugs,j1)
+
+      IMPLICIT DOUBLE PRECISION (a-h,o-z)
+
+      DOUBLE PRECISION eps
+      PARAMETER (eps=1.D-10)
+
+      DOUBLE PRECISION pi,radfac
+      PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
+
+      INTEGER ni,i,nmugs,npix,i1
+
+      INTEGER j1(npix)
+
+      DOUBLE PRECISION mu,xmu(nmugs),theta(npix)
+      
+Cf2py intent(in) theta, npix, xmu, nmugs
+Cf2py intent(out) j1
+Cf2py depend(npix) theta, j1
+Cf2py depend(nmugs) xmu
+*-------------------------------------------------------------------------------
+
+      DO ni=1,npix
+        i1= -1
+        j1(ni)= i1
+        
+        mu= theta(ni)
+        
+        IF (DACOS(mu)*radfac.LT.(0.D0)) GOTO 33
+        
+        IF (mu.LE.(xmu(1)+eps)) THEN
+           i1= 0
+        ELSEIF (mu.GT.(xmu(nmugs)-eps)) THEN
+           i1= nmugs
+        ELSE
+           DO i=1,nmugs-2
+               IF ((mu.GT.(xmu(i)+eps)).AND.(mu.LE.(xmu(i+1)+eps))) THEN
+                  i1= i
+               ENDIF
+           ENDDO
+           IF ((mu.GT.(xmu(nmugs-1)+eps)).AND.
+     .           (mu.LE.(xmu(nmugs)-eps))) THEN
+              i1= nmugs-1
+           ENDIF
+        ENDIF
+        j1(ni)= i1
+
+33      CONTINUE
+
+      ENDDO
+
+*-------------------------------------------------------------------------------
+      RETURN
+      END
+ */
+
+/*
+*-------------------------------------------------------------------------------
+* Bilinear interpolation
+*-------------------------------------------------------------------------------
+*/
+
+/*
+        SUBROUTINE interpbilinear(mu0,mu,phi,xmu,i1,j1,
+     .                          nmugs,nmat,nfou,rfour,RM)
+
+*****************************************************************************
+      IMPLICIT NONE
+
+      DOUBLE PRECISION pi,radfac
+      PARAMETER (pi=3.141592653589793D0,radfac=pi/180.D0)
+
+      INTEGER nmugs,nmat,nfou,m,k,jbase,i1,j1
+
+      DOUBLE PRECISION x1,x2,y1,y2,w1,w2,w3,w4,
+     .                 fac,mu,mu0,phi
+
+      DOUBLE PRECISION xmu(nmugs),
+     .                 rfour(nmat*nmugs,nmugs,0:nfou),
+     .                 rfm(nmat),RM(nmat),Bplus(4),
+     .                 r1(nmat),r2(nmat),r3(nmat),r4(nmat)
+
+Cf2py intent(in) mu0, mu, phi, xmu, i1, j1 
+Cf2py intent(in) nmugs, nmat, nfou, rfour
+Cf2py intent(out) RM
+Cf2py depend(nmat) rfour, RM
+Cf2py depend(nmugs) rfour, xmu
+Cf2py depend(nfou) rfour
+
+*----------------------------------------------------------------------------
+*     Initialize the 1st column of the reflection matrix and the 
+*     Stokes vector of the reflected light:
+*----------------------------------------------------------------------------
+      DO k=1,nmat
+         RM(k)= 0.D0
+      ENDDO
+      
+*----------------------------------------------------------------------------
+*     Loop over the Fourier coefficients:
+*----------------------------------------------------------------------------
+      DO m=0,nfou
+
+         fac=1.D0
+         IF (m.EQ.0) fac=0.5D0
+
+         IF (j1.NE.nmugs) THEN
+            x1= xmu(j1)
+            x2= xmu(j1+1)
+               
+            jbase= (j1-1)*nmat
+
+            IF (i1.NE.nmugs) THEN
+               y1= xmu(i1)
+               y2= xmu(i1+1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1,m)
+                  r2(k)= rfour(jbase+k,i1+1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1+1,m)
+               ENDDO
+            ELSE
+               y1= xmu(i1-1)
+               y2= xmu(i1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1-1,m)
+                  r2(k)= rfour(jbase+k,i1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1-1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1,m)
+               ENDDO
+            ENDIF
+         ELSE
+            x1= xmu(j1-1)
+            x2= xmu(j1)
+
+            jbase= (j1-2)*nmat
+
+            IF (i1.NE.nmugs) THEN
+               y1= xmu(i1)
+               y2= xmu(i1+1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1,m)
+                  r2(k)= rfour(jbase+k,i1+1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1+1,m)
+               ENDDO
+            ELSE
+               y1= xmu(i1-1)
+               y2= xmu(i1)
+
+               DO k=1,nmat
+                  r1(k)= rfour(jbase+k,i1-1,m)
+                  r2(k)= rfour(jbase+k,i1,m)
+                  r3(k)= rfour(jbase+nmat+k,i1-1,m)
+                  r4(k)= rfour(jbase+nmat+k,i1,m)
+               ENDDO
+            ENDIF
+         ENDIF
+
+         w1=(x2-mu)*(y2-mu0)/((x2-x1)*(y2-y1))
+         w2=(x2-mu)*(mu0-y1)/((x2-x1)*(y2-y1))
+         w3=(mu-x1)*(y2-mu0)/((x2-x1)*(y2-y1))
+         w4=(mu-x1)*(mu0-y1)/((x2-x1)*(y2-y1))
+
+         DO k=1,nmat
+            rfm(k)= w1*r1(k)+w2*r2(k)+w3*r3(k)+w4*r4(k)
+         ENDDO
+
+*--------------------------------------------------------------------
+*        Calculate the 1st column of the reflection matrix: 
+*--------------------------------------------------------------------
+         Bplus(1)= COS(m*phi)
+         Bplus(2)= COS(m*phi)
+         Bplus(3)= SIN(m*phi)
+         Bplus(4)= SIN(m*phi)
+
+         DO k=1,nmat
+            RM(k)= RM(k) + 2.D0*Bplus(k)*fac*rfm(k)
+         ENDDO
+
+*----------------------------------------------------------------------------
+*     Next Fourier coefficient:
+*----------------------------------------------------------------------------
+      ENDDO
+
+*----------------------------------------------------------------------------
+      RETURN
+      END
+ */
+
+
+//////////////////////////////////////////////////////////////
+// PHYSICAL ROUTINES
+//////////////////////////////////////////////////////////////
 /*
 *----------------------------------------------------------------------------
 *     Read a Fourier coefficients file and calculate the Stokes vector

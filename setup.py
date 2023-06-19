@@ -75,7 +75,7 @@ setuptools.setup(
     install_requires=['rebound','scipy','ipython',
 	              'matplotlib','tqdm','dill',
 	              'spiceypy','cmasher','pandas','celluloid',
-	              'sigfig','anytree','ipywidgets'],
+	              'sigfig','anytree','ipywidgets','gdown'],
 
     # ######################################################################
     # OPTIONS
