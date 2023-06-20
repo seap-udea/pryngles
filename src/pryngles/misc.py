@@ -32,7 +32,7 @@ from sys import maxsize as HASH_MAXSIZE
 DATA_INDEX=dict(
     baseurl = 'https://docs.google.com/feeds/download/spreadsheets/Export?exportFormat=xlsx&key=',
     downurl = 'https://docs.google.com/uc?export=download&id=',
-    filename = 'pryngles_files_index.xlsx',
+    filename = 'pryngles_data_index.xlsx',
     fileid = '17rgmzuENn_5jEO2rzDzngJLpZT1P9rPsQr3PNQGFkGs',
     col_filename = 'filename',
     col_fileid = 'fileid',
