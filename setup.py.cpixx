@@ -75,11 +75,11 @@ setuptools.setup(
     install_requires=['rebound','scipy','ipython',
 	              'matplotlib','tqdm','dill',
 	              'spiceypy','cmasher','pandas','celluloid',
-	              'sigfig','anytree','ipywidgets'],
+	              'sigfig','anytree','ipywidgets','gdown'],
 
     # ######################################################################
     # OPTIONS
     # ######################################################################
     include_package_data=True,
-    package_data={"": ["data/*.*", "tests/*.*"]},
+    package_data={"": ["data/*.*", "data/sampler_presets/*.*", "tests/*.*"]},
 )

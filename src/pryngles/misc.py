@@ -30,9 +30,9 @@ from sys import maxsize as HASH_MAXSIZE
 # Constants of module miscelaneous
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DATA_INDEX=dict(
-    baseurl = 'https://docs.google.com/feeds/download/spreadsheets/Export?exportFormat=xlsx&key=',
+    baseurl = 'https://docs.google.com/feeds/download/spreadsheets/Export?exportFormat=csv&key=',
     downurl = 'https://docs.google.com/uc?export=download&id=',
-    filename = 'pryngles_data_index.xlsx',
+    filename = 'pryngles_data_index.csv',
     fileid = '17rgmzuENn_5jEO2rzDzngJLpZT1P9rPsQr3PNQGFkGs',
     col_filename = 'filename',
     col_fileid = 'fileid',
@@ -93,7 +93,7 @@ class Misc(object):
         else:
             print(f"Index file {filename} already retrieved. For overwrite use overwrite = True.")
             
-        files=pd.read_excel(filename,index_col=DATA_INDEX['col_filename'])
+        files=pd.read_csv(filename,index_col=DATA_INDEX['col_filename'])
         if not quiet:
             print(f"There are {len(files)} files in data repository.")
             
