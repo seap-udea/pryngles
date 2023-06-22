@@ -1283,7 +1283,7 @@ class RingedPlanet(object):
 
         #Plot options
         self._resetPlot()
-
+        
     def updateProperties(self):
         """
         Use this routine if you change any attribute of the planet
@@ -3322,6 +3322,55 @@ class RingedPlanet(object):
             msr,rijs,etaijs,zetaijs=self._getFacetsOnSky(self.rrs_equ[i],observing_body="ring")
             self.Sir[i]=((self.fluxips[msr]*zetaijs)*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs*self.zetars[i]).sum()
             #self.Sir[i]=((self.fluxips[msr])*(self.normr*self.afr/(4*mh.pi*rijs**2))*etaijs).sum()
+
+    def compute_polarimetic_curve(self,lambs,normalize=True,progress=lambda x:x):
+        """Compute the polarimetric light curve for elciptic longitudes lambs.
+        
+        Parameters:
+            lambs: array (N) [radians]:
+                Ecliptic longitudes to evaluate.
+                
+        Optional parameters:
+            progress: function: 
+                Progress bar function. For instance function tqdm 
+                `from tqdm import tqdm`
+                
+        Return:
+            LC: array (N x 16):
+                Light-curve array with columns:
+                    Column 0: lambda [radians]
+                    Column 1: Total flux, Stot
+                    Column 2: Polarized flux, Pflux
+                    Column 3: Total degree of polarization, Ptot
+                    Column 4: Phase angle [degrees], alpha
+                    Columns 5,6,7 (5:8): Total stokes vector (F,Q,U), Stot[]
+                    Columns 8,9,10 (8:11): Planet stokes vector (F,Q,U), Stotp[]
+                    Columns 11,12,13 (11:14): Ring stokes vector (F,Q,U), Stotr[]
+                    Column 14: Degree of polarization planet, Ptotp
+                    Column 15: Degree of polarization ring, Ptotr
+        """
+        LC=np.zeros((len(lambs),16))
+        
+        # Start the orbit
+        for i,lamb in enumerate(progress(lambs)):
+            self.changeStellarPosition(lamb)
+            self.updateSpangles()
+            self.updateReflection(taur=self.taur,normalize=normalize)
+        
+            products = []
+            products += [lamb] # Lambda
+            products += [self.Stot[0]] # Total flux
+            products += [(self.Stot[1]**2+self.Stot[2]**2)**0.5] # Polarized flux
+            products += [self.Ptot] # Total degree of polarization
+            products += [np.arccos(self.alphaps)*Consts.rad] # Phase angle
+            products += list(self.Stot) # Stokes vector total 
+            products += list(self.Stotp) # Stokes vector planet 
+            products += list(self.Stotr) # Stokes vector ring
+            products += [self.Ptotp,self.Ptotr] # Degree of polarization planet and ring
+            
+            LC[i] = products
+            
+        return LC
 
 
 

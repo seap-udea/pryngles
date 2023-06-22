@@ -673,6 +673,7 @@ RING_DEFAULTS.update(odict(
     #Same as Body
     fi=1.5,
     fe=2.0,
+    taur=0.4,
     
     #Optics: update
     spangle_type=SPANGLE_GRANULAR,

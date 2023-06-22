@@ -68,7 +68,7 @@ class Misc(object):
         """
         return os.path.join(ROOTDIR,'data',path);
 
-    def retrieve(datafile,path="/tmp/",quiet=False,overwrite=False):
+    def retrieve_data(datafile,path="/tmp/",quiet=False,overwrite=False):
         """Retrieve a data file from public Pryngles repo, https://bit.ly/pryngles-data.
 
         Parameters:
@@ -91,16 +91,19 @@ class Misc(object):
             url = DATA_INDEX['baseurl']+DATA_INDEX['fileid']
             gdown.download(url,filename,quiet=quiet)
         else:
-            print(f"Index file {filename} already retrieved. For overwrite use overwrite = True.")
+            if not quiet:
+                print(f"Index file {filename} already retrieved. For overwrite use overwrite = True.")
             
         files=pd.read_csv(filename,index_col=DATA_INDEX['col_filename'])
         if not quiet:
             print(f"There are {len(files)} files in data repository.")
-            
 
         if isinstance(datafile,str):
             datafile=[datafile]
 
+        if len(datafile) == 0:
+            return list(files.index)
+            
         dfiles=[]
         for dfile in datafile:
             # Look for file in the data index
@@ -122,7 +125,7 @@ class Misc(object):
             print(f"Files downloaded: {dfiles}")
 
         return dfiles
-    
+
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Input/output methos
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
