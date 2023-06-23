@@ -76,7 +76,7 @@ class Const(object):
 #Useful macros
 RAD=Const.rad
 DEG=Const.deg
-
+NORMFACTOR=1 # Originally it was 1e6 for ppm
 
 class CanonicalUnits(object):
     def __init__(self,UL=0,UT=0,UM=0):
@@ -3084,7 +3084,7 @@ class RingedPlanet(object):
             if normalize:
                 self.Rip[cond] = Sp[cond,0]/(np.pi*self.Rp**2)
             else:
-                self.Rip[cond] = Sp[cond,0]/(4*np.pi*self.rstar**2)*1e6        
+                self.Rip[cond] = Sp[cond,0]/(4*np.pi*self.rstar**2)*NORMFACTOR
             Stotp = np.sum(Sp,axis=0)/(np.pi*self.Rp**2)
             
             # Calculate degree of polarization
@@ -3179,7 +3179,7 @@ class RingedPlanet(object):
             if normalize:
                 self.Rir[cond] = Sr[cond,0]/(np.pi*(self.Rp**2)) 
             else:
-                self.Rir[cond] = Sr[cond,0]/(4*np.pi*self.rstar**2)*1e6 
+                self.Rir[cond] = Sr[cond,0]/(4*np.pi*self.rstar**2)*NORMFACTOR
             Stotr = np.sum(Sr,axis=0)/(np.pi*(self.Rp**2))
 
             # Calculate degree of polarization
@@ -3196,8 +3196,8 @@ class RingedPlanet(object):
         if ring_used and planet_used:
             Stot = Stotr+Stotp
             if not normalize:
-                Stotp *= self.Rp**2/(4*self.rstar**2)*1e6
-                Stotr *= self.Rp**2/(4*self.rstar**2)*1e6              
+                Stotp *= self.Rp**2/(4*self.rstar**2)*NORMFACTOR
+                Stotr *= self.Rp**2/(4*self.rstar**2)*NORMFACTOR              
             self.Stotp = Stotp
             self.Ptotp = Ptotp
             self.Stotr = Stotr 
@@ -3207,14 +3207,14 @@ class RingedPlanet(object):
         elif ring_used:
             Stot = np.copy(Stotr)
             if not normalize:
-                Stotr *= self.Rp**2/(4*self.rstar**2)*1e6
+                Stotr *= self.Rp**2/(4*self.rstar**2)*NORMFACTOR
             self.Stotr = Stotr 
             self.Ptotr = Ptotr
             verbose(VERB_DEEP,"Ftot ring: ", Stotr[0], ",  Ptot ring: ", Ptotr)
         elif planet_used:
             Stot = np.copy(Stotp)
             if not normalize:
-                Stotp *= self.Rp**2/(4*self.rstar**2)*1e6
+                Stotp *= self.Rp**2/(4*self.rstar**2)*NORMFACTOR
             self.Stotp = Stotp
             self.Ptotp = Ptotp
             verbose(VERB_DEEP,"Ftot planet: ", Stotp[0], ",  Ptot planet: ", Ptotp)
@@ -3229,7 +3229,7 @@ class RingedPlanet(object):
             Ptot = np.sqrt(Stot[1]**2 + Stot[2]**2)/Stot[0]
             
         if not normalize:
-            Stot *= self.Rp**2/(4*self.rstar**2)*1e6
+            Stot *= self.Rp**2/(4*self.rstar**2)*NORMFACTOR
             
         self.Stot = Stot
         self.Ptot = Ptot
@@ -3329,7 +3329,11 @@ class RingedPlanet(object):
         Parameters:
             lambs: array (N) [radians]:
                 Ecliptic longitudes to evaluate.
-                
+
+        Optional parameters:
+            normalize: bool, default = True:
+                Normalize the flux with respect to the stellar flux.
+
         Optional parameters:
             progress: function: 
                 Progress bar function. For instance function tqdm 
@@ -3350,7 +3354,7 @@ class RingedPlanet(object):
                     Column 15: Degree of polarization ring, Ptotr
         """
         LC=np.zeros((len(lambs),16))
-        
+
         # Start the orbit
         for i,lamb in enumerate(progress(lambs)):
             self.changeStellarPosition(lamb)
@@ -3369,10 +3373,9 @@ class RingedPlanet(object):
             products += [self.Ptotp,self.Ptotr] # Degree of polarization planet and ring
             
             LC[i] = products
-            
+
+        self.LC_normalized = normalize
         return LC
-
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Extra
