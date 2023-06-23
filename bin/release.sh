@@ -13,8 +13,6 @@
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 #!/bin/bash
-. .pack/packrc
-
 type=$1;shift
 if [ "x$type" = "x" ]
 then
@@ -54,17 +52,6 @@ fi
 echo "Releasing new version $version (current version $setversion) of the package in mode '$type'..."
 
 ##################################################################
-# Run tests before release
-##################################################################
-echo "Testing before releasing..."
-# if ! nosetests
-# then
-#     echo "Software does not pass the tests."
-#     exit 1
-# fi
-echo "Success. Package ready to be released."
-
-##################################################################
 # Update setup.py file
 ##################################################################
 sed -i.bak "s/version=.*/version='$version',/gi" setup.py 
@@ -89,7 +76,7 @@ echo "version='$version'" > src/$PACKNAME/version.py
 # Build package
 ##################################################################
 echo "Building packages..."
-$PYTHON -m build
+python -m build
 
 ##################################################################
 # Uploading the package
@@ -98,8 +85,8 @@ echo
 if [ $qtype -eq 0 ]
 then
     echo "Uploading to Test PyPI (use __token__ as username and pypi-<token> as password)..."
-    $PYTHON -m twine upload --repository testpypi dist/* --verbose
+    python -m twine upload --repository testpypi dist/* --verbose
 else
     echo "Uploading to PyPI (use your username and password)..."
-    $PYTHON -m twine upload dist/* --verbose
+    python -m twine upload dist/* --verbose
 fi

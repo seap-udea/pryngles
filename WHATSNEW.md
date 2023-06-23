@@ -9,6 +9,7 @@ list of the features introduced in each version family of the package.
 
 - **0.9.x versions**:
 
+  - Pryngles data repository included.
   - A major issue in the units was corrected when initializing RP with
     the system interface.
   - Major upgrade in the optical model of the legacy module.
