@@ -32,6 +32,8 @@ if len(argv)<=1:
 elif not os.path.exists(argv[1]):
     raise ValueError(f"Filename provided '{argv[1]}' not found.")
 
+nallfiles=0
+nalltests=0
 for filepath in argv[1:]:
     filename=os.path.basename(filepath)
     if "ipynb" not in filename:
@@ -42,15 +44,19 @@ for filepath in argv[1:]:
     filesrc=f"/tmp/convert-{filebase}.py"
     filetar=f"/tmp/{filebase}.py"
 
+    #Test dir
+    #testdir=filedir
+    testdir="src/pryngles/tests"
+    
     #Target file
-    filetest=f"{filedir}/test-{filebase}.py"
+    filetest=f"{testdir}/test-{filebase}.py"
 
     if os.path.exists(filetest):
         os.system(f"rm {filetest}")
     if os.path.exists(filesrc):
         os.system(f"rm {filesrc}")
 
-    print(f"Extracting test code from {filepath} and storing it into {filetest}...")
+    print(f"Extracting test code from '{filepath}' and storing it into '{filetest}'...")
 
     #Converting notebook
     print(f"\tConverting notebook into python file...")
@@ -115,4 +121,8 @@ if __name__=="__main__":
     ft.close()
 
     print(f"Found {ntest} tests in source file...")
+    nalltests += ntest
+    nallfiles +=1
 
+print(f"\nTotal files processed: {nallfiles}")
+print(f"Total tests generated: {nalltests}")

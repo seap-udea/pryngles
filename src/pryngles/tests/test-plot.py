@@ -36,6 +36,8 @@ class Test(unittest.TestCase):
 	
 	    #Color sample
 	    Plot.rgb_sample(27)
+	    
+	    plt.show()
 	
 	def test_flyby(self):
 	
@@ -54,6 +56,8 @@ class Test(unittest.TestCase):
 	    ax.set_ylabel("y")
 	    ax.set_zlabel("z")
 	
+	    plt.show()
+	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
 	def test_animrb(self):
@@ -77,8 +81,9 @@ class Test(unittest.TestCase):
 	
 	    anim=Plot.animate_rebound(sim,filename="/tmp/animate-rebound.gif",interval=20)
 	
+	    plt.show()
+	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
 if __name__=="__main__":
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
-    
+   unittest.main(argv=['first-arg-is-ignored'],exit=False)

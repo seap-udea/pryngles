@@ -155,5 +155,4 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	
 if __name__=="__main__":
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
-    
+   unittest.main(argv=['first-arg-is-ignored'],exit=False)

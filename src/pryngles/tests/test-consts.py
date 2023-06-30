@@ -22,5 +22,4 @@ class Test(unittest.TestCase):
 	    print(Consts.get_physical())
 	
 if __name__=="__main__":
-    unittest.main(argv=['first-arg-is-ignored'],exit=False)
-    
+   unittest.main(argv=['first-arg-is-ignored'],exit=False)
