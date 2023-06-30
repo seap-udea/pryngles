@@ -46,6 +46,7 @@ cleanout:
 	@-find . -name "*.tout" -delete
 	@-find . -name "*.so" -delete
 	@-find . -name '__pycache__' -type d | xargs rm -fr
+	@-find . -name '.ipynb_checkpoints' -type d | xargs rm -fr
 
 cleandist:
 	@-rm -rf dist/
