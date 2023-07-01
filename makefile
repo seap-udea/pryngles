@@ -72,7 +72,7 @@ testall:
 ##################################################################
 push:
 	@echo "Commiting..."
-	git commit -am $(COMMIT)
+	git commit -am "$(COMMIT)"
 	git push origin $(BRANCH)
 
 pull:
