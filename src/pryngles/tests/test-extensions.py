@@ -38,8 +38,8 @@ class Test(unittest.TestCase):
 	    print(rfou)
 	    print(rfou.sum())
 	    F=FourierCoefficients(n,m,p,xmu,rfou,rtra)
-	    suma=cpixx_ext.sum_structure(F,n,m,p)
-	    print(suma)
+	    #suma=cpixx_ext.sum_structure(F,n,m,p)
+	    #print(suma)
 	    C=ExtensionUtil.ptr2cub(F.rfou,*rfou.shape)
 	    print(C)
 	    

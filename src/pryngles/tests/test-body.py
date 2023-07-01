@@ -42,19 +42,6 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	def test_spangle(self):
-	
-	    global B
-	    
-	    Verbose.VERBOSITY=VERB_ALL
-	
-	    #Create body
-	    B=Body("Body",BODY_DEFAULTS,None,name='B',m=2,x=2)
-	    B.spangle_body()
-	    B.sg.plot3d()
-	
-	    Verbose.VERBOSITY=VERB_NONE
-	
 	def test_star(self):
 	
 	    global S

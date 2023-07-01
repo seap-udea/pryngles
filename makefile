@@ -12,6 +12,11 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
+PYTHON=python
+PIP=pip
+NOSE=nosetests
+COMMIT="Update"
+BRANCH=$(shell git branch |grep "*" |cut -f 2 -d " ")
 
 ##################################################################
 #BASIC RULES
@@ -57,19 +62,27 @@ cleandist:
 ##################################################################
 gentest:
 	@echo "Generating tests..."
-	@-python bin/test-parse.py tests/*.ipynb
+	@-$(PYTHON) bin/test-parse.py tests/*.ipynb
+
+testall:
+	@-$(NOSE) --verbosity=2 -x src/pryngles/tests
 
 ##################################################################
 #GIT
 ##################################################################
-commit:
+push:
 	@echo "Commiting..."
-	@-git commit -am "Commit"
-	@-git push
+	git commit -am $(COMMIT)
+	git push origin $(BRANCH)
 
 pull:
 	@echo "Pulling new files..."
-	@-git pull 
+	@-git pull
+
+reset:
+	@echo "Reset and pulling..."
+	@-git --reset hard
+	@-git pull
 
 ##################################################################
 #PACKAGE RULES
@@ -79,7 +92,7 @@ release:
 	@echo "Releasing a new version..."
 	@bash bin/release.sh $(RELMODE) $(VERSION)
 
-pipinstall:
+install:
 	@$(PIP) install -e .
 
 import:

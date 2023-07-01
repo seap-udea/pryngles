@@ -135,6 +135,7 @@ class Test(unittest.TestCase):
 	        
 	    #Show scatterers
 	    print(sys.data.scatterer.unique())
+	    print(sys.spangle_scatterers)
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
