@@ -77,12 +77,12 @@ push:
 
 pull:
 	@echo "Pulling new files..."
-	@-git pull
+	git pull
 
 reset:
 	@echo "Reset and pulling..."
-	@-git --reset hard
-	@-git pull
+	git --reset hard
+	git pull
 
 ##################################################################
 #PACKAGE RULES
