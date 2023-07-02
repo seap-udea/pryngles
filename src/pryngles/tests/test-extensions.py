@@ -23,6 +23,9 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
+	    Verbose.save_test_fig('extensions-16998544')
+	    plt.close('all')
+
 	def test_fun(self):
 	    global cpixx_ext
 	    
@@ -46,6 +49,9 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
+	    Verbose.save_test_fig('extensions-16999420')
+	    plt.close('all')
+
 	def test_stokes(self):
 	    global S,phi,beta,theta0,theta,apix
 	    Verbose.VERBOSITY=VERB_SIMPLE
@@ -110,6 +116,9 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
+	    Verbose.save_test_fig('extensions-78353020')
+	    plt.close('all')
+
 	def test_stokes_mass(self):
 	    from time import time
 	    global S,phi,beta,theta0,theta,apix
@@ -141,5 +150,9 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
+	    Verbose.save_test_fig('extensions-12146151')
+	    plt.close('all')
+
+Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

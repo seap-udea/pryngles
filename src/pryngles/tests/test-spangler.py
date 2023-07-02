@@ -29,6 +29,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-68615044')
+	    plt.close('all')
+
 	def test_init(self):
 	
 	    Verbose.VERBOSITY=VERB_ALL
@@ -60,6 +63,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-10983988')
+	    plt.close('all')
+
 	def test_reset(self):
 	
 	    Verbose.VERBOSITY=VERB_SIMPLE
@@ -70,6 +76,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-17186287')
+	    plt.close('all')
+
 	def test_scale(self):
 	
 	    Verbose.VERBOSITY=VERB_SIMPLE
@@ -82,6 +91,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-17088976')
+	    plt.close('all')
+
 	def test_pop(self):
 	    Verbose.VERBOSITY=VERB_ALL
 	
@@ -116,6 +128,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-14958250')
+	    plt.close('all')
+
 	def test_plot3d(self):
 	    global sg
 	    Verbose.VERBOSITY=VERB_SIMPLE
@@ -160,6 +175,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-11456686')
+	    plt.close('all')
+
 	def test_setint(self):
 	    global sg
 	
@@ -188,6 +206,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-65942043')
+	    plt.close('all')
+
 	def test_setobsluz(self):
 	    global sg
 	
@@ -219,6 +240,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-52341906')
+	    plt.close('all')
+
 	def test_simplevis(self):
 	    global sg
 	
@@ -278,6 +302,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-14226835')
+	    plt.close('all')
+
 	def test_plot2d(self):
 	
 	    global sg
@@ -307,6 +334,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-13606695')
+	    plt.close('all')
+
 	def test_join(self):
 	
 	    Verbose.VERBOSITY=VERB_SIMPLE
@@ -327,6 +357,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-14110181')
+	    plt.close('all')
+
 	def test_upint(self):
 	    plt.close("all")
 	    global sg
@@ -371,6 +404,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-94019041')
+	    plt.close('all')
+
 	def test_muluz(self):
 	
 	    Verbose.VERBOSITY=VERB_NONE
@@ -405,5 +441,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('spangler-13780478')
+	    plt.close('all')
+
+Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

@@ -12,13 +12,37 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
+from pryngles import *
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#For compatibility purposes with legacy: remove when legacy is retired
+RAD=Consts.rad
+DEG=Consts.deg
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants of module system
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+LEGACY_PHYSICAL_PROPERTIES=dict(
+    #Albedos
+    AS=1,AL=1,
+    #Ring geometrical opacity
+    taug=1.0, #Geometrical opacity
+    diffeff=1.0, #Diffraction efficiency
+    #Law of diffuse reflection on ring surface
+    reflection_rings_law=lambda x,y:x,
+    #Observations wavelength
+    wavelength=550e-9,
+    #Ring particle propeties (see French & Nicholson, 2000)
+    particles=dict(q=3,s0=100e-6,smin=1e-2,smax=1e2,Qsc=1,Qext=2),
+    #Stellar limb darkening
+    limb_cs=[],
+)
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # External required packages
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-from pryngles import *
-
 import pickle
 import unittest
 import spiceypy as spy
@@ -44,7 +68,6 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.ticker import LogLocator
-get_ipython().run_line_magic('matplotlib', 'nbagg')
 
 # Choose 
 #mh=np #Slower but powerful with arrays
@@ -525,14 +548,6 @@ class Util(object):
                 np.cos(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) + np.sin(np.pi/2-x[2])*np.cos(x[0]) - np.sin(a),
                 np.cos(np.pi/2-x[2])*np.cos(x[0]) - np.sin(np.pi/2-x[2])*np.cos(x[1]+np.pi/2)*np.sin(x[0]) - np.cos(b)*np.cos(a),
                 x[2] - np.pi/2 + c]
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class Conf
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-class Conf(object):
-    FIGDIR="./paper2-model/figures/"
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Sample

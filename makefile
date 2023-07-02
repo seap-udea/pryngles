@@ -15,8 +15,10 @@
 PYTHON=python
 PIP=pip
 NOSE=nosetests
+MONTAGE=montage
 COMMIT="Update"
 BRANCH=$(shell git branch |grep "*" |cut -f 2 -d " ")
+MODULE="__init__"
 
 ##################################################################
 #BASIC RULES
@@ -66,6 +68,11 @@ gentest:
 
 testall:
 	@-$(NOSE) --verbosity=2 -x src/pryngles/tests
+	@echo "Creating a montage with test images..."
+	@-$(MONTAGE) -geometry 800x800+2+2 /tmp/test-*.png /tmp/pryngles-montage.jpg
+
+test:
+	@-$(NOSE) --verbosity=2 -x src/pryngles/tests/test-$(MODULE).py
 
 ##################################################################
 #GIT

@@ -29,6 +29,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('sampler-10811222')
+	    plt.close('all')
+
 	def test_cut(self):
 	
 	    Verbose.VERBOSITY=VERB_ALL
@@ -44,6 +47,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('sampler-12962325')
+	    plt.close('all')
+
 	def test_ring(self):
 	
 	    Verbose.VERBOSITY=VERB_ALL
@@ -66,6 +72,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('sampler-63439190')
+	    plt.close('all')
+
 	def test_sphere(self):
 	
 	    Verbose.VERBOSITY=VERB_ALL
@@ -80,6 +89,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('sampler-14537953')
+	    plt.close('all')
+
 	def test_purge(self):
 	
 	    Verbose.VERBOSITY=VERB_ALL
@@ -94,6 +106,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('sampler-16582747')
+	    plt.close('all')
+
 	def test_update(self):
 	
 	    Verbose.VERBOSITY=VERB_ALL
@@ -135,5 +150,9 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('sampler-70953852')
+	    plt.close('all')
+
+Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

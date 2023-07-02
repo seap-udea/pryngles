@@ -35,10 +35,13 @@ class Test(unittest.TestCase):
 	    print(Plot.rgb([27,0.5,0.5]))
 	
 	    #Color sample
-	    Plot.rgb_sample(27)
+	    Plot.rgb_sample(56)
 	    
 	    plt.show()
 	
+	    Verbose.save_test_fig('plot-92948509')
+	    plt.close('all')
+
 	def test_flyby(self):
 	
 	    Verbose.VERBOSITY=VERB_SIMPLE
@@ -60,6 +63,9 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('plot-30580815')
+	    plt.close('all')
+
 	def test_animrb(self):
 	
 	    Verbose.VERBOSITY=VERB_NONE
@@ -85,5 +91,9 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
+	    Verbose.save_test_fig('plot-59527338')
+	    plt.close('all')
+
+Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

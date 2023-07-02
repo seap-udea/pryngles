@@ -25,6 +25,7 @@ Arguments:
 
 """
 from sys import argv
+from sys import maxsize as HASH_MAXSIZE
 import os
 
 if len(argv)<=1:
@@ -81,6 +82,7 @@ class Test(unittest.TestCase):
     qcont=False
     qfullcont=False
     ntest=0
+    testhash=""
     for line in fp:
         if "#@test:" in line:
             ntest+=1
@@ -97,6 +99,7 @@ class Test(unittest.TestCase):
                 qcont=False
             if qcont:
                 ft.write("\t"+line)
+                testhash+=line
         elif qfulltest:
             if ("class Test" in line) or ("@fulltest" in line) or ("@end:fulltest" in line):
                 qfullcont=False
@@ -108,10 +111,15 @@ class Test(unittest.TestCase):
             fo.write(line)
 
         if "@end:test" in line:
+            pnghash=str(hash(testhash)%((HASH_MAXSIZE+1)*2))[:8]
+            ft.write(f"\t    Verbose.save_test_fig('{filebase}-{pnghash}')\n")
+            ft.write(f"\t    plt.close('all')\n\n")
+            testhash=""
             qtest=False
 
     if not qfulltest:
-        ft.write("""\
+        pnghash=str(hash(testhash)%((HASH_MAXSIZE+1)*2))[:8]
+        ft.write(f"""\
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)
 """)

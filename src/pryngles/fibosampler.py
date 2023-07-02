@@ -12,12 +12,16 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
+"""NOTE: This is a spin-off package. It will be converted into a
+stand-alone package.
+
+"""
+from pryngles import *
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # External required packages
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-from pryngles import *
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
@@ -29,6 +33,35 @@ from mpl_toolkits import mplot3d
 from scipy.spatial.transform import Rotation
 import math
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Constants
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+""" Sampler presets are the values of N 
+    for which there are already stored samples
+"""
+SAMPLER_PRESETS = ["sphere", "circle", "ring"]
+SAMPLER_SPHERE_PRESETS = np.array(
+    list(np.arange(100, 1000, 100))+\
+    list(np.arange(1000, 2000, 200))+\
+    list(np.arange(2000, 3000, 300))+\
+    list(np.arange(3000, 4000, 400))+\
+    list(np.arange(4000, 5000, 500))+\
+    [5000]
+)
+SAMPLER_CIRCLE_PRESETS = np.arange(100, 6000, 100)
+
+# Minimum number of particles in ring
+SAMPLER_MIN_RING = 10
+
+# Geometries
+SAMPLER_GEOMETRY_CIRCLE=0
+SAMPLER_GEOMETRY_SPHERE=1
+
+# Shapes
+SAMPLE_SHAPES=[]
+SAMPLE_SHAPES+=["circle"]
+SAMPLE_SHAPES+=["ring"]
+SAMPLE_SHAPES+=["sphere"]
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Sampler
@@ -156,7 +189,9 @@ class Sampler(PrynglesCommon):
             exec(f"self.Npreset=SAMPLER_{geometry.upper()}_PRESETS[abs({N}-SAMPLER_{geometry.upper()}_PRESETS).argmin()]")
             
             Npreset = self.Npreset
-            filename = Misc.get_data(f"sampler_presets/sample_{geometry}_N_{Npreset}.pkl")
+            
+            filename = os.path.join(os.path.dirname(__file__),'data',
+                                    f"sampler_presets/sample_{geometry}_N_{Npreset}.pkl")
             verbose(VERB_SYSTEM,f"Reading preset data from {filename}")
             self.load_from(filename)
             self.Npreset = Npreset
@@ -275,13 +310,59 @@ class Sampler(PrynglesCommon):
             
             if spangled:
                 for isp in range(self.N):
-                    Plot.circle3d(self.ax, self.ss[isp], self.deff/2, zDir=self.ss[isp], **defaults)
+                    self.circle3d(self.ax, self.ss[isp], self.deff/2, zDir=self.ss[isp], **defaults)
             
             self.ax.set_box_aspect([1 ,1 , 1])
             
         self.fig.tight_layout()
     
-    
+    # places a 3D circle in axes with 3d projection. 
+    def circle3d(self, ax, center = (0,0,0), radius = 1, zDir='z', **kwargs):
+        """
+        Add a circle in 3d
+        """
+        pc = Circle(center[0:2], radius, **kwargs)
+        ax.add_patch(self._pathpatch_2d_to_3d(pc, center, zDir))
+
+    def _pathpatch_2d_to_3d(self,pathpatch,pivot=[0,0,0],zDir=[0,0,1]):
+        """
+        Create a patch in 3d around pivot in the direction of zDir
+        
+        Source: https://stackoverflow.com/a/69785236
+        """
+
+        path = pathpatch.get_path() #Get the path and the associated transform
+        trans = pathpatch.get_patch_transform()
+        path = trans.transform_path(path) #Apply the transform
+
+        pathpatch.__class__ =  mplot3d.art3d.PathPatch3D #Change the class
+        pathpatch._path2d = path       #Copy the 2d path
+        pathpatch._code3d = path.codes #Copy the codes
+        pathpatch._facecolor3d = pathpatch.get_facecolor #Get the face color
+
+        # Get the 2D vertices and add the third dimension
+        verts3d = np.empty((path.vertices.shape[0],3))
+        verts3d[:,0:2] = path.vertices
+        verts3d[:,2] = pivot[2]
+
+        #Get rotation matriz
+        norm = np.linalg.norm(zDir)
+        zDir = zDir/norm
+        if np.abs(zDir[2])==1:
+            yDir = np.array([0,zDir[2],0])
+        else:
+            yDir = (np.array([0,0,1]) - zDir[2]*zDir)/math.sqrt(1-zDir[2]**2)
+        rotMat = np.empty((3,3))
+        rotMat[:,0] = np.cross(zDir,yDir)
+        rotMat[:,1] = yDir
+        rotMat[:,2] = -zDir
+        R=Rotation.from_matrix(rotMat)
+
+        #Displace
+        pathpatch._segment3d = R.apply(verts3d - pivot) + pivot
+
+        return pathpatch
+        
     def gen_circle(self, perturbation=1, boundary=2):
         """ Sample points in fibonacci spiral on the unit circle
     

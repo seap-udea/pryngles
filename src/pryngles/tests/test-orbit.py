@@ -25,6 +25,9 @@ class Test(unittest.TestCase):
 	
 	    S.show_tree()
 	
+	    Verbose.save_test_fig('orbit-10096644')
+	    plt.close('all')
+
 	def test_Orbit(self):
 	
 	    global S4
@@ -57,6 +60,9 @@ class Test(unittest.TestCase):
 	    #Use this code to animate:
 	    #Plot.animate_rebound(S4.sim)
 	
+	    Verbose.save_test_fig('orbit-13887545')
+	    plt.close('all')
+
 	def test_build(self):
 	
 	    global orbit
@@ -77,5 +83,9 @@ class Test(unittest.TestCase):
 	    Plot.animate_rebound(orbit.sim,traces=True,nsnap=300,axis=True,ms=1)
 	    #Plot.animate_rebound(orbit.sim,filename="/tmp/hierarchical-system.gif",color='b',ms=3)
 	
+	    Verbose.save_test_fig('orbit-90488479')
+	    plt.close('all')
+
+Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)
