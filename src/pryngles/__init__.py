@@ -76,6 +76,9 @@ class Verbose(object):
     Methods:
         print(level,msg):
             Print a message if level<=VERBOSITY.
+
+        save_test_fig(suffix):
+            Save images produced by a test procedure.
     
     Example:
     
@@ -97,11 +100,21 @@ class Verbose(object):
         if level<=Verbose.VERBOSITY:
             print("  "*level+f"VERB{level}::{inspect.stack()[1][3]}::",*args)
 
-    def save_test_fig(suffix):
+    def save_test_fig(suffix='image'):
+        """After a test it saves or show the result of the test.
+
+        suffix: string, default = 'image':
+
+           Suffix of the image. The full name of images will
+           `test-<suffix>-<n>.jpg`, where `<n>` is the number of the
+           figure.
+
+        """
+        print(f"Saving test figures using method '{VERB_TEST_FIG}'...")
         if VERB_TEST_FIG == 'save':
             for ifig in plt.get_fignums():
                 fig = plt.figure(ifig)
-                fig.savefig(f'{VERB_TEST_DIR}/test-{suffix}-{ifig:03d}.png')
+                fig.savefig(f'{VERB_TEST_DIR}/test-{suffix}-{ifig:03d}.jpg')
         elif VERB_TEST_FIG == 'show':
             plt.show()
         else:
@@ -172,17 +185,17 @@ from pryngles.fibosampler import *
 #Utility modules 
 from pryngles.util import *
 
-#Physical modules 
+#Physical and geometrical modules 
 from pryngles.optics import * 
+from pryngles.spangler import * 
 
 #Legacy module 
 from pryngles.legacy import *
 
 #Core modules
-from pryngles.spangler import * 
 from pryngles.system import *
 
-#Photometry
+#Photometry -> under development
 from pryngles.photometry import *
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

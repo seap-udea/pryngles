@@ -53,7 +53,7 @@ __s+=1
 SPANGLE_SOLID_ROCK=__s
 SPANGLE_COLORS[__s]=[27,0.5,1.0]
 
-#Spangles for planets with a rocky surface
+#Spangles for planets with an icy surface
 __s+=1
 SPANGLE_SOLID_ICE=__s
 SPANGLE_COLORS[__s]=[27,0.5,1.0]

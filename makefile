@@ -12,13 +12,26 @@
 ##################################################################
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
+# Basic variables
 PYTHON=python
 PIP=pip
-NOSE=nosetests
-MONTAGE=montage
+MOD="__init__"
+
+# Git options
 COMMIT="Update"
 BRANCH=$(shell git branch |grep "*" |cut -f 2 -d " ")
-MODULE="__init__"
+
+# Test commands and variables
+NOSE=nosetests
+TEST_DIR=src/pryngles/tests
+TESTFIG_DIR=/tmp
+
+MONTAGE=montage
+MONTAGE_FIG=$(TESTFIG_DIR)/pryngles-montage.jpg
+
+MAGICK=magick
+MONTAGE_REF=tests/pryngles-montage-reference.jpg
+MONTAGE_DIF=$(TESTFIG_DIR)/pryngles-montage-differences.jpg
 
 ##################################################################
 #BASIC RULES
@@ -66,13 +79,15 @@ gentest:
 	@echo "Generating tests..."
 	@-$(PYTHON) bin/test-parse.py tests/*.ipynb
 
-testall:
-	@-$(NOSE) --verbosity=2 -x src/pryngles/tests
-	@echo "Creating a montage with test images..."
-	@-$(MONTAGE) -geometry 800x800+2+2 /tmp/test-*.png /tmp/pryngles-montage.jpg
-
 test:
-	@-$(NOSE) --verbosity=2 -x src/pryngles/tests/test-$(MODULE).py
+	@-$(NOSE) --verbosity=2 -x src/pryngles/tests/test-$(MOD).py
+
+testall:
+	@-$(NOSE) --verbosity=2 -x $(TEST_DIR)
+	@echo "Creating a montage with test images..."
+	@-$(MONTAGE) -geometry 800x800+2+2 $(TESTFIG_DIR)/test-*.jpg $(MONTAGE_FIG)
+	@echo "Computing difference between montages..."
+	@-$(MAGICK) compare -compose src $(MONTAGE_FIG) $(MONTAGE_REF) $(MONTAGE_DIF)
 
 ##################################################################
 #GIT

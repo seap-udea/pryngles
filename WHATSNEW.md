@@ -9,6 +9,8 @@ list of the features introduced in each version family of the package.
 
 - **0.10.x versions**:
 
+  - We introduced a new module, `photometry` intended to process
+    system results to produce light-curves.
   - Structure of the package was reorganized: all modules were fused together.
   - Module `sampler` renamed as `fibosampler` to be spun-off as an independent package.
   - Module `orbit` renamed to `hinb` to be spun-off as an independent package.

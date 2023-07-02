@@ -183,8 +183,8 @@ class Body(Orbody):
                     radius: float [rebound length units], default = 1:
                         Radius of the body.
     
-                    prot: float [ut], default = 1:
-                        Period of rotation of the star.
+                    prot: float [rebound time units], default = 1:
+                        Period of rotation of the body.
     
                     i: float [rad], default = 0:
                         Inclination of the body equator with respect to the ecliptic plane.
@@ -215,7 +215,7 @@ class Body(Orbody):
     
     Derived attributes:
     
-            wrot: float [rad/ut]:
+            wrot: float [rad/rebound time units]:
                 Rotational angular velocity.
     
             n_equ: array(3):
@@ -344,10 +344,6 @@ class Body(Orbody):
         print(RenderTree(self))
         
 
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    # Tested methods from module file body
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     def spangle_body(self):
         """
         Spangle the surface of the body
@@ -379,7 +375,6 @@ class Body(Orbody):
         
         self.sg.set_observer()
         self.sg.set_luz()
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Star
@@ -693,7 +688,7 @@ class System(PrynglesCommon):
             #Add planet, when an object is added, it is automatically spangled
             P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
     
-            #Add moon: orbital elements are respect to ecliptic system
+            #Add moon: orbital elements are respect to central object and w.r.t. to ecliptic system
             M=sys.add("Planet",parent=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
     
             #Add ring system
@@ -912,10 +907,6 @@ class System(PrynglesCommon):
             print(f"Simulation for this system has not been yet initialized. Use System.initialize_simulation()")
 
 
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    # Tested methods from module file scatterer
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     def update_scatterers(self):
         """Update the scatterers of the spangles
         """
@@ -936,11 +927,6 @@ class System(PrynglesCommon):
             #Instantiate object of scatterer and save hash into DataFrame
             self.data.loc[index,"scatterer"]=spangle_scatterer(**scatterer_options).hash
     
-
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    # Tested methods from module file system
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     def add(self,kind="Star",parent=None,**props):
         """Add an object to the system
         
@@ -1076,6 +1062,8 @@ class System(PrynglesCommon):
                         
                     System with two stars and one planet per star:
                         orbital_tree = [[S1,PS1],[S1,PS2]]
+
+                 When orbital_tree = None the tree will be created using the list of bodies.
         
         Return:
             orbit: object Orbit:
@@ -1085,9 +1073,6 @@ class System(PrynglesCommon):
             self.sim: Rebound Simulation:
                 Simulation of the system.
                 
-        Note:
-        
-            You can 
         """
         
         #Compile orbital configuration
