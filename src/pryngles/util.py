@@ -17,6 +17,7 @@ from pryngles import *
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # External required packages
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+import time
 import inspect
 import os
 import re
@@ -30,7 +31,7 @@ import math as mh
 import spiceypy as spy
 import rebound as rb
 from tqdm import tqdm
-from celluloid import Camera 
+from celluloid import Camera # Deprecated
 from colorsys import hls_to_rgb
 from collections import OrderedDict as odict
 import matplotlib.pyplot as plt
@@ -114,6 +115,72 @@ class Misc(object):
     
         get_data(file)
     """
+
+    def convert_unit(value,
+                     units=dict(us=1e-6,ms=1e-3,s=1e0,m=60,h=3600)):
+        """
+        Convert a value to the neares multiple and submultiple
+        """
+        minimum=1e100
+        quantity=-1
+        for u,f in units.items():
+            convert=value/f
+            if (convert>1) and (convert<minimum):
+                quantity=convert
+                unit=u
+                minimum=convert
+        if quantity<0:
+            unit=list(units.keys())[0]
+            quantity=value/units[unit]
+        return quantity,unit
+        
+    TIME_IMPORT=-1
+    TIME_FIRST=-1
+    TIME_LAST=-1
+    def elapsed_time(show=True, total=False, imp=False, msg=None,
+                     verbosity=VERB_NONE):
+        """Calculate the time elapsed from last call
+        Parameters:
+
+            show: boolean, default = True:
+                If true show the elapsed time.
+                If false just mark the time.
+
+            total: boolean, default = False:
+                If true compute the elapsed time since the first call of the
+                function
+
+            imp: boolean, default = False:
+                If true compute the elapsed time since the first call of the
+                function
+
+        """
+        if Misc.TIME_IMPORT<0:
+            Misc.TIME_IMPORT=time.time()     
+        elif Misc.TIME_FIRST<0:
+            Misc.TIME_FIRST=time.time()
+            Misc.TIME_LAST=time.time()
+        elif Misc.TIME_LAST<0:
+            Misc.TIME_LAST=time.time()
+        
+        tnow=time.time()
+        if total:
+            tpast = Misc.TIME_FIRST
+            ref = 'first call'
+        elif imp:
+            tpast = Misc.TIME_IMPORT
+            ref = 'import'
+        else:
+            tpast = Misc.TIME_LAST
+            Misc.TIME_LAST=tnow
+            ref = 'last call'
+
+        if show:
+            value=tnow-tpast
+            elapsed,unit=Misc.convert_unit(value)
+            if msg is None:
+                mgs = f"Elapsed time since {ref}:"
+            verbose(verbosity,f"{msg}: {value:g} s = {elapsed:.2f} {unit}")
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Data methods

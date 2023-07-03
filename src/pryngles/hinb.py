@@ -19,6 +19,8 @@ from pryngles import *
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import numpy as np
 import rebound as rb
+import matplotlib.pyplot as plt
+from celluloid import Camera
 from tqdm import tqdm
 from anytree import NodeMixin,RenderTree
 
@@ -140,7 +142,7 @@ class Orbit(PrynglesCommon):
             S3=Orbit(S1,S2,a=5,e=0)
             S4=Orbit(S3,m2=1,a=20,e=0,E=45*Consts.deg)
             S4.ensamble_system()
-            Plot.animate_rebound(S4.sim)
+            OrbitUtil.preview_rebound(S4.sim)
             
         Planet with a moon:
             units=["au","msun","yr"]
@@ -151,7 +153,7 @@ class Orbit(PrynglesCommon):
                 a=20,e=0.0)
             orb.calculate_orbit()
             sim,states=orb.get_states()
-            Plot.animate_rebound(sim)
+            OrbitUtil.preview_rebound(sim)
             
         Simple system:
             units=["au","msun","yr"]
@@ -377,7 +379,7 @@ class OrbitUtil(PrynglesCommon):
 
             #You may check the result using:
             orbit.calculate_orbit()
-            Plot.animate_rebound(orbit.sim,color='b',ms=2)
+            OrbitUtil.preview_rebound(orbit.sim,color='b',ms=2)
         """
         
         p1,p2=pair
@@ -398,3 +400,113 @@ class OrbitUtil(PrynglesCommon):
         orbit=Orbit(m1=m1,m2=m2,units=units,**elements)
 
         return orbit,pelements
+
+    def preview_rebound(sim,tini=0,tend=None,traces=False,axis=False,
+                        filename=None,nsnap=None,interval=100,
+                        **plot_args):
+        """Animate a rebound simulation.
+
+        Parameters:
+
+           sim: rebound Simulation object:
+              Simulation already set in Rebound.
+
+           tini, tend: float, default = 0, None:
+              Initial and final time for preview.
+
+           traces: boolean, default = False,
+              If False an animation is generated. 
+
+           axis: boolean, default = False,
+              If True, show axis and grid of plotting region.
+
+           plot_args: dictionary:
+              Plotting arguments for the positions.
+
+        If traces = False an animation with celluloid is created and
+        the following optional arguments apply:
+        
+           filename:
+
+        """
+        default_plot_args=dict(
+            marker='o',
+        )
+        default_plot_args.update(plot_args)
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
+        
+        verbosity=Verbose.VERBOSITY
+        Verbose.VERBOSITY=VERB_NONE
+        
+        fig,ax=plt.subplots()
+    
+        if not traces:
+            camera=Camera(fig)
+    
+        #Get the period of the longest osculant orbit
+        P=-1
+        for p in sim.particles[1:]:
+            P=p.P if p.P>P else P
+        
+        #Choose properly tend and nsnap
+        tend=P if tend is None else tend
+        nsnap=int(tend/(P/100)) if nsnap is None else nsnap
+        
+        if traces:
+            sim.move_to_com()
+            for i,p in enumerate(sim.particles):
+                xyz=p.xyz
+                ax.plot(xyz[0],xyz[1],marker="*",ms=10,zorder=1000,
+                        color=colors[i],label=f'{sim.hash_name[str(p.hash)]}')
+        else:
+            for i,p in enumerate(sim.particles):
+                ax.plot([],[],color=colors[i],label=f'{sim.hash_name[str(p.hash)]}',
+                        **default_plot_args)
+    
+        #Simulate
+        for i,t in enumerate(tqdm(np.linspace(tini,tend,nsnap))):
+            sim.integrate(t)
+            sim.move_to_com()
+            
+            for i,p in enumerate(sim.particles):
+                xyz=p.xyz
+                ax.plot(xyz[0],xyz[1],color=colors[i],
+                        **default_plot_args)
+             
+            if not traces:
+                ax.text(0.5,1,f"t = {sigfig.round(t,3)} (snap {i+1}/{nsnap})",
+                        transform=ax.transAxes,
+                        ha='center',va='bottom')
+                ax.legend()
+                camera.snap()
+        
+        if axis:
+            ax.grid()
+        else:
+            ax.axis("off")
+        ax.axis("equal")
+    
+        if traces:
+            ax.legend()
+            fig.tight_layout()
+            return fig
+        else:
+            anim=camera.animate(interval=interval)    
+            Verbose.VERBOSITY=verbosity
+    
+            if filename is not None:
+                if 'gif' in filename:
+                    anim.save(filename)
+                elif 'mp4' in filename:
+                    ffmpeg=animation.writers["ffmpeg"]
+                    metadata = dict(title='Pryngles Spangler Animation',
+                                    artist='Matplotlib',
+                                    comment='Movie')
+                    w=ffmpeg(fps=15,metadata=metadata)
+                    anim.save(filename,w)
+                else:
+                    raise ValueError(f"Animation format '{filename}' not recognized")
+    
+            return anim
+

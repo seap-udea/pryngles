@@ -33,9 +33,8 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('__init__-21428976')
+	    Verbose.save_test_fig('__init__-test_common')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

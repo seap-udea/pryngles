@@ -41,7 +41,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-26762841')
+	    Verbose.save_test_fig('system-test_system_init')
 	    plt.close('all')
 
 	def test_system_add(self):
@@ -86,7 +86,7 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-54513726')
+	    Verbose.save_test_fig('system-test_system_add')
 	    plt.close('all')
 
 	def test_sim(self):
@@ -120,7 +120,7 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-96747018')
+	    Verbose.save_test_fig('system-test_sim')
 	    plt.close('all')
 
 	def test_system_remove(self):
@@ -145,7 +145,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-79559153')
+	    Verbose.save_test_fig('system-test_system_remove')
 	    plt.close('all')
 
 	def test_spangleobs(self):
@@ -201,7 +201,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-16903175')
+	    Verbose.save_test_fig('system-test_spangleobs')
 	    plt.close('all')
 
 	def test_setluz(self):
@@ -230,7 +230,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-46551864')
+	    Verbose.save_test_fig('system-test_setluz')
 	    plt.close('all')
 
 	def test_setmultiple(self):
@@ -267,7 +267,7 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-17532182')
+	    Verbose.save_test_fig('system-test_setmultiple')
 	    plt.close('all')
 
 	def test_update(self):
@@ -291,7 +291,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-16234048')
+	    Verbose.save_test_fig('system-test_update')
 	    plt.close('all')
 
 	def test_reset(self):
@@ -321,7 +321,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-16968351')
+	    Verbose.save_test_fig('system-test_reset')
 	    plt.close('all')
 
 	def test_int(self):
@@ -351,7 +351,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-90470932')
+	    Verbose.save_test_fig('system-test_int')
 	    plt.close('all')
 
 	def test_legacy(self):
@@ -404,9 +404,8 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('system-18132525')
+	    Verbose.save_test_fig('system-test_legacy')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

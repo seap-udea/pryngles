@@ -65,7 +65,7 @@ class Test(unittest.TestCase):
 	    nvec=Science.direction(120,45)
 	    print(nvec,Science.direction(*nvec))
 	
-	    Verbose.save_test_fig('science-12276488')
+	    Verbose.save_test_fig('science-test_coords')
 	    plt.close('all')
 
 	def test_rot(self):
@@ -82,7 +82,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('science-57926482')
+	    Verbose.save_test_fig('science-test_rot')
 	    plt.close('all')
 
 	def test_limb(self):
@@ -109,7 +109,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('science-12286485')
+	    Verbose.save_test_fig('science-test_limb')
 	    plt.close('all')
 
 	def test_hull(self):
@@ -137,7 +137,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('science-11167961')
+	    Verbose.save_test_fig('science-test_foo')
 	    plt.close('all')
 
 	def test_plane(self):
@@ -166,9 +166,8 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('science-12519404')
+	    Verbose.save_test_fig('science-test_plane')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

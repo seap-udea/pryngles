@@ -41,9 +41,24 @@ class Test(unittest.TestCase):
 	    print(Misc.calc_hash(P))
 	    print(Misc.calc_hash(PrynglesCommon))
 	
-	    Verbose.save_test_fig('misc-18568630')
+	    Verbose.save_test_fig('misc-test_misc')
 	    plt.close('all')
 
-Test.FIGURES=[]
+	def test_time(self):
+	    Verbose.VERBOSITY=VERB_ALL
+	    
+	    print(Misc.TIME_IMPORT)
+	    Misc.elapsed_time()
+	
+	    Misc.elapsed_time(show=False)
+	    time.sleep(2)
+	    Misc.elapsed_time(total=True)
+	
+	    Misc.elapsed_time(imp=True)
+	    Verbose.VERBOSITY=VERB_NONE    
+	    
+	    Verbose.save_test_fig('misc-test_time')
+	    plt.close('all')
+
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

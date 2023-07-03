@@ -208,3 +208,4 @@ Verbose.VERBOSITY=VERB_NONE
 print_df=Misc.print_df
 sci=Science
 
+Misc.elapsed_time(show=False)

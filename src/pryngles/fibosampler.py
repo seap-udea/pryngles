@@ -177,7 +177,7 @@ class Sampler(PrynglesCommon):
             
             #Modify N if it is a ring
             qring = False
-            if geometry is "ring":
+            if "ring" in geometry:
                 ri = geometry_args["ri"]
                 verbose(VERB_VERIFY,f"Original ring preset {N}")
                 N = int(N / (1-ri**2))

@@ -1001,6 +1001,7 @@ class Spangler(PrynglesCommon):
                 If not visible: reduce level of color to half
     
         """
+        Misc.elapsed_time(show=False,verbosity=VERB_NONE)
         bgcolor='k'
     
         #Plot only a given object
@@ -1198,6 +1199,7 @@ class Spangler(PrynglesCommon):
         fig.tight_layout()
         self.fig3d=fig
         self.ax3d=ax
+        Misc.elapsed_time(show=True,msg="Plotting time",verbosity=VERB_NONE)
     
     def set_intersect(self,
                       nvec=[0,0,1],

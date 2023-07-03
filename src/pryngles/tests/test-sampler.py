@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('sampler-10811222')
+	    Verbose.save_test_fig('sampler-test_foo')
 	    plt.close('all')
 
 	def test_cut(self):
@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('sampler-12962325')
+	    Verbose.save_test_fig('sampler-test_foo')
 	    plt.close('all')
 
 	def test_ring(self):
@@ -72,7 +72,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('sampler-63439190')
+	    Verbose.save_test_fig('sampler-test_foo')
 	    plt.close('all')
 
 	def test_sphere(self):
@@ -89,7 +89,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('sampler-14537953')
+	    Verbose.save_test_fig('sampler-test_foo')
 	    plt.close('all')
 
 	def test_purge(self):
@@ -106,7 +106,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('sampler-16582747')
+	    Verbose.save_test_fig('sampler-test_foo')
 	    plt.close('all')
 
 	def test_update(self):
@@ -150,9 +150,8 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('sampler-70953852')
+	    Verbose.save_test_fig('sampler-test_pre')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

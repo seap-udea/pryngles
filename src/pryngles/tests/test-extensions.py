@@ -23,7 +23,7 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
-	    Verbose.save_test_fig('extensions-16998544')
+	    Verbose.save_test_fig('extensions-test_readf')
 	    plt.close('all')
 
 	def test_fun(self):
@@ -49,7 +49,7 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
-	    Verbose.save_test_fig('extensions-16999420')
+	    Verbose.save_test_fig('extensions-test_fun')
 	    plt.close('all')
 
 	def test_stokes(self):
@@ -116,7 +116,7 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
-	    Verbose.save_test_fig('extensions-78353020')
+	    Verbose.save_test_fig('extensions-test_stokes')
 	    plt.close('all')
 
 	def test_stokes_mass(self):
@@ -150,9 +150,8 @@ class Test(unittest.TestCase):
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
 	
-	    Verbose.save_test_fig('extensions-12146151')
+	    Verbose.save_test_fig('extensions-test_stokes_mass')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

@@ -83,6 +83,7 @@ test:
 	@-$(NOSE) --verbosity=2 -x src/pryngles/tests/test-$(MOD).py
 
 testall:
+	@-rm $(MONTAGE_FIG) $(TESTFIG_DIR)/test-*.jpg
 	@-$(NOSE) --verbosity=2 -x $(TEST_DIR)
 	@echo "Creating a montage with test images..."
 	@-$(MONTAGE) -geometry 800x800+2+2 $(TESTFIG_DIR)/test-*.jpg $(MONTAGE_FIG)

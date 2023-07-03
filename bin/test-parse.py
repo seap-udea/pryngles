@@ -27,6 +27,7 @@ Arguments:
 from sys import argv
 from sys import maxsize as HASH_MAXSIZE
 import os
+import re
 
 if len(argv)<=1:
     raise AssertionError("You must provide a filename.")
@@ -99,7 +100,11 @@ class Test(unittest.TestCase):
                 qcont=False
             if qcont:
                 ft.write("\t"+line)
-                testhash+=line
+                if "def" in line:
+                    try:
+                        testhash=re.findall("def (\w+)\(",line)[0]
+                    except:
+                        testhash='test_foo'
         elif qfulltest:
             if ("class Test" in line) or ("@fulltest" in line) or ("@end:fulltest" in line):
                 qfullcont=False
@@ -111,7 +116,8 @@ class Test(unittest.TestCase):
             fo.write(line)
 
         if "@end:test" in line:
-            pnghash=str(hash(testhash)%((HASH_MAXSIZE+1)*2))[:8]
+            #pnghash=str(hash(testhash)%((HASH_MAXSIZE+1)*2))[:8]
+            pnghash=testhash
             ft.write(f"\t    Verbose.save_test_fig('{filebase}-{pnghash}')\n")
             ft.write(f"\t    plt.close('all')\n\n")
             testhash=""

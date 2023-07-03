@@ -21,9 +21,8 @@ class Test(unittest.TestCase):
 	    print(Consts.get_all())
 	    print(Consts.get_physical())
 	
-	    Verbose.save_test_fig('consts-11223065')
+	    Verbose.save_test_fig('consts-test_fun')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

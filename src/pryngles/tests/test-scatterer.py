@@ -48,7 +48,7 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('scatterer-18035265')
+	    Verbose.save_test_fig('scatterer-_initialize_scatterer')
 	    plt.close('all')
 
 	def test_scatters(self):
@@ -62,7 +62,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('scatterer-40399805')
+	    Verbose.save_test_fig('scatterer-test_scatters')
 	    plt.close('all')
 
 	def test_lambsurface(self):
@@ -84,7 +84,7 @@ class Test(unittest.TestCase):
 	    fig.tight_layout()
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('scatterer-67256344')
+	    Verbose.save_test_fig('scatterer-test_lambsurface')
 	    plt.close('all')
 
 	def test_lambatmos(self):
@@ -106,7 +106,7 @@ class Test(unittest.TestCase):
 	    fig.tight_layout()
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('scatterer-14228086')
+	    Verbose.save_test_fig('scatterer-test_lambatmos')
 	    plt.close('all')
 
 	def test_catalogue(self):
@@ -120,7 +120,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('scatterer-33296169')
+	    Verbose.save_test_fig('scatterer-test_catalogue')
 	    plt.close('all')
 
 	def test_upscat(self):
@@ -154,9 +154,8 @@ class Test(unittest.TestCase):
 	    
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('scatterer-23016694')
+	    Verbose.save_test_fig('scatterer-test_upscat')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

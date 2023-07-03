@@ -42,7 +42,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('body-15561379')
+	    Verbose.save_test_fig('body-test_fun')
 	    plt.close('all')
 
 	def test_star(self):
@@ -76,7 +76,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('body-14678217')
+	    Verbose.save_test_fig('body-test_star')
 	    plt.close('all')
 
 	def test_planet(self):
@@ -114,7 +114,7 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('body-36352905')
+	    Verbose.save_test_fig('body-test_planet')
 	    plt.close('all')
 
 	def test_ring(self):
@@ -138,9 +138,8 @@ class Test(unittest.TestCase):
 	
 	    Verbose.VERBOSITY=VERB_NONE
 	
-	    Verbose.save_test_fig('body-82215136')
+	    Verbose.save_test_fig('body-test_ring')
 	    plt.close('all')
 
-Test.FIGURES=[]
 if __name__=="__main__":
    unittest.main(argv=['first-arg-is-ignored'],exit=False)

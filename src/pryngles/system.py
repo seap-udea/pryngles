@@ -1117,6 +1117,7 @@ class System(PrynglesCommon):
         
         #Add particles to simulation
         orbit.sim.move_to_com()
+        self.sim.hash_name=dict()
         for i,p in enumerate(orbit.sim.particles):
             self.sim.add(
                 hash=bodies[i].name,
@@ -1124,6 +1125,7 @@ class System(PrynglesCommon):
                 x=p.x,y=p.y,z=p.z,
                 vx=p.vx,vy=p.vy,vz=p.vz
             )
+            self.sim.hash_name[str(self.sim.particles[bodies[i].name].hash)]=bodies[i].name
         self.sim.orbit=orbit
         self._simulated=True
         self._update_system()
@@ -1196,7 +1198,8 @@ class System(PrynglesCommon):
         """
         if not self._simulated:
             raise AssertionError("Before spangling the system you must initialize the simulation: System.initialize_simulation().")
-        
+
+        Misc.elapsed_time(show=False,verbosity=VERB_NONE)
         self._spanglers=dict()
         
         #Add spangles
@@ -1231,6 +1234,7 @@ class System(PrynglesCommon):
         
         #Already spangled
         self._spangled=True
+        Misc.elapsed_time(show=True,msg="Spangling time",verbosity=VERB_NONE)
     
     def _set_observer(self,nvec=[0,0,1],alpha=0,center=None):
         """Set the position of the observer
