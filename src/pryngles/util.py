@@ -52,6 +52,16 @@ from matplotlib import animation
 # Hash maxsize
 from sys import maxsize as HASH_MAXSIZE
 
+# Data index
+DATA_INDEX=dict(
+    baseurl = 'https://docs.google.com/feeds/download/spreadsheets/Export?exportFormat=csv&key=',
+    downurl = 'https://docs.google.com/uc?export=download&id=',
+    filename = 'pryngles_data_index.csv',
+    fileid = '17rgmzuENn_5jEO2rzDzngJLpZT1P9rPsQr3PNQGFkGs',
+    col_filename = 'filename',
+    col_fileid = 'fileid',
+)
+
 # C types for extensions
 DOUBLE = ctypes.c_double
 PDOUBLE = ctypes.POINTER(DOUBLE)

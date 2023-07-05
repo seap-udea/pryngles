@@ -136,8 +136,6 @@ SPANGLER_COLUMNS=odict({
     "hidden_by_int":"", #Which body intersect the observer or light coming to a Spangle
     "transit_over_int":"", #Which body is intersected by the Spangle (is transiting over)
 
-    "string_int":"",#Temporal string
-    
     #Coordinates of the spangle (cartesian and spherical) in the observer system
     "center_obs":[0,0,0], #Center of the body
     "x_obs":1,"y_obs":0,"z_obs":0, #Cartesian coordinates of the spangle
@@ -152,7 +150,6 @@ SPANGLER_COLUMNS=odict({
     "hidden_by_obs":"", #Which body intersect the observer or light coming to a Spangle
     "transit_over_obs":"", #Which body is intersected by the Spangle (is transiting over)
     "beta_loc":0, #Beta angle rotates the local scattering plane to the planetary scattering plane
-    
     
     #Coordinates of the spangle (cartesian and spherical) in the light-source system
     "center_luz":[0,0,0],#Center of the body
@@ -175,21 +172,25 @@ SPANGLER_COLUMNS=odict({
     "asp":1.0, #Effective area of the spangle in 3D 
     "dsp":1.0, #Effective diameter of spangle, dsp = 2*(asp/pi)**0.5
 
+    #Optical plotting parameters
+    "albedo_gray_normal":1.0,#Wavelength-independent normal albedo (just for plotting purposes)
+    "tau_gray_optical":0.0,#Wavelength-independent optical depth (just for plotting purposes)
+    
     #Optical parameters
     "scatterer":"",#Hash (identifier) of the scatterer used for this spangle
-    "albedo_gray_normal":1.0,#Wavelength-independent normal albedo
-    "albedo_gray_spherical":1.0,#Wavelength-independent spherical albedo
-    "tau_gray_optical":0.0,#Wavelength-independent optical depth
-    
-    #Polarization parameters
-    "F":0,"Q":0,"U":0,"V":0,"P":0, #Stokes vector components
+    "scatterer_parameters":dict(), #Scatterer parameters (e.f. albedo, optical thickness, etc.)
     
     #Thermal characteristics
     "emmitter":"",#Hash (identifier) of the emmitter used for this spangle
-    "Teq":273.15,#K, equilibrium temperature
-    "Tem":273.15,#K, emmision temperature
-    "emmisivity":1,#1 perfect black body
+    "emmitter_parameters":dict(), #Emmitter parameters (e.f. Teq, Tem, emmisivity, etc.)
+
+    #Fluxes
+    "Fluxes":dict(), #Fluxes calculated (e.g. Ftot, Q, U, V –circular polarization)
+    "Polarization":dict(), #Polarization quantities (e.g. Fpol, Pdeg) 
     
+    #Internal
+    "_string_int":"",
+
     #Special states
     "unset":True, #State has not been set
     "hidden":False, #The spangle is not taken into account for photometry
@@ -225,9 +226,8 @@ SPANGLER_KEY_ORDERING=[
     #Geometrical bulk properties
     'asp', 
     #Physical bulk properties
-    'albedo_gray_normal', 'albedo_gray_spherical', 'tau_gray_optical', 
-    'F','Q','U','V','P',
-    'Teq', 'Tem', 'emmisivity', 
+    'albedo_gray_normal',
+    'tau_gray_optical', 
     #State
     'visible', 'shadow', 'indirect', 'emit', 
     'illuminated', 'transmit', 
@@ -253,7 +253,7 @@ SPANGLER_KEY_ORDERING=[
     'x_int', 'y_int', 'z_int', 'ns_int', 
     'rho_int', 'az_int', 'cosf_int', 'cos_int', 
     'azim_int', 'n_int', 'n_int_ecl', 'd_int', 'asp_int', 'z_cen_int', 'hidden_by_int', 'transit_over_int', 
-    'string_int',
+    '_string_int',
     
     'center_obs', 
     'x_obs', 'y_obs', 'z_obs', 'ns_obs', 
@@ -268,8 +268,12 @@ SPANGLER_KEY_ORDERING=[
     
     'dsp', 
     
-    #Other
-    'scatterer', 'emmitter',
+    #Optical and thermal parameters
+    'scatterer', 'scatterer_parameters',
+    'emmitter', 'emmitter_parameters',
+
+    #Fluxes and polarization
+    'Fluxes', 'Polarization',
     
     #Internal states
     'unset', 'hidden', 'source', 'intersect', 'above', 
@@ -287,8 +291,8 @@ SPANGLER_KEY_SUMMARY=[
     #Geometrical bulk properties
     'asp', 
     #Physical bulk properties
-    'albedo_gray_normal', 'albedo_gray_spherical', 'tau_gray_optical', 
-    'Teq', 'Tem', 'emmisivity', 
+    'albedo_gray_normal',
+    'tau_gray_optical', 
     #State
     'visible', 'shadow', 'indirect', 'emit', 
     'illuminated', 'transmit', 
@@ -340,7 +344,6 @@ SPANGLER_DEBUG_FIELDS=["name","spangle_type","geometry",
 SPANGLER_EPS_BORDER=0.01
 
 SPANGLER_COLUMNS_DOC="""
-#Columns of spangling
 SPANGLER_COLUMNS=odict({
     "name":"", #Identification of the body having the spangler
 
@@ -385,8 +388,6 @@ SPANGLER_COLUMNS=odict({
     "hidden_by_int":"", #Which body intersect the observer or light coming to a Spangle
     "transit_over_int":"", #Which body is intersected by the Spangle (is transiting over)
 
-    "string_int":"",#Temporal string
-    
     #Coordinates of the spangle (cartesian and spherical) in the observer system
     "center_obs":[0,0,0], #Center of the body
     "x_obs":1,"y_obs":0,"z_obs":0, #Cartesian coordinates of the spangle
@@ -400,6 +401,7 @@ SPANGLER_COLUMNS=odict({
     "z_cen_obs":0.0, #z-coordinate of the center of the body to which the spangle belows
     "hidden_by_obs":"", #Which body intersect the observer or light coming to a Spangle
     "transit_over_obs":"", #Which body is intersected by the Spangle (is transiting over)
+    "beta_loc":0, #Beta angle rotates the local scattering plane to the planetary scattering plane
     
     #Coordinates of the spangle (cartesian and spherical) in the light-source system
     "center_luz":[0,0,0],#Center of the body
@@ -422,22 +424,30 @@ SPANGLER_COLUMNS=odict({
     "asp":1.0, #Effective area of the spangle in 3D 
     "dsp":1.0, #Effective diameter of spangle, dsp = 2*(asp/pi)**0.5
 
+    #Optical plotting parameters
+    "albedo_gray_normal":1.0,#Wavelength-independent normal albedo (just for plotting purposes)
+    "tau_gray_optical":0.0,#Wavelength-independent optical depth (just for plotting purposes)
+    
     #Optical parameters
     "scatterer":"",#Hash (identifier) of the scatterer used for this spangle
-    "albedo_gray_normal":1.0,#Wavelength-independent normal albedo
-    "albedo_gray_spherical":1.0,#Wavelength-independent spherical albedo
-    "tau_gray_optical":0.0,#Wavelength-independent optical depth
+    "scatterer_parameters":dict(), #Scatterer parameters (e.f. albedo, optical thickness, etc.)
     
     #Thermal characteristics
     "emmitter":"",#Hash (identifier) of the emmitter used for this spangle
-    "Teq":273.15,#K, equilibrium temperature
-    "Tem":273.15,#K, emmision temperature
-    "emmisivity":1,#1 perfect black body
+    "emmitter_parameters":dict(), #Emmitter parameters (e.f. Teq, Tem, emmisivity, etc.)
+
+    #Fluxes
+    "Fluxes":dict(), #Fluxes calculated (e.g. Ftot, Q, U, V –circular polarization)
+    "Polarization":dict(), #Polarization quantities (e.g. Fpol, Pdeg) 
     
+    #Internal
+    "_string_int":"",
+
     #Special states
     "unset":True, #State has not been set
     "hidden":False, #The spangle is not taken into account for photometry
     "source":False, #The spangle belongs to a light-source (it does not reflect light)
+
 })
 SPANGLER_VISIBILITY_STATES=odict({
     #Spangle state
@@ -455,7 +465,6 @@ SPANGLER_SOURCE_STATES=odict({
     "transit":False, #The spangle is transiting
     "occult":False, #The spangle is occulted by a light source
 })
-SPANGLER_COLUMNS.update(SPANGLER_SOURCE_STATES)
 """
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -519,19 +528,19 @@ class Spangler(PrynglesCommon):
     def __init__(self,
                  #Initialization using specific options
                  #Initialization with a list of spanglers
-                     spanglers=[],
+                 spanglers=[],
                  #Basic
-                     nspangles=1,
-                     name=None,
-                     n_equ=SPANGLER_COLUMNS["n_equ"],
-                     alpha_equ=SPANGLER_COLUMNS["alpha_equ"],
-                     center_equ=SPANGLER_COLUMNS["center_equ"],
-                     center_ecl=SPANGLER_COLUMNS["center_ecl"],
+                 nspangles=1,
+                 spangles=None,
+                 name=None,
+                 n_equ=SPANGLER_COLUMNS["n_equ"],
+                 alpha_equ=SPANGLER_COLUMNS["alpha_equ"],
+                 center_equ=SPANGLER_COLUMNS["center_equ"],
+                 center_ecl=SPANGLER_COLUMNS["center_ecl"],
                  #Optional
-                     w=SPANGLER_COLUMNS["w"],
-                     q0=SPANGLER_COLUMNS["q0"],
+                 w=SPANGLER_COLUMNS["w"],
+                 q0=SPANGLER_COLUMNS["q0"],
                 ):
-        
         #Common attributes
         self.n_obs=np.array([0,0,1])
         self.n_luz=np.array([0,0,1])
@@ -568,6 +577,11 @@ class Spangler(PrynglesCommon):
             #Attributes
             self.nspangles=nspangles
             self.shape="vanilla" #No geometry defined
+
+            #Precalculated spangles
+            self.spangles=spangles
+            if (self.spangles is not None) and (len(self.spangles) != self.nspangles):
+                raise AssertionError(f"You provided spangles (size = {len(self.spangles)}) whose size does not correspond with nspangles = {nspangles}")
             
             #Default property values
             self._defaults=deepcopy(SPANGLER_COLUMNS)
@@ -756,7 +770,7 @@ class Spangler(PrynglesCommon):
             verbose(VERB_VERIFY,f"Updating rotations at t = {t}")
 
             self.data["q_equ"]=[q+q0+w*t for q,w,q0 in zip(self.data.q_equ,self.data.w,self.data.q0)]
-            self.data[["x_equ","y_equ","z_equ"]]=                [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
+            self.data[["x_equ","y_equ","z_equ"]]=[sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
 
             qupdate=True
 
@@ -776,9 +790,9 @@ class Spangler(PrynglesCommon):
 
         #Convert from equatorial to ecliptic
         verbose(VERB_VERIFY,f"Converting to equatorial")
-        self.data[["x_ecl","y_ecl","z_ecl"]]=            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl             for sph,r,cequ,cecl in zip(self.data.name,
-                                        np.array(self.data[["x_equ","y_equ","z_equ"]]),
-                                        self.data.center_equ,self.data.center_ecl)]
+        self.data[["x_ecl","y_ecl","z_ecl"]]=[np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl for sph,r,cequ,cecl in zip(self.data.name,
+                                                                                                                    np.array(self.data[["x_equ","y_equ","z_equ"]]),
+                                                                                                                    self.data.center_equ,self.data.center_ecl)]
         
         #Update orientation of the spangle
         self.data["ns_ecl"]=[np.matmul(self.M_equ2ecl[sph],n) for sph,n in zip(self.data.name,
@@ -791,8 +805,8 @@ class Spangler(PrynglesCommon):
         if sum(cond)>0:
             verbose(VERB_VERIFY,f"Setting local vectors based on ns: {sum(cond)}")
             #wy = ez x ns because with this definition seen from above the system is oriented as usual
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0]                                                     for ns in self.data[cond].ns_ecl],dtype=object).values
-            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns)                                                     for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0] for ns in self.data[cond].ns_ecl],dtype=object).values
+            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns) for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
                                                    dtype=object).values
             cond=~cond
         else:
@@ -802,15 +816,11 @@ class Spangler(PrynglesCommon):
         if sum(cond)>0:
             verbose(VERB_VERIFY,f"Setting local matrix based on ex: {sum(cond)}")
             self.data.loc[cond,"wx_ecl"]=pd.Series([[1,0,0]]*sum(cond),dtype=object).values
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0]                                                     for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
+            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0] for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
                                                    dtype=object).values
             
         #Update velocities
         #Not implemented yet
-
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    # Tested methods from module file spangler
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     def populate_spangler(self,
                           shape="circle",preset=False,spangle_type=SPANGLE_SOLID_ROCK,
@@ -840,21 +850,49 @@ class Spangler(PrynglesCommon):
                 See Sampler methods documentation.
                  
         """
-        #Check if preset
-        if preset:
-            verbose(VERB_VERIFY,f"Populating spangler from preset for {shape}")
-            preset=(shape,shape_args)
-            self.sample=Sampler(preset=preset,N=self.nspangles,seed=seed)   
-        else:
-            verbose(VERB_VERIFY,f"Generating spangler from scratch")
+        #Check if spangles has been already provided
+        if self.spangles is not None:
+            verbose(VERB_VERIFY,f"Spangles provided, size = {len(self.spangles)}, {self.spangles.shape}")
             self.sample=Sampler(N=self.nspangles,seed=seed)
-            exec(f"self.sample.gen_{shape}(**shape_args)")
-    
+            # Cartesian coordinates
+            self.sample.ss=self.spangles.copy()
+            self.sample.pp=np.array([Science.spherical(r) for r in self.sample.ss]) 
+            # Number of spangles
+            self.sample.N=self.nspangles
+            rs = np.linalg.norm(self.spangles,axis=1)
+            self.sample.R = rs.max()
+            if shape == "sphere":
+                self.sample.geometry = SAMPLER_GEOMETRY_SPHERE
+                self.sample.dim = 3
+                self.sample.A = 4*np.pi*self.sample.R**2
+                self.sample.ns = self.spangles.copy()
+            else:
+                self.sample.geometry = SAMPLER_GEOMETRY_CIRCLE
+                self.sample.dim = 2
+                self.sample.ri = rs.min()
+                self.sample.A = np.pi*(self.sample.R**2-self.sample.ri**2)
+                self.sample.ns = np.array([[0,0,1]]*self.nspangles)
+            # Calculate distances
+            self.sample._calc_distances()
+            self.sample.purged=True
+            self.sample.nhidden = 0
+        else:
+            verbose(VERB_VERIFY,f"Spangles not provided")
+            #Check if preset
+            if preset:
+                verbose(VERB_VERIFY,f"Populating spangler from preset for {shape}")
+                preset=(shape,shape_args)
+                self.sample=Sampler(preset=preset,N=self.nspangles,seed=seed)   
+            else:
+                verbose(VERB_VERIFY,f"Generating spangler from scratch")
+                self.sample=Sampler(N=self.nspangles,seed=seed)
+                exec(f"self.sample.gen_{shape}(**shape_args)")
+
         self.shape=shape
         self.data["geometry"]=self.sample.geometry
         self.data["spangle_type"]=spangle_type
     
-        if self.sample.geometry in [SAMPLER_GEOMETRY_SPHERE]:
+        if (self.sample.geometry in [SAMPLER_GEOMETRY_SPHERE]) and (not self.sample.purged):
             #Purge sample if it is in 3d
             verbose(VERB_VERIFY,f"Purging 3d sample")
             self.sample.purge_sample()
@@ -909,7 +947,7 @@ class Spangler(PrynglesCommon):
                 self.data.drop(range(self.nspangles+dif,self.nspangles),inplace=True)
                 
             self.nspangles=self.sample.N
-        
+
         #Area
         self.data["asp"]=self.sample.aes*scale**2
         self.data["dsp"]=2*(self.data["asp"]/np.pi)**0.5
@@ -1253,12 +1291,13 @@ class Spangler(PrynglesCommon):
     
             Normal to spangles in the intersection system, ns_int.
             
-            
         Notes:
-            If the intersection direction is in the center of the body (for instance, when a ring or a bubble 
-            is illuminated from the center), set intersect to True for all spangles and compute the distance and
-            relative orientation (cos_int) of the spangles correspondingly.
-    
+            If the intersection direction is in the center of the body
+            (for instance, when a ring or a bubble is illuminated from
+            the center), set intersect to True for all spangles and
+            compute the distance and relative orientation (cos_int) of
+            the spangles correspondingly.
+
         """
         
         verbose(VERB_SIMPLE,
@@ -1299,12 +1338,12 @@ class Spangler(PrynglesCommon):
             return
             
         #Update positions in the intersection reference frame
-        self.data.loc[cond,["x_int","y_int","z_int"]]=        [np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
+        self.data.loc[cond,["x_int","y_int","z_int"]]=[np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
         
         #Center of the object in the observer reference system
-        center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)               for sp,c_ecl,c_equ in zip(self.data[cond].name,
-                                             np.array(self.data[cond].center_ecl),
-                                             np.array(self.data[cond].center_equ))]
+        center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center) for sp,c_ecl,c_equ in zip(self.data[cond].name,
+                                                                                                                         np.array(self.data[cond].center_ecl),
+                                                                                                                         np.array(self.data[cond].center_equ))]
         self.data.loc[cond,"center_int"]=pd.Series(center_int).values
         
         #According to distance to intersetcion point generate z_cen_int
@@ -1314,7 +1353,7 @@ class Spangler(PrynglesCommon):
             self.data.loc[cond,"z_cen_int"]=np.array(center_int)[:,2]
     
         #Pseudo-cylindrical coordinates in the observer system
-        self.data.loc[cond,["rho_int","az_int","cosf_int"]]=        [sci.pcylindrical(r) for r in          np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
+        self.data.loc[cond,["rho_int","az_int","cosf_int"]]=[sci.pcylindrical(r) for r in np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
     
         #Compute distance to intersection of each spangle and the 
         if self.infinite:
@@ -1347,7 +1386,7 @@ class Spangler(PrynglesCommon):
             self.data.loc[cond,"cos_int"]=[spy.vdot(n_ecl,n_int) for n_ecl in self.data.ns_ecl[cond]]
         else:
             #In this case n_int is a per-spangle variable
-            self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int)                                        for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
+            self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int) for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
             
         #Set areas
         self.data.loc[cond,"asp_int"]=self.data.loc[cond,"asp"]
@@ -1368,7 +1407,6 @@ class Spangler(PrynglesCommon):
             zord=min(self.data[cond_obj].z_int)
     
             if (self.data[cond_obj].hidden).sum()==0:
-    
                 #Convex hull of whole objects
                 cond_hull=(cond_obj)&(~self.data[cond_obj].hidden)
                 verbose(VERB_SIMPLE,"Hull points (whole object):",sum(cond_hull))
@@ -1385,7 +1423,7 @@ class Spangler(PrynglesCommon):
                 )]
     
             else:
-                #Convex hull of objects with a hole (eg. rings)
+                #Convex hull of plain objects with a hole (eg. rings)
     
                 #Plane of rings
                 cond_hidden=(cond_obj)&(self.data[cond_obj].hidden)
@@ -1425,7 +1463,6 @@ class Spangler(PrynglesCommon):
                     vhull=vhull,
                     plane=plane
                 )]
-               
     
     def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
         """Set the positions and orientation of spanglers in the observer system.
@@ -1453,14 +1490,9 @@ class Spangler(PrynglesCommon):
         self.center_obs=center.copy() if center else center
         
         self.data.loc[cond,"visible"]=False
-        #self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT].values
-        #"""
         self.data.loc[cond,SPANGLER_COL_OBS]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
                                                           columns=SPANGLER_COL_OBS,
                                                           index=self.data[cond].index)
-        #"""
-        #self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT]
-        
         
         #Update states
         self.data.unset=False
@@ -1468,14 +1500,19 @@ class Spangler(PrynglesCommon):
         #Condition for visibility
         """
         & ! Hidden
-        & z_cen_obs+scale < 0: spangle is observable from the observer vantage point-
+        & z_cen_obs+scale < 0: spangle is observable from the observer vantage point
             (
                 | cos_obs > 0: spangle it is towards the observer
                 | Spangle type is semitransparent
             )
         """
-        cond=    (~self.data.hidden)&    ((self.data.z_cen_obs+self.data.scale)<0)&    (        (self.data.cos_obs>0)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
-        )
+        cond=\
+            (~self.data.hidden)&\
+            ((self.data.z_cen_obs+self.data.scale)<0)&\
+            (\
+             (self.data.cos_obs>0)|\
+             (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))\
+             )
         self.data.loc[cond,"visible"]=True
         
     def set_luz(self,nvec=[0,0,1],alpha=0,center=None,name=None):
@@ -1522,7 +1559,6 @@ class Spangler(PrynglesCommon):
         self.data.loc[cond,"transmit"]=False
         
         #Conditions
-        #self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
         self.data.loc[cond,SPANGLER_COL_LUZ]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
                                                           columns=SPANGLER_COL_LUZ,
                                                           index=self.data[cond].index)
@@ -1537,30 +1573,42 @@ class Spangler(PrynglesCommon):
         """
         & ! Hidden
         & z_cen_luz+scale < 0: spangle is in front of the light-source.
-            (
+        &   (
+                | cos_luz > 0: spangle it is towards the light source
                 | geometry = circle : 2d spangles are always illuminated
                 | spangle_type = stellar: stellar spangles are always illuminated
-                | cos_luz > 0: spangle it is towards the light source
+                | spangle_type is semitransparent: semitransparent spangles are always illuminated
             )
         """
-        cond=    cond&    (~self.data.hidden)&    ((self.data.z_cen_luz+self.data.scale)<0)&    (        (self.data.geometry==SAMPLER_GEOMETRY_CIRCLE)|        (self.data.cos_luz>0)|        (self.data.spangle_type==SPANGLE_STELLAR)|        (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))
-        )
+        cond=cond&\
+            (~self.data.hidden)&\
+            ((self.data.z_cen_luz+self.data.scale)<0)&\
+            (\
+             (self.data.cos_luz>0)|\
+             (self.data.geometry==SAMPLER_GEOMETRY_CIRCLE)|\
+             (self.data.spangle_type==SPANGLE_STELLAR)|\
+             (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))\
+            )
         self.data.loc[cond,"illuminated"]=True
     
         #Conditions for transmission:
         """
-        & No hidden
+        & Is illiminated
+        & ! Hidden
         (
-            & Spangle type is semitransparent
             & cos_obs . cos_luz < 0: observer and light source are in opposite sides
+            & Spangle type is semitransparent
         )
         
         ATTENTION: TRANSMISSION IS ONLY PROPERLY SET IF OBSERVER HAVE BEEN PREVIOUSLY SET.
         """
-        cond=    cond&    (~self.data.hidden)&    (     (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))&     ((self.data.cos_luz*self.data.cos_obs)<=0)
-        )
+        cond=cond&\
+            (~self.data.hidden)&\
+            (\
+             ((self.data.cos_luz*self.data.cos_obs)<=0)&\
+             (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))\
+            )
         self.data.loc[cond,"transmit"]=True
-        
     
     def plot2d(self,
                coords="obs",
@@ -1914,7 +1962,13 @@ class Spangler(PrynglesCommon):
             verbose(VERB_SIMPLE,f"Points included in calculation: {cond_included.sum()}")
         
         #Under the current circumstances all this spangles are intersecting 
-        cond=    (~self.data.hidden)&    (     (self.data.cos_int>0)|     (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))    )&    (cond_included)
+        cond=\
+            (~self.data.hidden)&\
+            (\
+             (self.data.cos_int>0)|\
+             (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))\
+            )&\
+            (cond_included)
         
         self.data.loc[cond,"intersect"]=True
         self.data.hidden_by_int=""
@@ -2009,8 +2063,8 @@ class Spangler(PrynglesCommon):
                 self.data.loc[below,"hidden_by_int"]=self.data.loc[below,"hidden_by_int"]+f"{name}:{zord:.3e}&"
                     
                 #Compute distance to center for transiting spangles
-                self.data.loc[above,"string_int"]=[f"{name}:{zord:.3e}:{((r[0]-xcen)**2+(r[1]-ycen)**2)**0.5/scale:.3e}&"                                                for r in self.data[above][["x_int","y_int"]].values]
-                self.data.loc[above,"transit_over_int"]=self.data.loc[above,"transit_over_int"]+self.data.loc[above,"string_int"]
+                self.data.loc[above,"_string_int"]=[f"{name}:{zord:.3e}:{((r[0]-xcen)**2+(r[1]-ycen)**2)**0.5/scale:.3e}&" for r in self.data[above][["x_int","y_int"]].values]
+                self.data.loc[above,"transit_over_int"]=self.data.loc[above,"transit_over_int"]+self.data.loc[above,"_string_int"]
                 
                 hull["inhull"]=sum(inhull)
                 hull["below"]=sum(below)

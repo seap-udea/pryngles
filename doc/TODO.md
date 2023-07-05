@@ -1,6 +1,10 @@
 To Do List
 ==========
 
+- Decouple spangler from optical modules.
+
+- Convert lambda to time in hinb module.
+
 - Use automatic archive of rebound:
   https://rebound.readthedocs.io/en/latest/ipython_examples/SimulationArchiveRestart/
 

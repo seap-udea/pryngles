@@ -57,6 +57,7 @@ BODY_DEFAULTS.update(odict(
     geometry_args=dict(),
     seed=0,
     preset=True,
+    spangles=None,
     
     albedo_gray_spherical=1,
     albedo_gray_normal=1,
@@ -255,6 +256,7 @@ class Body(Orbody):
         
         #Prepare key attributes
         self.sg=None
+        self._spangles = None
 
         #Name of the object
         if 'name' in props:
@@ -312,7 +314,17 @@ class Body(Orbody):
                 raise ValueError(f"Property {prop} not identified in object {self.kind}")
                 
         self.elements={k:v for k,v in self.__dict__.items() if k in REBOUND_ORBITAL_PROPERTIES}
-        
+
+        """We introduce this code to allow the initialization of a
+        body with the coordinates of the spangles instead of
+        initializing them
+        """
+        try:
+            nspangles = len(self.nspangles)
+            self._spangles = np.array(self.nspangles)
+            self.nspangles = nspangles
+        except:
+            pass
         verbose(VERB_VERIFY,"Updating Body")
         self._update_properties()
     
@@ -345,6 +357,7 @@ class Body(Orbody):
         
 
     def spangle_body(self):
+
         """
         Spangle the surface of the body
         """
@@ -352,6 +365,7 @@ class Body(Orbody):
         #Create spangler
         self.sg=Spangler(
             nspangles=self.nspangles,
+            spangles=self._spangles,
             name=self.name,
             n_equ=self.n_equ,
             alpha_equ=self.alpha,
