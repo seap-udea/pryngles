@@ -761,7 +761,16 @@ class Spangler(PrynglesCommon):
             self.data["n_equ"]=[n_equ]*self.nspangles
 
             #Transformation matrices
-            self.M_equ2ecl[self.name],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ)
+            """It is important to stress that when n_equ is provided
+            there is an inversion in the direction of the x-y axes
+            that should be compensated in order to be consisten with
+            the legacy interface.
+
+            This compensation should be removed in the future when the
+            package be fully debugged.
+
+            """
+            self.M_equ2ecl[self.name],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ,invertxy=True)
 
             qupdate=True
 

@@ -40,6 +40,7 @@ BODY_DEFAULTS.update(odict(
     source=None,
     
     #Orbit
+    #No default orbital properties required
     m=1,
 
     #Physics
@@ -58,8 +59,8 @@ BODY_DEFAULTS.update(odict(
     seed=0,
     preset=True,
     spangles=None,
-    
-    albedo_gray_spherical=1,
+
+    #Basic optical properties
     albedo_gray_normal=1,
     tau_gray_optical=0,
     
@@ -78,8 +79,7 @@ STAR_DEFAULTS=deepcopy(BODY_DEFAULTS)
 STAR_DEFAULTS.update(odict(
 
     #Orbit: update
-    #Same as body
-    radius=0.1,
+    #No default orbital properties required
     
     #Physics: update
     #Same as Body
@@ -98,7 +98,7 @@ PLANET_DEFAULTS=deepcopy(BODY_DEFAULTS)
 PLANET_DEFAULTS.update(odict(
     
     #Orbit: update
-    a=1,e=0,
+    #No default orbital properties required
     
     #Physics: update
     #Same as Body
@@ -995,7 +995,8 @@ class System(PrynglesCommon):
         if self.root:
             if (kind!="Star") and (parent is None):
                 parent=self.root
-                
+
+            """
             if kind=="Planet":
                 if "m" not in props:
                     props["m"]=0.1*parent.m
@@ -1004,6 +1005,11 @@ class System(PrynglesCommon):
                 if "a" not in props:
                     if "a" in parent.__dict__:
                         props["a"]=0.5*parent.a
+            if kind=="Planet":
+                for prop in ['m','radius']:
+                    if prop not in props:
+                        raise AssertionError(f"No value for '{prop}' was provided")
+            """
                     
         #Create body
         props.update(dict(name_by_kind=True))
@@ -1053,7 +1059,7 @@ class System(PrynglesCommon):
         return self.__body
     
     
-    def initialize_simulation(self,orbital_tree=None,**rebound_options):
+    def initialize_simulation(self,orbital_tree=None, test=False, hinb=True, **rebound_options):
         """Initialize rebound simulation using a given orbital tree.
         
         Parameters:
@@ -1078,6 +1084,13 @@ class System(PrynglesCommon):
                         orbital_tree = [[S1,PS1],[S1,PS2]]
 
                  When orbital_tree = None the tree will be created using the list of bodies.
+
+            hinb: boolean, default = True:
+                 If Ture Initialize the system as a hierarchical n-body system.
+                 Otherwise initialize the simulation with the orbital elements provided.
+        
+            rebound_options: dictionary:
+                 All the additional options you want to add to rebound add method.
         
         Return:
             orbit: object Orbit:
@@ -1105,6 +1118,8 @@ class System(PrynglesCommon):
             self.orbital_tree=[self.root,self.orbital_tree]
         else:
             self.orbital_tree=orbital_tree
+
+        self.n_bodies_tree=len(list(Misc.flatten(self.orbital_tree)))
         
         #Set the rebound hash of all bodies
         for name,body in self.bodies.items():
@@ -1120,17 +1135,41 @@ class System(PrynglesCommon):
                 continue
             if body not in bodies:
                 raise AssertionError(f"Body '{name}' is in System but not in orbital tree.")
+
+        #Code to test initialization
+        if test:
+            def show_tree(tree):
+                if not isinstance(tree,list):
+                    body=tree
+                    print(f"Body: {body.name}")
+                    print(f"Orbital elements: {body.elements}")
+                else:
+                    for body in tree:
+                        show_tree(body)
+            print(f"An orbital tree was build with {self.n_bodies_tree} bodies")
+            print(f"Tree: {self.orbital_tree}")
+            show_tree(self.orbital_tree)
+            return self.orbital_tree
             
-        #Build hierarchical N-body system
-        orbit,pelements=OrbitUtil.build_system(self.orbital_tree,self.units)
-        orbit.calculate_orbit()
-        
+        if hinb:
+            #Build hierarchical N-body system
+            verbose(VERB_VERIFY,f"Simulation: building hierarchical n-body system with tree {self.orbital_tree}")
+            orbit,pelements=OrbitUtil.build_system(self.orbital_tree,self.units)
+            orbit.calculate_orbit()
+            orbit.sim.move_to_com()
+        else:
+            #Add objects to simulation as they were provided in the adding procedures
+            verbose(VERB_VERIFY,f"Simulation: adding bodies as they were provied")
+            orbit=Orbit(units=self.units)
+            for body in bodies:
+                verbose(VERB_VERIFY,f"Adding body: {body.name}, elements: {body.elements}")
+                orbit.sim.add(**body.elements)
+            
         #Initialize simulation
-        self.sim=rb.Simulation()
+        self.sim=rb.Simulation(**rebound_options)
         self.sim.units=self.units
         
         #Add particles to simulation
-        orbit.sim.move_to_com()
         self.sim.hash_name=dict()
         for i,p in enumerate(orbit.sim.particles):
             self.sim.add(

@@ -20,6 +20,7 @@ from pryngles import *
 import numpy as np
 import rebound as rb
 import matplotlib.pyplot as plt
+from copy import deepcopy
 from celluloid import Camera
 from tqdm import tqdm
 from anytree import NodeMixin,RenderTree
@@ -429,6 +430,9 @@ class OrbitUtil(PrynglesCommon):
            filename:
 
         """
+        # Preserve initial time
+        psim = deepcopy(sim)
+        
         default_plot_args=dict(
             marker='o',
         )
@@ -446,7 +450,7 @@ class OrbitUtil(PrynglesCommon):
     
         #Get the period of the longest osculant orbit
         P=-1
-        for p in sim.particles[1:]:
+        for p in psim.particles[1:]:
             P=p.P if p.P>P else P
         
         #Choose properly tend and nsnap
@@ -454,22 +458,22 @@ class OrbitUtil(PrynglesCommon):
         nsnap=int(tend/(P/100)) if nsnap is None else nsnap
         
         if traces:
-            sim.move_to_com()
-            for i,p in enumerate(sim.particles):
+            #psim.move_to_com()
+            for i,p in enumerate(psim.particles):
                 xyz=p.xyz
                 ax.plot(xyz[0],xyz[1],marker="*",ms=10,zorder=1000,
-                        color=colors[i],label=f'{sim.hash_name[str(p.hash)]}')
+                        color=colors[i],label=f'{psim.hash_name[str(p.hash)]}')
         else:
-            for i,p in enumerate(sim.particles):
-                ax.plot([],[],color=colors[i],label=f'{sim.hash_name[str(p.hash)]}',
+            for i,p in enumerate(psim.particles):
+                ax.plot([],[],color=colors[i],label=f'{psim.hash_name[str(p.hash)]}',
                         **default_plot_args)
     
         #Simulate
         for i,t in enumerate(tqdm(np.linspace(tini,tend,nsnap))):
-            sim.integrate(t)
-            sim.move_to_com()
+            psim.integrate(t)
+            #psim.move_to_com()
             
-            for i,p in enumerate(sim.particles):
+            for i,p in enumerate(psim.particles):
                 xyz=p.xyz
                 ax.plot(xyz[0],xyz[1],color=colors[i],
                         **default_plot_args)
@@ -490,7 +494,8 @@ class OrbitUtil(PrynglesCommon):
         if traces:
             ax.legend()
             fig.tight_layout()
-            return fig
+            psim.integrate(tnow)
+            obj = fig
         else:
             anim=camera.animate(interval=interval)    
             Verbose.VERBOSITY=verbosity
@@ -508,5 +513,7 @@ class OrbitUtil(PrynglesCommon):
                 else:
                     raise ValueError(f"Animation format '{filename}' not recognized")
     
-            return anim
+            obj = anim
 
+        del psim
+        return obj

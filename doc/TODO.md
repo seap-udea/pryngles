@@ -1,6 +1,14 @@
 To Do List
 ==========
 
+- Introduce orbital drivers: instead of calculating everything with
+  rebound use another routines for updating the positions of the
+  bodies, e.g. pyastro.
+
+- Introduce velocities for the spangles.
+
+- Include a citation command.
+
 - Decouple spangler from optical modules.
 
 - Convert lambda to time in hinb module.
@@ -51,17 +59,18 @@ To Do List
 
 - Incorporate wavelength dependent limb-darkening coefficients.
 
-- Include forward scattering for rings.
-
 - Plot returns information to render a photorealistic image of the
   planet.  Returns the value of each point in a plot.
 
-- Include the possibility of non-ringed planets (Nr=0).
-
-- Include a citation command.
-
 Done
 ====
+
+- Allow to initialize the bodies in a system using simply their
+  cartesian coordinates and speeds.
+
+- Include the possibility of non-ringed planets (Nr=0).
+
+- Include forward scattering for rings.
 
 - For intersections, transit and occult use the shape of the figure
   for defining the region on which this intersections occur. Use

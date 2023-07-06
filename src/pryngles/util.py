@@ -558,7 +558,7 @@ class Science(PrynglesCommon):
         else:
             raise ValueError("You provided a wrong number of arguments '{args}'.  It should be 2 or 3'")
     
-    def rotation_matrix(ez,alpha):
+    def rotation_matrix(ez,alpha,invertxy=False):
         """
         Set a rotation matrix from the direction of the ez vector and a rotation angle alpha
         
@@ -576,14 +576,34 @@ class Science(PrynglesCommon):
             Muni2sys: float (3x3)
                 Rotation matrix from the universal system to the system defined by ez
         """
+        #Build vectors
         ez,one=spy.unorm(ez)
         ex=spy.ucrss([0,0,1],ez) #Spice is 5 faster for vcrss
         if spy.vnorm(ex)==0:
             ex=np.array([1,0,0]) if np.sum(ez)>0 else np.array([-1,0,0])
         ey=spy.ucrss(ez,ex)
+
+        #To be consistent with legacy invert axis
+        """DEBUG
+
+        It is important to stress that when n_equ is provided there is
+        an inversion in the direction of the x-y axes that should be
+        compensated in order to be consisten with the legacy
+        interface.
+        
+        This compensation should be removed in the future when the
+        package be fully debugged.
+
+        """        
+        if invertxy:
+            ex = -ex
+            ey = -ey
+        
+        #Build matrix
         Msys2uni=np.array(list(np.vstack((ex,ey,ez)).transpose())).reshape((3,3))
         Muni2sys=spy.invert(Msys2uni)
         verbose(VERB_VERIFY,"Rotation axis:",ex,ey,ez)
+
         return Msys2uni,Muni2sys
     
     def limb_darkening(rho,cs=[0.6562],N=None):
