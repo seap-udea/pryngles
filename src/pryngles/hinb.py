@@ -431,7 +431,9 @@ class OrbitUtil(PrynglesCommon):
 
         """
         # Preserve initial time
-        psim = deepcopy(sim)
+        sim.save("/tmp/rebound-preview.bin")
+        psim = rb.Simulation("/tmp/rebound-preview.bin")
+        psim.hash_name = sim.hash_name
         
         default_plot_args=dict(
             marker='o',
@@ -494,7 +496,6 @@ class OrbitUtil(PrynglesCommon):
         if traces:
             ax.legend()
             fig.tight_layout()
-            psim.integrate(tnow)
             obj = fig
         else:
             anim=camera.animate(interval=interval)    
