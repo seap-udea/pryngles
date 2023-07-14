@@ -1,6 +1,8 @@
 To Do List
 ==========
 
+- Not _set_luz when update_perspective.
+
 - Introduce orbital drivers: instead of calculating everything with
   rebound use another routines for updating the positions of the
   bodies, e.g. pyastro.

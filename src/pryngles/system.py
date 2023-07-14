@@ -59,6 +59,7 @@ BODY_DEFAULTS.update(odict(
     seed=0,
     preset=True,
     spangles=None,
+    normarea=1,
 
     #Basic optical properties
     albedo_gray_normal=1,
@@ -257,6 +258,7 @@ class Body(Orbody):
         #Prepare key attributes
         self.sg=None
         self._spangles = None
+        self._normarea = 1
 
         #Name of the object
         if 'name' in props:
@@ -320,8 +322,9 @@ class Body(Orbody):
         initializing them
         """
         try:
-            nspangles = len(self.nspangles)
-            self._spangles = np.array(self.nspangles)
+            nspangles = len(self.nspangles["spangles"])
+            self._spangles = np.array(self.nspangles["spangles"])
+            self._normarea = self.nspangles["normarea"] if 'normarea' in self.nspangles.keys() else 1
             self.nspangles = nspangles
         except:
             pass
@@ -366,6 +369,7 @@ class Body(Orbody):
         self.sg=Spangler(
             nspangles=self.nspangles,
             spangles=self._spangles,
+            normarea=self._normarea,
             name=self.name,
             n_equ=self.n_equ,
             alpha_equ=self.alpha,
@@ -786,7 +790,7 @@ class System(PrynglesCommon):
         
         Example of item:
         
-            SPANGLE_ATMOSPHERIC:(LambertianGrayAtmosphere,dict(AS="albedo_gray_spherical"))
+            SPANGLE_ATMOSPHERIC:(GrayAtmosphere,dict(AS=1.0))
             
                 This means that for spangles of the type SPANGLE_ATMOSPHERIC Pryngles will 
                 instantiate an object of the class LambertianGrayAtmosphere.  This class have a
@@ -795,13 +799,13 @@ class System(PrynglesCommon):
                 initialize the object.                
         """
         self.spangle_scatterers={
-            SPANGLE_ATMOSPHERIC:(LambertianGrayAtmosphere,dict(AS="albedo_gray_spherical")),
-            SPANGLE_GRANULAR:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
-            SPANGLE_LIQUID:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
-            SPANGLE_SOLID_ICE:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
-            SPANGLE_SOLID_ROCK:(LambertianGraySurface,dict(AL="albedo_gray_normal")),
-            SPANGLE_GASEOUS:(BlackBodySurface,dict()),
-            SPANGLE_STELLAR:(BlackBodySurface,dict()),
+            SPANGLE_ATMOSPHERIC:(GrayAtmosphere,dict(AS=1.0)),
+            SPANGLE_GRANULAR:(GraySurface,dict(AL=1.0)),
+            SPANGLE_LIQUID:(GraySurface,dict(AL=1.0)),
+            SPANGLE_SOLID_ICE:(GraySurface,dict(AL=1.0)),
+            SPANGLE_SOLID_ROCK:(GraySurface,dict(AL=1.0)),
+            SPANGLE_GASEOUS:(BlackSurface,dict()),
+            SPANGLE_STELLAR:(BlackSurface,dict()),
         }
         
     def update_units(self,units):
@@ -921,26 +925,52 @@ class System(PrynglesCommon):
             print(f"Simulation for this system has not been yet initialized. Use System.initialize_simulation()")
 
 
-    def update_scatterers(self):
-        """Update the scatterers of the spangles
+    def update_scatterers(self, force=False, verbosity=VERB_NONE):
+        """Update the scatterers of the spangles. For each spangle
+        type it took the spangle_scatterers list specification and
+        reassign it to all spangles in simulation.
+
+        Optional parameters:
+        
+           force: boolean, default = True:
+               If False it update only the unassigned spangles (this
+               is to avoid initialization)
+        
+
         """
         if not self._spangled:
             raise AssertionError("You need to spangle the system before updating the scatterers.")
+
+        Misc.elapsed_time(show=False,verbosity=verbosity)        
         
         #Update scatterer only for the non-assigned one
-        cond=(self.data.scatterer=="")
+        cond=(~self.data.hidden)
+        cond=(cond) if force else (cond)&(self.data.scatterer=="")
+
+        verbose(verbosity,f"Updating scatterer for {cond.sum()} spangles")
+        spangle_types=dict()
         for index in self.data[cond].index:
+        
             #Get spangle
             spangle=self.data.loc[index]
+
             #Get spangle sype
             spangle_type=spangle["spangle_type"]
+                
+                
             #Get scatterer class and options description
-            spangle_scatterer,spangle_options=self.spangle_scatterers[spangle_type]
-            #Build options of scatterers from options description
-            scatterer_options={**dict(zip(spangle_options.keys(),spangle[list(spangle_options.values())]))}
+            spangle_scatterer,scatterer_parameters=self.spangle_scatterers[spangle_type]
+            
+            if spangle_type not in spangle_types.keys():
+                verbose(verbosity,f"Updating scatterer for spangle type: '{spangle_type}' with scatterer '{spangle_scatterer}' and parameters {scatterer_parameters}")
+                spangle_types[spangle_type]=True
+
             #Instantiate object of scatterer and save hash into DataFrame
-            self.data.loc[index,"scatterer"]=spangle_scatterer(**scatterer_options).hash
-    
+            self.data.loc[index,"scatterer"]=spangle_scatterer(**scatterer_parameters).hash
+            self.data.loc[index,"scatterer_parameters"]=scatterer_parameters,
+
+        Misc.elapsed_time(show=True,msg="Update scatterers time",verbosity=verbosity)
+            
     def add(self,kind="Star",parent=None,**props):
         """Add an object to the system
         
@@ -1277,7 +1307,7 @@ class System(PrynglesCommon):
     
         #An usefule alias
         self.data=self.sg.data
-        
+
         #Set default observer
         self.update_perspective(n_obs=self.n_obs,alpha_obs=self.alpha_obs)
         
@@ -1325,6 +1355,7 @@ class System(PrynglesCommon):
         body=self.bodies[name]
         verbose(verbosity,f"Illuminating body {name}, with nluz = {nluz} and center = {body.center_source}")
         self.sg.set_luz(nvec=nluz,center=body.center_source,name=name)
+        self.sg._update_azimbeta(n_luz=nluz,name=name)
         if body.childs:
             verbose(verbosity,f"\tObject {name} has childs!")
             for child_name in body.childs:
@@ -1389,9 +1420,12 @@ class System(PrynglesCommon):
             self.center_obs=center_obs
     
         #Set observer
+        """We can save time if before updating observer we save the
+        illumination state
+
+        """
         self._set_observer(nvec=self.n_obs,alpha=self.alpha_obs,center=center_obs)
         self._set_luz()
-        
     
     def update_body(self,body,**props):
         """Update properties of a body in the system

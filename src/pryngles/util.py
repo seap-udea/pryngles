@@ -112,6 +112,9 @@ Consts.rsun=695700e3 #m, nominal solar radius, source:
 Consts.rjupiter=71492e3 #m, equatorial radius, source: 
 Consts.rsaturn=60268e3 #m, equatorial radius, source: 
 
+#Numerical constant
+EPS_MACHINE=np.finfo(float).eps
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Misc
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -426,6 +429,28 @@ class ExtensionUtil(object):
         return arr
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class FourierCoefficients
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class FourierCoefficients(ctypes.Structure):
+    """Fourier coefficients ctypes structure
+    """
+    _fields_=[
+        ("nmat",ctypes.c_int),
+        ("nmugs",ctypes.c_int),
+        ("nfou",ctypes.c_int),
+        ("xmu",PDOUBLE),
+        ("rfou",PPPDOUBLE),
+        ("rtra",PPPDOUBLE),
+    ]
+    def __init__(self,nmat,nmugs,nfou,xmu,rfou,rtra):
+        self.nmat=nmat
+        self.nmugs=nmugs
+        self.nfou=nfou
+        self.xmu=ExtensionUtil.vec2ptr(xmu)
+        self.rfou=ExtensionUtil.cub2ptr(rfou)
+        self.rtra=ExtensionUtil.cub2ptr(rtra)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Science
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Science(PrynglesCommon):
@@ -558,50 +583,54 @@ class Science(PrynglesCommon):
         else:
             raise ValueError("You provided a wrong number of arguments '{args}'.  It should be 2 or 3'")
     
-    def rotation_matrix(ez,alpha,invertxy=False):
-        """
-        Set a rotation matrix from the direction of the ez vector and a rotation angle alpha
+    def rotation_matrix(vz,alpha,observer=False):
+        """Set a rotation matrix from the direction of the ez vector and a rotation angle alpha
         
         Parameter:
-            ez: array (3)
+            vz: array (3)
                 vector in the direction of the z-axis. 
                 
             alpha: float (3) [rad]
                 Rotation angle of the x-axis around z-axis (clockwise)
-                
+
+            observer: boolean, default = False:
+                If True the system is set as if it was an observer
+                system, ie. when seeing from the z-axis the x-axis is
+                set in the direction of the -y axis
+        
         Return:
             Msys2uni: float (3x3)
                 Rotation matrix from the system defined by ez and the universal system.
                 
             Muni2sys: float (3x3)
                 Rotation matrix from the universal system to the system defined by ez
+
         """
-        #Build vectors
-        ez,one=spy.unorm(ez)
-        ex=spy.ucrss([0,0,1],ez) #Spice is 5 faster for vcrss
-        if spy.vnorm(ex)==0:
-            ex=np.array([1,0,0]) if np.sum(ez)>0 else np.array([-1,0,0])
+        #Direction of z according to tyoe if reference
+        zdir = np.array([0,0,-1]) if observer else np.array([0,0,+1])
+        
+        #Normal vector in the direction to vz
+        ez,ezmag=spy.unorm(vz)
+        
+        #NOTE: Spice is 5 faster for vcrss
+        ex=spy.vcrss(ez,zdir)
+
+        #Check if ez is parallel to [0,0,1]
+        exn=spy.vnorm(ex)
+        if exn<EPS_MACHINE:
+            ex=np.array([0,-1,0]) if observer else np.array([+1,0,0])
+            ex=ex if (np.sum(ez)>0) else -ex
+        else:
+            ex/=exn
         ey=spy.ucrss(ez,ex)
 
-        #To be consistent with legacy invert axis
-        """DEBUG
-
-        It is important to stress that when n_equ is provided there is
-        an inversion in the direction of the x-y axes that should be
-        compensated in order to be consisten with the legacy
-        interface.
+        #Build alpha rotation
+        Mplane=spy.rotate(-alpha,3)
         
-        This compensation should be removed in the future when the
-        package be fully debugged.
-
-        """        
-        if invertxy:
-            ex = -ex
-            ey = -ey
-        
-        #Build matrix
-        Msys2uni=np.array(list(np.vstack((ex,ey,ez)).transpose())).reshape((3,3))
+        #Build final matrices
+        Msys2uni=np.matmul(np.array(list(np.vstack((ex,ey,ez)).transpose())).reshape((3,3)),Mplane)
         Muni2sys=spy.invert(Msys2uni)
+
         verbose(VERB_VERIFY,"Rotation axis:",ex,ey,ez)
 
         return Msys2uni,Muni2sys

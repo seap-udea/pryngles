@@ -74,6 +74,106 @@ from matplotlib.ticker import LogLocator
 mh=math #Faster but not suitable for arrays
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class StokesScatterer
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class StokesScatterer(object):
+    """Stokes scatterer
+    """
+    
+    def __init__(self,filename):
+        self.filename=filename
+        self.read_fourier()
+        
+    def read_fourier(self):
+        """
+        Read a file containing fourier coefficients produced by PyMieDAP
+
+        Parameters:
+
+           filename: string:
+
+        Returns:
+
+            nmugs: int:
+               Number of gaussian integration coefficients.
+
+            nmat: int:
+               Number of matrix.
+
+            nfou: int:
+               Number of coefficients.
+
+            rfout: array (nmugs*nmat,nmugs,nfou):
+               Matrix for the fourier coefficients for reflection.
+
+            rtra: array (nmugs*nmat,nmugs,nfou): 
+               Matrix for the fourier coefficients for transmission
+        """
+        f=open(self.filename)
+
+        #Read header
+        nmat=0
+        imu=0
+        for i,line in enumerate(f):
+            if '#' in line:
+                continue
+            data=line.split()
+            if len(data)<3:
+                if len(data)==1:
+                    if not nmat:
+                        nmat=int(data[0])
+                    else:
+                        nmugs=int(data[0])
+                        xmu=np.zeros(nmugs)
+                else:
+                    xmu[imu]=float(data[0])
+                    imu+=1
+            else:
+                break
+
+        #Get core data
+        data=np.loadtxt(self.filename,skiprows=i)
+        nfou=int(data[:,0].max())+1
+
+        rfou=np.zeros((nmat*nmugs,nmugs,nfou))
+        rtra=np.zeros((nmat*nmugs,nmugs,nfou))
+
+        #Read fourier coefficients
+        for row in data:
+            m,i,j=int(row[0]),int(row[1])-1,int(row[2])-1
+            ibase=i*nmat
+            rfou[ibase:ibase+3,j,m]=row[3:3+nmat]
+            if len(row[3:])>nmat:
+                rtra[ibase:ibase+3,j,m]=row[3+nmat:3+2*nmat]
+
+        verbose(VERB_SIMPLE,f"Checksum '{self.filename}': {rfou.sum()+rtra.sum():.16e}")
+        f.close()
+        
+        self.nmat,self.nmugs,self.nfou=nmat,nmugs,nfou
+        self.xmu,self.rfou,self.rtra=xmu,rfou,rtra
+        self.F=FourierCoefficients(nmat,nmugs,nfou,xmu,rfou,rtra)
+
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Tested methods from module file extensions
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def calculate_stokes(self,phi,beta,theta0,theta,apix,qreflection=1):
+        """
+        """
+        npix=len(phi)
+        Sarr=np.zeros((npix,self.F.nmat+1))
+        Sarr_ptr=ExtensionUtil.mat2ptr(Sarr)
+        cpixx_ext.reflection(self.F,qreflection,npix,
+                             ExtensionUtil.vec2ptr(phi),
+                             ExtensionUtil.vec2ptr(beta),
+                             ExtensionUtil.vec2ptr(theta0),
+                             ExtensionUtil.vec2ptr(theta),
+                             ExtensionUtil.vec2ptr(apix),
+                             Sarr_ptr);
+        stokes=ExtensionUtil.ptr2mat(Sarr_ptr,*Sarr.shape)
+        return stokes
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Stand alone code of the module
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2749,8 +2849,8 @@ class RingedPlanet(object):
         
         # Location of planetary spangles with respect to planetary scattering plane
         rot_scat = np.arctan2(self.nstar_obs[1],self.nstar_obs[0])
-        Rz = self.rotation_matrix_z(rot_scat)       
-        self.rps_scat = np.array([np.matmul(Rz,r) for r in self.rps_obs])
+        self.M_obs2sca = self.rotation_matrix_z(rot_scat)       
+        self.rps_scat = np.array([np.matmul(self.M_obs2sca,r) for r in self.rps_obs])
         
         # Normal vector of the ring
         nrs_obs = spy.ucrss(self.rrs_obs[0,:],self.rrs_obs[1,:])
@@ -2872,7 +2972,6 @@ class RingedPlanet(object):
         elif self.reference_plane == "Detector":
             # Calculate angle normal vector makes with the x-axis in the observer frame
             th_nr_x = np.arctan2(nrs_obs[2],nrs_obs[0])
-        
             # Spherical cosine law to calculate beta
             t1 = np.cos(th_nr_x)
             t2 = np.sin(np.arccos(self.zetars))

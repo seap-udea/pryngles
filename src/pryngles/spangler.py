@@ -165,8 +165,10 @@ SPANGLER_COLUMNS=odict({
     "hidden_by_luz":"", #Which body intersect the observer or light coming to a Spangle
     "transit_over_luz":"", #Which body is intersected by the Spangle (is transiting over)
     
-    #Azimutal angles
+    #Azimutal and beta angles
     "azim_obs_luz":0,#Difference between the azimuth of the observer over the spangle and that of light-source
+    "beta_detect":0,#Beta angle with respect to detector plane
+    "beta_planet":0,#Beta angle with respect to planetary plane
 
     #Geometrical parameters
     "asp":1.0, #Effective area of the spangle in 3D 
@@ -178,11 +180,11 @@ SPANGLER_COLUMNS=odict({
     
     #Optical parameters
     "scatterer":"",#Hash (identifier) of the scatterer used for this spangle
-    "scatterer_parameters":dict(), #Scatterer parameters (e.f. albedo, optical thickness, etc.)
+    "scatterer_parameters":(dict(),), #Scatterer parameters (e.f. albedo, optical thickness, etc.)
     
     #Thermal characteristics
     "emmitter":"",#Hash (identifier) of the emmitter used for this spangle
-    "emmitter_parameters":dict(), #Emmitter parameters (e.f. Teq, Tem, emmisivity, etc.)
+    "emmitter_parameters":(dict(),), #Emmitter parameters (e.f. Teq, Tem, emmisivity, etc.)
 
     #Fluxes
     "Fluxes":dict(), #Fluxes calculated (e.g. Ftot, Q, U, V –circular polarization)
@@ -264,7 +266,7 @@ SPANGLER_KEY_ORDERING=[
     'x_luz', 'y_luz', 'z_luz', 'ns_luz', 
     'rho_luz', 'az_luz', 'cosf_luz', 
     'z_cen_luz', 
-    'azim_obs_luz', 
+    'azim_obs_luz','beta_detect','beta_planet',
     
     'dsp', 
     
@@ -419,6 +421,8 @@ SPANGLER_COLUMNS=odict({
     
     #Azimutal angles
     "azim_obs_luz":0,#Difference between the azimuth of the observer over the spangle and that of light-source
+    "beta_detect":0,#Beta angle with respect to detector plane
+    "beta_planet":0,#Beta angle with respect to planetary plane
 
     #Geometrical parameters
     "asp":1.0, #Effective area of the spangle in 3D 
@@ -532,6 +536,7 @@ class Spangler(PrynglesCommon):
                  #Basic
                  nspangles=1,
                  spangles=None,
+                 normarea=1,
                  name=None,
                  n_equ=SPANGLER_COLUMNS["n_equ"],
                  alpha_equ=SPANGLER_COLUMNS["alpha_equ"],
@@ -557,6 +562,9 @@ class Spangler(PrynglesCommon):
         #Transformation matrices from equatorial to ecliptic coordinates
         self.M_equ2ecl=dict()
         self.M_ecl2equ=dict()
+        self.M_obs2sca=dict()
+        self.M_luz2ecl=dict()
+        self.M_ecl2luz=dict()
         
         #Convex hulls of spanglers
         self.qhulls=dict()
@@ -580,6 +588,7 @@ class Spangler(PrynglesCommon):
 
             #Precalculated spangles
             self.spangles=spangles
+            self.normarea=normarea
             if (self.spangles is not None) and (len(self.spangles) != self.nspangles):
                 raise AssertionError(f"You provided spangles (size = {len(self.spangles)}) whose size does not correspond with nspangles = {nspangles}")
             
@@ -761,16 +770,18 @@ class Spangler(PrynglesCommon):
             self.data["n_equ"]=[n_equ]*self.nspangles
 
             #Transformation matrices
-            """It is important to stress that when n_equ is provided
-            there is an inversion in the direction of the x-y axes
-            that should be compensated in order to be consisten with
-            the legacy interface.
+            """DEBUG
+
+            It is important to stress that when n_equ is provided there is
+            an inversion in the direction of the x-y axes that should be
+            compensated in order to be consisten with the legacy
+            interface.
 
             This compensation should be removed in the future when the
             package be fully debugged.
 
             """
-            self.M_equ2ecl[self.name],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ,invertxy=True)
+            self.M_equ2ecl[self.name],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ,observer=False)
 
             qupdate=True
 
@@ -879,8 +890,9 @@ class Spangler(PrynglesCommon):
                 self.sample.geometry = SAMPLER_GEOMETRY_CIRCLE
                 self.sample.dim = 2
                 self.sample.ri = rs.min()
-                self.sample.A = np.pi*(self.sample.R**2-self.sample.ri**2)
+                self.sample.A = np.pi*(self.sample.R**2-self.sample.ri**2)*self.normarea
                 self.sample.ns = np.array([[0,0,1]]*self.nspangles)
+            print(f"WARNING: Areas of the spangles can be different due to sampling")
             # Calculate distances
             self.sample._calc_distances()
             self.sample.purged=True
@@ -1253,6 +1265,8 @@ class Spangler(PrynglesCommon):
                       alpha=0,
                       center=None,
                       name=None,
+                      observer=False,
+                      verbosity=VERB_VERIFY
                      ):
         """Set the positions and orientation of spanglers in an intersection direction
     
@@ -1264,14 +1278,18 @@ class Spangler(PrynglesCommon):
                             
             alpha: float, default = 0:
                 Roll angle of x-axis.
-                
+
             center: list/array (3), default = None:
                 Location of the vantage point in the ecliptic reference system.
                 If None, we assume that the vantage point is at an infinite distance.
                 
             name: string, default = None:
                 Spangler hash to which the transformation will be applied.
-    
+        
+            observer: float, default = True:
+                If True then the direction of the vector is outgoing from surface, if
+                False it is incoming to spangle as the source.
+                
         Return:
         
             cond: boolean array:
@@ -1308,7 +1326,6 @@ class Spangler(PrynglesCommon):
             the spangles correspondingly.
 
         """
-        
         verbose(VERB_SIMPLE,
                 f"Setting intersect using nvec = {nvec}, alpha = {alpha} center = {center}, name = {name}")
         
@@ -1332,10 +1349,14 @@ class Spangler(PrynglesCommon):
             d_int=np.linalg.norm(center)
             center=np.array(center)
         self.d_int=d_int
-    
+
+        verbose(verbosity,f"Intersect: n = {self.n_int}, d = {self.d_int}, c = {center}")
+        
         #Transformation matrices
-        M_int2ecl,self.M_ecl2int=Science.rotation_matrix(n_int,alpha_int)
+        M_int2ecl,self.M_ecl2int=Science.rotation_matrix(n_int,alpha_int,observer=observer)
         self.M_int2ecl=M_int2ecl
+
+        verbose(verbosity,f"Components of axis observer: \n{self.M_int2ecl}")
         
         #Depending on body
         cond=[True]*self.nspangles
@@ -1380,7 +1401,7 @@ class Spangler(PrynglesCommon):
             
         #Azimuth of the direction of the intersection vector in the tangent plane of the spangle
         self.data.loc[cond,"azim_int"]=[np.arctan2(spy.vdot(wy,n_int),
-                                                   spy.vdot(wx,n_int)) \
+                                                   spy.vdot(wx,n_int)) - int(~observer)*np.pi \
                                         for wy,wx,n_int in zip(self.data.wy_ecl[cond],
                                                                self.data.wx_ecl[cond],
                                                                self.data.n_int_ecl[cond])]
@@ -1491,7 +1512,11 @@ class Spangler(PrynglesCommon):
         verbose(VERB_SIMPLE,f"Setting observer")
         
         #Set observer
-        cond,self.n_obs,self.d_obs=self.set_intersect(nvec,alpha,center)
+        cond,self.n_obs,self.d_obs=self.set_intersect(nvec,alpha,center,
+                                                      observer=True,
+                                                      verbosity=VERB_VERIFY)
+        self.M_obs2ecl=self.M_int2ecl        
+        self.M_ecl2obs=self.M_ecl2int        
         
         #Set properties
         self.alpha_obs=alpha
@@ -1552,9 +1577,12 @@ class Spangler(PrynglesCommon):
         verbose(VERB_SIMPLE,f"Setting light-source")
      
         #Set intersect of all points in order to prepare the update luz
-        cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,name=None) 
+        cond,self.n_luz,self.d_luz=self.set_intersect(nvec,alpha,center,name=None,
+                                                      observer=False,verbosity=VERB_VERIFY)
+        self.M_luz2ecl[name]=self.M_int2ecl
+        self.M_ecl2luz[name]=self.M_ecl2int
         verbose(VERB_SIMPLE,f"Number of points: {sum(cond)}")
-        
+
         #Depending on body choose which spangles to change
         cond=[True]*self.nspangles
         if name:
@@ -1571,10 +1599,7 @@ class Spangler(PrynglesCommon):
         self.data.loc[cond,SPANGLER_COL_LUZ]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
                                                           columns=SPANGLER_COL_LUZ,
                                                           index=self.data[cond].index)
-        
-        #Set relative azimuth
-        self.data.loc[cond,"azim_obs_luz"]=self.data.loc[cond,"azim_obs"]-self.data.loc[cond,"azim_luz"]
-        
+                
         #Update states
         self.data.loc[cond,"unset"]=False
         
@@ -1618,7 +1643,78 @@ class Spangler(PrynglesCommon):
              (self.data.spangle_type.isin(SPANGLES_SEMITRANSPARENT))\
             )
         self.data.loc[cond,"transmit"]=True
-    
+
+    def _update_azimbeta(self, n_luz=[0,0,1], name=None, verbosity=VERB_VERIFY):
+        
+        Misc.elapsed_time(show=False,verbosity=verbosity)
+        # Normalize the direction of light-source
+        n_luz,norm=spy.unorm(n_luz)
+        cond=np.array([True]*self.nspangles) if not name else (self.data.name==name)
+        verbose(verbosity,f"Updating azimumth and beta angles for body {name}... (nspangles = {cond.sum()})")
+        
+        # Set relative azimuth
+        verbose(verbosity,f"Calculating azimuth differences (nspangles = {cond.sum()})")
+        self.data.loc[cond,"azim_obs_luz"]=np.mod(
+            (np.mod(self.data.loc[cond,"azim_obs"],2*np.pi)-\
+             np.mod(self.data.loc[cond,"azim_luz"],2*np.pi)),
+            2*np.pi)
+
+        # Compute the M_obs2sca for computing beta
+        nluz_obs = spy.mxv(self.M_ecl2obs,n_luz)
+        theta_luz = np.arctan2(nluz_obs[1],nluz_obs[0])
+        M_obs2sca = spy.rotate(theta_luz,3)
+            
+        # Set the beta angles
+
+        # Non-flat bodies
+        cond_geom = (cond)&(self.data.loc[cond,"geometry"]!=SAMPLER_GEOMETRY_CIRCLE)&(~self.data.loc[cond,"source"])&(~self.data.loc[cond,"hidden"])
+        if cond_geom.sum()>0:
+
+            verbose(verbosity,f"Calculating beta angles for spangles on non-flat bodies... (nspangles = {cond_geom.sum()})")
+            self.data.loc[cond_geom,"beta_detect"] = np.mod(np.arctan2(self.data.loc[cond_geom,"y_obs"],self.data.loc[cond_geom,"x_obs"]),np.pi)
+            
+            # Coordinates with respect to scatter planet
+            rsca = np.array([np.matmul(M_obs2sca,r) for r in np.array(self.data.loc[cond_geom,["x_obs","y_obs","z_obs"]])])
+
+            self.data.loc[cond_geom,"beta_planet"] = pd.DataFrame([np.mod(np.arctan2(y,x),np.pi) for y,x in zip(rsca[:,1],rsca[:,0])],
+                                                                  columns=["beta_planet"],index=self.data[cond_geom].index)
+            
+        # Flat bodies
+        cond_geom = (cond)&(self.data.loc[cond,"geometry"]==SAMPLER_GEOMETRY_CIRCLE)&(~self.data.loc[cond,"source"])&(~self.data.loc[cond,"hidden"])
+        if cond_geom.sum() > 0:
+
+            verbose(verbosity,f"Calculating beta angles for spangles on flat bodies... (nspangles = {cond_geom.sum()})")
+            # Angle with respect to **detector plane**
+            #Inclination of the spangle with respect to the x-axis
+            nrs_obs = self.data.loc[cond_geom].ns_obs.iloc[0]
+            th_nr_x = np.arctan2(nrs_obs[2],nrs_obs[0])
+            
+            # Spherical cosine law to calculate beta
+            t1 = np.cos(th_nr_x)
+            t2 = np.array([np.sin(np.arccos(cos_obs)) for cos_obs in self.data.loc[cond_geom,"cos_obs"]])
+            t3 = t1/t2
+            t3[t3 > 1] = 1.0
+            t3[t3 < -1] = -1.0
+            t3[abs(t3) < 1e-6] = 0.0
+            self.data.loc[cond_geom,"beta_detect"] = np.arccos(t3)
+
+            # If normal vector of ring is downward still rotate counter clock-wise
+            if nrs_obs[1] < 0:
+                self.data.loc[cond_geom,"beta_detect"] *= -1
+                self.data.loc[cond_geom,"beta_detect"] += np.pi
+
+            # Angle with respect to **planetary plane**
+            nr_obs_nvec = spy.ucrss(nrs_obs,np.array([0,0,1])) # normal vector to obs_nr plane    
+            obs_star_nvec = spy.ucrss(nluz_obs,np.array([0,0,1]))
+            self.data.loc[cond_geom,"beta_planet"] = np.arccos(np.inner(nr_obs_nvec,obs_star_nvec))*np.ones(cond_geom.sum())
+            
+            # If normal vector is pointing down make sure the beta angle rotates correctly
+            if nluz_obs[0] < 0:
+                self.data.loc[cond_geom,"beta_planet"] *= -1
+                self.data.loc[cond_geom,"beta_planet"] += np.pi
+
+        Misc.elapsed_time(show=True,msg=f"Azimuth and beta angles for {name}",verbosity=verbosity)
+        
     def plot2d(self,
                coords="obs",
                center_at=None,
@@ -2084,12 +2180,13 @@ class Spangler(PrynglesCommon):
                 
                 #This what the sum actually is
                 ahull_expected=(self.data.loc[cond,"asp_int"]*abs(self.data.loc[cond,"cos_int"])).sum()
+                
                 #This is the expected value
                 ahull=np.pi*scale**2
                 
                 #Normalization factor to get sum = ahull
                 norma=ahull/ahull_expected
-                
+
                 #Final area
                 self.data.loc[cond,"asp_int"]*=norma
         

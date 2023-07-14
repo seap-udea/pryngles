@@ -21,6 +21,8 @@ from abc import ABC, abstractmethod
 from scipy.optimize import bisect
 from scipy.integrate import quad,dblquad
 from scipy.interpolate import interp1d,interp2d
+import numpy as np
+import gzip
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants
@@ -34,66 +36,97 @@ except:
 # Class Scatterer
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Scatterer(PrynglesCommon,ABC):
-    """An scatterer surface
+    """This is an abstract class describing the basic attributes and methods
+    of a Scatterer. 
     
-    Initialization attributes:
+    A Scatterer is an object able to compute the components of the Stokes vector 
+    of the light scattered from a flat surface under a given ser of circumstances 
+    of illumination and observation.
     
-         params: dictionary:
-             Other parameters of the phase law.
+    All Scatterer has two basic properties:
     
-    Mandatory methods:
+        params: dictionary:
+           A dictionary containing all the properties of the scatterer. 
     
-        __init__(self,phase_law:lambda,**params)->int:
-            This method should return a hash of the object.
-            
-        get_albedo(eta:float,zeta:float,delta:float,lamb:float,**params)->float
-            This method must provide the albedo.
+        hash: integer: 
+           An unique identification. This hash allows us to find the object in 
+           a catalogue (SCATTERERS_CATALOGUE) for use at any moment in the execution.
         
-    Class methods:
+    and the following general methods:
     
         register(scatterer,params):
-            Register scatterer for future uses.
-    
+            Register the scatterer in the Scatterers catalogue.
+
+            Usage: always the initialization method for the daughters classes 
+            must be:
+            
+                def __init__(self,**params):
+                    if self.register(self,params):
+                        ...
+                        
         reset_catalogue():
             Reset the catalogue of scatterers.
             
             Usage: Scatterer.reset_catalogue()
     
-    Usage:
+    When you create a daughter class you must provide always the same method:
+    
+        __init__(self,**params)->int:
+            Initialization of the class.
+
+            If you use `regforce = True` the scatterer is again registered.
+            
+        calculate_stokes(eta:float,      -> Absolute value of the cosine of the illumination angle
+                         zeta:float,     -> Absolute value of the cosine of the scattering angle
+                         delta:float,    -> Difference in azimuth between incoming and observing 
+                         beta:float,     -> Angle between the scattering plane and the plane of reference
+                         wavelen:float,  -> Wavelength
+                         reflection:bool,-> True if the light is scattered back
+                         **params        -> Other parameters
+                         )->float(6)   
+                             
+            This method calculate the stokes "albedo vector" (f,q,u,v), namely the factor by which 
+            you must multiply the incoming flux Fo [W/m^2/nm or W/m^2], to obtain the stokes vector (F,Q,U,V):
+            
+                F = f Fo: total flux.
+                Q = q Fo, U = u Fo: linearly polarized flux.
+                V = v Fo: circularly polarized flux.
+                
+            Since normally eta, zeta, delta and beta are arrays, the routine must return a matrix 
+            where each row correspond to a value of eta, etc. and the columns are the components of
+            the stokes albedo vector.
+            
+    Example:
+
         You can create a Scatterer which implements this class:
     
             class MySurface(Scatterer):
+            
                 def __init__(self,**params):
                     if self.register(self,params):
                         #Read parameters of the scatterer
                         self.A=params["A"]
+                        
                         #Initialize scatterer
                         self._initialize_scatterer()
     
                 #Mandatory methods
-                def get_albedo(self,eta,zeta,delta,lamb,**params):
-                    albedo=self.AA*eta
-                    return albedo
+                def calculate_stokes(self,
+                                     eta,zeta,delta,beta,
+                                     wavelen,reflection=True,
+                                     **params):
+                    f=[self.AA*eta,0,0,0]
+                    return f
     
                 # Private methods to prepare scatterer
                 def _initialize_scatterer(self):
                     self.AA=self.A**2
-    
-    
+
     """
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Bassic methods
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    @abstractmethod
-    def __init__(self,**params)->str:
-        pass
-    
-    @abstractmethod
-    def get_albedo(self,eta:float,zeta:float,delta:float,lamb:float,**params)->float:
-        pass
-    
     @classmethod
     def register(self,scatterer,params):
         """Register scatterer
@@ -101,56 +134,82 @@ class Scatterer(PrynglesCommon,ABC):
         scatterer.params=params
         scatterer.params["name"]=scatterer.__class__.__name__
         scatterer.hash=Misc.calc_hash(params)
-        if scatterer.hash in SCATTERERS_CATALOGUE:
+
+        #Force scatterer register
+        regforce = True if 'regforce' in params else False
+        
+        if scatterer.hash in SCATTERERS_CATALOGUE and (not regforce):
             verbose(VERB_SIMPLE,f"Scatterer with name {scatterer.params['name']} and hash {scatterer.hash} already exist at {id(SCATTERERS_CATALOGUE)}")
-            scatterer.__dict__=deepcopy(SCATTERERS_CATALOGUE[scatterer.hash].__dict__)
+            #scatterer.__dict__=deepcopy(SCATTERERS_CATALOGUE[scatterer.hash].__dict__)
+            scatterer.__dict__=SCATTERERS_CATALOGUE[scatterer.hash].__dict__
             return False
         else:
             verbose(VERB_SIMPLE,f"Creating a new scatterer with name {scatterer.params['name']} and hash {scatterer.hash}")
             scatterer.params["hash"]=scatterer.hash
             SCATTERERS_CATALOGUE[scatterer.hash]=scatterer
             return True
-        
+
+    @classmethod
+    def check_size(self,value):
+        """Reset catalogue of scatterers
+        """
+        size = len(value) if len(np.array(value).shape)>0 else 1
+        return size
+
     @classmethod
     def reset_catalogue(self):
         """Reset catalogue of scatterers
         """
+        verbose(VERB_SIMPLE,"Resetting Scatterers catalogue")
         SCATTERERS_CATALOGUE=dict()
+        
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Methods to overwrite
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    @abstractmethod
+    def __init__(self,**params)->str:
+        pass
+    
+    @abstractmethod
+    def calculate_stokes(self,eta:float,zeta:float,delta:float,beta:float,
+                         wavelen:float,reflection:bool,
+                         **params)->float:
+        pass
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class NeutralSurface
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-class NeutralSurface(Scatterer):
+class WhiteSurface(Scatterer):
     """Neutral surface.
     """
     def __init__(self,**params):
         if self.register(self,params):
             pass
     
-    def get_albedo(self,eta,zeta,delta,lamb,**params):
-        return 1
+    def calculate_stokes(self,eta,zeta,delta,beta,wavelen,
+                         reflection=True,**params):
+        size = self.check_size(eta)
+        return np.array([[1,0,0,0]]*size)
     
-
-
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class BlackBodySurface
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-class BlackBodySurface(Scatterer):
+class BlackSurface(Scatterer):
     """Black body surface
     """
     def __init__(self,**params):
         if self.register(self,params):
             pass
     
-    def get_albedo(self,eta,zeta,delta,lamb,**params):
-        return 0
+    def calculate_stokes(self,eta,zeta,delta,beta,wavelen,
+                         reflection=True,**params):
+        size = self.check_size(eta)
+        return np.array([[0,0,0,0]]*size)
     
-
-
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class LambertianGraySurface
+# Class GraySurface
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-class LambertianGraySurface(Scatterer):
+class GraySurface(Scatterer):
     """Lambertian Gray Surface.
     
     This is the scatterer corresponding to a surface having a gray lambertian Albedo.
@@ -163,7 +222,7 @@ class LambertianGraySurface(Scatterer):
 
             The phase_law must obey the following prototype:
 
-                phase_law(eta,zeta,delta,lamb,**params):
+                phase_law(eta,zeta,delta,**params):
                     '''Phase law of the surface
 
                     Parameters:
@@ -176,26 +235,21 @@ class LambertianGraySurface(Scatterer):
                         delta: float:
                             difference between the incoming and outgoing azimuth.
 
-                        lamb: float:
-                            Wavelength.
-
                         parameters: dictionary: 
                             Other parameters of the phase law.
 
                     Return:
-                        Wavelength dependent albedo.
+                        Phase law.
                     '''
                     ...
 
                 Other law is the Lommel-Seeliger law:
 
-                    phase_law = lambda eta,zeta,delta,params:eta*zeta/(eta+zeta) (see Russel, 1916)
+                    phase_law = lambda eta,zeta,delta:eta*zeta/(eta+zeta) (see Russell, 1916)
 
     """
-    
     def __init__(self,**params):
-
-        
+ 
         if self.register(self,params):
             verbose(VERB_SIMPLE,f"Initializing {self.params['name']} with hash {self.hash}")
             
@@ -203,6 +257,7 @@ class LambertianGraySurface(Scatterer):
             if "phase_law" in params:
                 self.phase_law=params["phase_law"]
             else:
+                #Lambertian phase law
                 self.phase_law=lambda eta,zeta,delta,lamb,params:eta
 
             #Gray albedo
@@ -214,9 +269,14 @@ class LambertianGraySurface(Scatterer):
             #Accelerate the calculation of the albedo
             self._accelerate_lambertian_albedo()
 
-    def get_albedo(self,eta,zeta,delta,lamb,**params):
-        return self._get_albedo(eta)
-        
+    def calculate_stokes(self,eta,zeta,delta,beta,wavelen,
+                         reflection=True,**params):
+        size = self.check_size(eta)
+        f = np.zeros((size,4))
+        albedo = self._get_albedo(eta)
+        f[:,0] = albedo
+        return f
+    
     #####################################
     #Complimentary routines
     #####################################
@@ -236,15 +296,13 @@ class LambertianGraySurface(Scatterer):
         ALs=np.array([self._calc_lambertian_albedo(eta,gammap0=self.gammap0) for eta in etas])
         self._get_albedo=interp1d(etas,ALs)
 
-
-
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class LambertianGrayAtmosphere
+# Class GrayAtmosphere
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-class LambertianGrayAtmosphere(Scatterer):
-    """Lambertian Gray Atmopshere.
+class GrayAtmosphere(Scatterer):
+    """Gray Atmopshere.
     
-    This is the scatterer corresponding to plane-parallel gray lambertian atmosphere
+    This is the scatterer corresponding to plane-parallel analytical gray atmosphere
     """
     
     def __init__(self,**params):
@@ -264,8 +322,13 @@ class LambertianGrayAtmosphere(Scatterer):
             #Accelerate the calculation of the albedo
             self._accelerate_lambertian_albedo()
 
-    def get_albedo(self,eta,zeta,delta,lamb,**params):
-        return self._get_albedo(eta)
+    def calculate_stokes(self,eta,zeta,delta,beta,wavelen,
+                         reflection=True,**params):
+        size = self.check_size(eta)
+        f = np.zeros((size,4))
+        albedo = self._get_albedo(eta)
+        f[:,0] = albedo
+        return f
         
     #####################################
     #Complimentary routines
@@ -350,39 +413,49 @@ class LambertianGrayAtmosphere(Scatterer):
         self._get_albedo=interp1d(etas,ALs)
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class FourierCoefficients
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-class FourierCoefficients(ctypes.Structure):
-    """Fourier coefficients ctypes structure
-    """
-    _fields_=[
-        ("nmat",ctypes.c_int),
-        ("nmugs",ctypes.c_int),
-        ("nfou",ctypes.c_int),
-        ("xmu",PDOUBLE),
-        ("rfou",PPPDOUBLE),
-        ("rtra",PPPDOUBLE),
-    ]
-    def __init__(self,nmat,nmugs,nfou,xmu,rfou,rtra):
-        self.nmat=nmat
-        self.nmugs=nmugs
-        self.nfou=nfou
-        self.xmu=ExtensionUtil.vec2ptr(xmu)
-        self.rfou=ExtensionUtil.cub2ptr(rfou)
-        self.rtra=ExtensionUtil.cub2ptr(rtra)
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class StokesScatterer
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-class StokesScatterer(object):
-    """Stokes scatterer
+class FourierScatterer(Scatterer):
+    """Scatterer defined in terms of a Fourier expansion of the transmission 
+    and reflection matrices.
     """
-    
-    def __init__(self,filename):
-        self.filename=filename
-        self.read_fourier()
+    def __init__(self,**params):
+        if self.register(self,params):
+            verbose(VERB_SIMPLE,f"Initializing {self.params['name']} with hash {self.hash}")
+            
+            #Gray albedo
+            self.foufile=params["foufile"]
+
+            if not os.path.isfile(self.foufile):
+                del SCATTERERS_CATALOGUE[self.hash]
+                raise AssertionError(f"Fourier coefficients file '{self.foufile}' does not exist")
+            
+            #Load reflection functions
+            self._read_foufile(self.foufile)
+
+    def calculate_stokes(self,eta,zeta,delta,beta,wavelen,
+                         reflection=True,**params):
+        npix=self.check_size(eta)
+        apix=np.array([1.0]*npix)
         
-    def read_fourier(self):
+        #Return arrays
+        Sarr=np.zeros((npix,self.F.nmat+1))
+        Sarr_ptr=ExtensionUtil.mat2ptr(Sarr)
+        
+        #Call routine
+        cpixx_ext.reflection(self.F,int(reflection),npix,
+                             ExtensionUtil.vec2ptr(delta),
+                             ExtensionUtil.vec2ptr(beta),
+                             ExtensionUtil.vec2ptr(eta),
+                             ExtensionUtil.vec2ptr(zeta),
+                             ExtensionUtil.vec2ptr(apix),
+                             Sarr_ptr);
+        
+        #Extract stokes vector
+        stokes=ExtensionUtil.ptr2mat(Sarr_ptr,*Sarr.shape)
+        return stokes
+    
+    def _read_foufile(self,filename):
         """
         Read a file containing fourier coefficients produced by PyMieDAP
 
@@ -407,7 +480,14 @@ class StokesScatterer(object):
             rtra: array (nmugs*nmat,nmugs,nfou): 
                Matrix for the fourier coefficients for transmission
         """
-        f=open(self.filename)
+        is_gz = False
+        with open(filename, 'rb') as test_f:
+            is_gz = (test_f.read(2) == b'\x1f\x8b')
+
+        if is_gz:
+            f=gzip.open(filename,'rt')
+        else:
+            f=open(filename,'r')
 
         #Read header
         nmat=0
@@ -430,7 +510,7 @@ class StokesScatterer(object):
                 break
 
         #Get core data
-        data=np.loadtxt(self.filename,skiprows=i)
+        data=np.loadtxt(filename,skiprows=i)
         nfou=int(data[:,0].max())+1
 
         rfou=np.zeros((nmat*nmugs,nmugs,nfou))
@@ -444,29 +524,9 @@ class StokesScatterer(object):
             if len(row[3:])>nmat:
                 rtra[ibase:ibase+3,j,m]=row[3+nmat:3+2*nmat]
 
-        verbose(VERB_SIMPLE,f"Checksum '{self.filename}': {rfou.sum()+rtra.sum():.16e}")
+        verbose(VERB_SIMPLE,f"Checksum '{filename}': {rfou.sum()+rtra.sum():.16e}")
         f.close()
         
         self.nmat,self.nmugs,self.nfou=nmat,nmugs,nfou
         self.xmu,self.rfou,self.rtra=xmu,rfou,rtra
         self.F=FourierCoefficients(nmat,nmugs,nfou,xmu,rfou,rtra)
-
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    # Tested methods from module file extensions
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    def calculate_stokes(self,phi,beta,theta0,theta,apix,qreflection=1):
-        """
-        """
-        npix=len(phi)
-        Sarr=np.zeros((npix,self.F.nmat+1))
-        Sarr_ptr=ExtensionUtil.mat2ptr(Sarr)
-        cpixx_ext.reflection(self.F,qreflection,npix,
-                             ExtensionUtil.vec2ptr(phi),
-                             ExtensionUtil.vec2ptr(beta),
-                             ExtensionUtil.vec2ptr(theta0),
-                             ExtensionUtil.vec2ptr(theta),
-                             ExtensionUtil.vec2ptr(apix),
-                             Sarr_ptr);
-        stokes=ExtensionUtil.ptr2mat(Sarr_ptr,*Sarr.shape)
-        return stokes
