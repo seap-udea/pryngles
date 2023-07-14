@@ -22,6 +22,7 @@ from scipy.optimize import bisect
 from scipy.integrate import quad,dblquad
 from scipy.interpolate import interp1d,interp2d
 import numpy as np
+import matplotlib.pyplot as plt
 import gzip
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,10 +138,9 @@ class Scatterer(PrynglesCommon,ABC):
 
         #Force scatterer register
         regforce = True if 'regforce' in params else False
-        
-        if scatterer.hash in SCATTERERS_CATALOGUE and (not regforce):
+
+        if scatterer.hash in SCATTERERS_CATALOGUE:
             verbose(VERB_SIMPLE,f"Scatterer with name {scatterer.params['name']} and hash {scatterer.hash} already exist at {id(SCATTERERS_CATALOGUE)}")
-            #scatterer.__dict__=deepcopy(SCATTERERS_CATALOGUE[scatterer.hash].__dict__)
             scatterer.__dict__=SCATTERERS_CATALOGUE[scatterer.hash].__dict__
             return False
         else:
@@ -163,6 +163,65 @@ class Scatterer(PrynglesCommon,ABC):
         verbose(VERB_SIMPLE,"Resetting Scatterers catalogue")
         SCATTERERS_CATALOGUE=dict()
         
+    @classmethod
+    def preview_scattering(self,scatterer):
+
+        # Ranges
+        etas = np.linspace(0,1,100) 
+        zetas = np.ones_like(etas) # Light is above surface
+        deltas = np.zeros_like(etas)
+        betas = np.zeros_like(etas)
+        wavelen = 0
+
+        # Compute reflected and transmission albedos
+        fref = scatterer.calculate_stokes(etas,zetas,deltas,betas,wavelen,1)
+        ftra = scatterer.calculate_stokes(etas,zetas,deltas,betas,wavelen,0)
+        
+        # Angles
+        thetas = np.arccos(etas)*Consts.rad
+        
+        #Figure
+        fig,axs=plt.subplots(3,2,sharex=True,figsize=(6,6))
+
+        ax=axs[0,0]
+        ax.plot(thetas,fref[:,0],'b')
+            
+        ax.set_ylabel("Total")
+        ax.set_title("Reflection")
+        
+        ax=axs[1,0]
+        fpol = (fref[:,1]**2+fref[:,2]**2)**0.5
+        ax.plot(thetas,fpol*100,'b')
+        ax.set_ylabel(fr"Polarized [$\times$ 100]")
+
+        ax=axs[2,0]
+        P = fpol/fref[:,0] if fref[:,0].sum()>0 else fpol
+        ax.plot(thetas,P,'b')
+        ax.set_ylabel("Degree of Polarization")
+        ax.set_xlabel("Illumination angle [deg]")
+
+        ax=axs[0,1]
+        ax.plot(thetas,ftra[:,0],'r')
+        ax.set_title("Transmission")
+
+        ax.text(0.98,0.98,f"{scatterer.hash}",color='k',fontsize=8,
+                ha='right',va='top',transform=ax.transAxes)
+
+        ax=axs[1,1]
+        fpol = (ftra[:,1]**2+ftra[:,2]**2)**0.5
+        ax.plot(thetas,fpol*100,'r')
+
+        ax=axs[2,1]
+        P = fpol/ftra[:,0] if ftra[:,0].sum()>0 else fpol
+        ax.plot(thetas,P,'r')
+        ax.set_xlabel("Illumination angle [deg]")
+        
+        #Decoration
+        for ax in Misc.flatten(axs):
+            ax.grid()
+            
+        fig.tight_layout()
+
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Methods to overwrite
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -273,7 +332,12 @@ class GraySurface(Scatterer):
                          reflection=True,**params):
         size = self.check_size(eta)
         f = np.zeros((size,4))
-        albedo = self._get_albedo(eta)
+
+        if reflection:
+            albedo = self._get_albedo(eta)
+        else:
+            albedo = np.zeros_like(eta)
+            
         f[:,0] = albedo
         return f
     
@@ -326,7 +390,12 @@ class GrayAtmosphere(Scatterer):
                          reflection=True,**params):
         size = self.check_size(eta)
         f = np.zeros((size,4))
-        albedo = self._get_albedo(eta)
+
+        if reflection:
+            albedo = self._get_albedo(eta)
+        else:
+            albedo = np.zeros_like(eta)
+            
         f[:,0] = albedo
         return f
         

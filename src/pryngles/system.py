@@ -64,6 +64,7 @@ BODY_DEFAULTS.update(odict(
     #Basic optical properties
     albedo_gray_normal=1,
     tau_gray_optical=0,
+    scatterer_parameters=dict(scatterer='GraySurface',AL=1),
     
     #Legacy
     primary=None,
@@ -88,6 +89,7 @@ STAR_DEFAULTS.update(odict(
     #Optical properties: update
     limb_coeffs=[],
     spangle_type=SPANGLE_STELLAR,
+    scatterer_parameters=dict(scatterer='BlackSurface'),
     shape="sphere",
 ))
 BODY_KINDS+=["Star"]
@@ -107,6 +109,7 @@ PLANET_DEFAULTS.update(odict(
     
     #Optical: update
     spangle_type=SPANGLE_SOLID_ROCK,
+    scatterer_parameters=dict(scatterer='GrayAtmosphere',AS=1),
     geometry="sphere",
 ))
 BODY_KINDS+=["Planet"]
@@ -128,6 +131,7 @@ RING_DEFAULTS.update(odict(
     
     #Optics: update
     spangle_type=SPANGLE_GRANULAR,
+    scatterer_parameters=dict(scatterer='GraySurface',AL=1),
     shape="ring",
 ))
 BODY_KINDS+=["Ring"]
@@ -798,6 +802,7 @@ class System(PrynglesCommon):
                 instantiating the object the column "albedo_gray_spherical" will be used to 
                 initialize the object.                
         """
+        """
         self.spangle_scatterers={
             SPANGLE_ATMOSPHERIC:(GrayAtmosphere,dict(AS=1.0)),
             SPANGLE_GRANULAR:(GraySurface,dict(AL=1.0)),
@@ -807,6 +812,8 @@ class System(PrynglesCommon):
             SPANGLE_GASEOUS:(BlackSurface,dict()),
             SPANGLE_STELLAR:(BlackSurface,dict()),
         }
+        """
+        self.spangle_scatterers=dict()
         
     def update_units(self,units):
         """Update units of the system
@@ -924,51 +931,67 @@ class System(PrynglesCommon):
         else:
             print(f"Simulation for this system has not been yet initialized. Use System.initialize_simulation()")
 
-
-    def update_scatterers(self, force=False, verbosity=VERB_NONE):
+    def update_scatterers(self, force=False, regforce=False, verbosity=VERB_VERIFY):
         """Update the scatterers of the spangles. For each spangle
         type it took the spangle_scatterers list specification and
         reassign it to all spangles in simulation.
 
         Optional parameters:
         
-           force: boolean, default = True:
+           force: boolean, default = False:
                If False it update only the unassigned spangles (this
                is to avoid initialization)
         
+           regforce: boolean, default = False:
+               If True it creates another instance of the Scatterer objects.
+               Use carefully to prevent the proliferation of objects.
 
         """
         if not self._spangled:
             raise AssertionError("You need to spangle the system before updating the scatterers.")
 
         Misc.elapsed_time(show=False,verbosity=verbosity)        
-        
+
         #Update scatterer only for the non-assigned one
         cond=(~self.data.hidden)
         cond=(cond) if force else (cond)&(self.data.scatterer=="")
 
         verbose(verbosity,f"Updating scatterer for {cond.sum()} spangles")
+
         spangle_types=dict()
         for index in self.data[cond].index:
         
-            #Get spangle
+            #Get spangle and basic properties
             spangle=self.data.loc[index]
+            scatterer=spangle['scatterer']
+            scatterer_parameters=spangle['scatterer_parameters']
+            spangle_type=spangle['spangle_type']
 
-            #Get spangle sype
-            spangle_type=spangle["spangle_type"]
+            if spangle_type in spangle_types.keys():
+                # If this spangle type has been already updated in this instance
+                self.data.loc[index,"scatterer"]=spangle_types[spangle_type]
                 
+            else:
+                if spangle_type in self.spangle_scatterers.keys():
+                    # Option 1: the definition was provided in the self.spangle_scatterers
+                    scatterer_parameters = self.spangle_scatterers[spangle_type]
+                    scatterer = scatterer_parameters['scatterer']
+                    verbose(verbosity,f"Definition of the scatterer for spangles {spangle_type} found in spangle_scatterers ({scatterer}, {scatterer_parameters})")
+
+                else:
+                    # Option 2: 
+                    if 'scatterer' in scatterer_parameters.keys():
+                        scatterer = scatterer_parameters['scatterer']
+                    else:
+                        scatterer = 'BlackSurface'
+                    verbose(verbosity,f"Definition of the scatterer found in the spangle itself ({scatterer}, {scatterer_parameters})")
+
+                verbose(verbosity,f"Updating scatterer for spangle type: '{spangle_type}' with scatterer '{scatterer}' and parameters {scatterer_parameters}")
+                hash_scatterer = eval(f"{scatterer}(**scatterer_parameters,regforce={regforce}).hash")
+                spangle_types[spangle_type]=hash_scatterer
+                self.data.loc[index,"scatterer"]=hash_scatterer
+                self.spangle_scatterers[spangle_type]=scatterer_parameters
                 
-            #Get scatterer class and options description
-            spangle_scatterer,scatterer_parameters=self.spangle_scatterers[spangle_type]
-            
-            if spangle_type not in spangle_types.keys():
-                verbose(verbosity,f"Updating scatterer for spangle type: '{spangle_type}' with scatterer '{spangle_scatterer}' and parameters {scatterer_parameters}")
-                spangle_types[spangle_type]=True
-
-            #Instantiate object of scatterer and save hash into DataFrame
-            self.data.loc[index,"scatterer"]=spangle_scatterer(**scatterer_parameters).hash
-            self.data.loc[index,"scatterer_parameters"]=scatterer_parameters,
-
         Misc.elapsed_time(show=True,msg="Update scatterers time",verbosity=verbosity)
             
     def add(self,kind="Star",parent=None,**props):
@@ -1314,9 +1337,18 @@ class System(PrynglesCommon):
         #Save state of the system
         if self._resetable:
             self.save_to(self._snap_file_name)
-        
+
+        #Set scatterer parameters
+        for name,body in self.bodies.items():
+            cond = (self.data.name == name)
+            self.data.loc[cond,'scatterer_parameters']=pd.Series([body.scatterer_parameters]*sum(cond),dtype=object).values
+
         #Already spangled
         self._spangled=True
+
+        #Assign spangler scatterers
+        self.update_scatterers(verbosity=VERB_VERIFY)
+        
         Misc.elapsed_time(show=True,msg="Spangling time",verbosity=VERB_NONE)
     
     def _set_observer(self,nvec=[0,0,1],alpha=0,center=None):

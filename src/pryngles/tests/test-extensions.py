@@ -18,7 +18,7 @@ class Test(unittest.TestCase):
 	def test_readf(self):
 	    Verbose.VERBOSITY=VERB_SIMPLE
 	    
-	    filename=Misc.get_data("fou_gasplanet.dat")
+	    filename=Misc.get_data("fou_sample_gas.dat.gz")
 	    S=StokesScatterer(filename)
 	    Verbose.VERBOSITY=VERB_NONE
 	    pass
@@ -68,7 +68,7 @@ class Test(unittest.TestCase):
 	    #Planet
 	    #######################
 	    #Scatterer
-	    filename=Misc.get_data("fou_gasplanet.dat")
+	    filename=Misc.get_data("fou_sample_gas.dat.gz")
 	    S=StokesScatterer(filename)
 	    
 	    phi[0]=1.0448451569439827;
@@ -86,7 +86,7 @@ class Test(unittest.TestCase):
 	    #Ring
 	    #######################
 	    #Scatterer
-	    filename=Misc.get_data("fou_ring_0_4_0_8.dat")
+	    filename=Misc.get_data("fou_sample_dust.dat.gz")
 	    S=StokesScatterer(filename)
 	    
 	    #Test values for backscattering
@@ -117,40 +117,6 @@ class Test(unittest.TestCase):
 	    pass
 	
 	    Verbose.save_test_fig('extensions-test_stokes')
-	    plt.close('all')
-
-	def test_stokes_mass(self):
-	    from time import time
-	    global S,phi,beta,theta0,theta,apix
-	    Verbose.VERBOSITY=VERB_SIMPLE
-	
-	    #Interpolation file
-	    filename=Misc.get_data("fou_ring_0_4_0_8.dat")
-	    fileinterp=Misc.get_data("ring-interpolation.mat")
-	    
-	    data=np.loadtxt(fileinterp)
-	    npix=len(data)
-	    phi=data[:npix,0].copy()
-	    beta=data[:npix,1].copy()
-	    theta0=data[:npix,2].copy()
-	    theta=data[:npix,3].copy()
-	    apix=data[:npix,7].copy()
-	    spixx=data[:npix,8:]
-	
-	    #Scatterer
-	    S=StokesScatterer(filename)
-	    
-	    #Calculate albedo
-	    st=time()
-	    stokes=S.calculate_stokes(phi,beta,theta0,theta,apix)
-	    et=time()
-	    print("Maximum difference:",abs(spixx-stokes).max())
-	    print(f"Calculation time (per vector): {(et-st)/npix*1e3} ms")
-	    
-	    Verbose.VERBOSITY=VERB_NONE
-	    pass
-	
-	    Verbose.save_test_fig('extensions-test_stokes_mass')
 	    plt.close('all')
 
 if __name__=="__main__":

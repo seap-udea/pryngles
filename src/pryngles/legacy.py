@@ -63,6 +63,7 @@ from scipy.integrate import quad,dblquad
 import dill
 import cmasher as cmr
 import matplotlib.pyplot as plt
+import gzip
 
 # Added
 import matplotlib as mpl
@@ -109,7 +110,14 @@ class StokesScatterer(object):
             rtra: array (nmugs*nmat,nmugs,nfou): 
                Matrix for the fourier coefficients for transmission
         """
-        f=open(self.filename)
+        is_gz = False
+        with open(self.filename, 'rb') as test_f:
+            is_gz = (test_f.read(2) == b'\x1f\x8b')
+
+        if is_gz:
+            f=gzip.open(self.filename,'rt')
+        else:
+            f=open(self.filename,'r')
 
         #Read header
         nmat=0
@@ -1282,8 +1290,8 @@ class RingedPlanet(object):
         #Scatterer extension
         extension="cpixx",
         #Fourier coefficient files
-        fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
-        fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat"),
+        fname_planet = Misc.get_data("fou_sample_haze.dat.gz"),
+        fname_ring = Misc.get_data("fou_sample_dust.dat.gz"),
         #Maximum angular seperation between center and 
         # edge of body before unidirectial assumption is broken, in degrees
         limit_angle_non_uni = 0.05, 
