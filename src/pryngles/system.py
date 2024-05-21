@@ -725,6 +725,8 @@ class System(PrynglesCommon):
             
     def update_perspective(self,n_obs=None,alpha_obs=0,center_obs=None):
         """Update perspective (observer)
+
+        It takes too long
         """
         if n_obs is not None:
             #Update observing conditions
