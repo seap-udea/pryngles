@@ -724,9 +724,9 @@ class System(PrynglesCommon):
             raise AssertionError("You must first spangle system before setting light.")
             
     def update_perspective(self,n_obs=None,alpha_obs=0,center_obs=None):
-        """Update perspective (observer)
+        """Update Spangles Perspective for Observer (Visibility and Illumination states)
 
-        It takes too long
+        Warning: This function may have slow performance
         """
         if n_obs is not None:
             #Update observing conditions
@@ -777,16 +777,18 @@ class System(PrynglesCommon):
             print("System is not resetable. Use resetable = True when defining the System or when you spangle it.")
     
     def integrate(self,*args,**kwargs):
-        """Integrate system
+        """Integrate N-Body System
     
         Parameters:
             *args, **kwargs:
                 Mandatory (non-keyword) arguments and optional (keyword) arguments for rebound.integrate.
             
         Update:
-            Integrate using integrate rebound method.
+            Integrate using integrate Rebound method.
             
-            Update center of each body and set positions of the spangles.
+            Update center of each body and set positions of the Spangles. 
+        
+        Note: It doesn´t update the Visibility and Illumination states of the Spangles.
         """
         #Time of integration
         t=args[0]
@@ -813,6 +815,30 @@ class System(PrynglesCommon):
             
         else:
             raise AssertionError("You must first spangle system before setting positions.")
+
+    def integrate_perspective(self, t, n_obs = None, alpha_obs = 0, center_obs = None):
+
+        """Rebound Integration of N-Body System and Update Spangles Perspective for Observer
+
+        Parameters: 
+            t: Time for Rebound Integration
+            n_obs, alpha_obs, center_obs: Observer Properties
+
+        Update:
+            Integrate using integrate Rebound method.
+            
+            Update center of each body and set positions of the Spangles.
+
+            Update Visibility and Illumination states of the Spangles
+
+        Warning: This function may have slow performance...
+        """
+
+        #Integration
+        self.integrate(t)
+
+        #Updating Spangles Perspective
+        self.update_perspective(n_obs = None, alpha_obs = 0, center_obs = None)
     
     def ensamble_system(self,lamb=0,beta=0,**physics):
         """Ensamble Ringed Planet
