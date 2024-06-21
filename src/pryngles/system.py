@@ -724,11 +724,16 @@ class System(PrynglesCommon):
             raise AssertionError("You must first spangle system before setting light.")
             
     def update_perspective(self,n_obs=None,alpha_obs=0,center_obs=None):
-        """Update Spangles Perspective for Observer (Visibility and Illumination states)
+        """
+        Update:
+
+            - Spangles Perspective for Observer (Visibility and Illumination states)
+            - Computation for Incident Stellar Flux and its Diffuse Reflection
 
         Warning: This function may have slow performance
         """
         if n_obs is not None:
+            
             #Update observing conditions
             self.n_obs,one=spy.unorm(n_obs)
             self.alpha_obs=alpha_obs
@@ -737,6 +742,10 @@ class System(PrynglesCommon):
         #Set observer
         self._set_observer(nvec=self.n_obs,alpha=self.alpha_obs,center=center_obs)
         self._set_luz()
+
+        #Set Photomety Values
+        self.update_StellarFlux()
+        self.update_DiffuseReflection()
         
     
     def update_body(self,body,**props):
@@ -891,3 +900,79 @@ class System(PrynglesCommon):
         self.RP=RingedPlanet(**self._ringedplanet)
         return self.RP
     
+
+    def update_StellarFlux(self):
+
+        """
+        Computation of the Incident Stellar Flux per Spangle
+
+        Attribute Created:
+
+            stellar_flux = Belongs to Spangles Data object (self.data.stellar_flux)
+
+        Computation:
+
+            - Illuminated Spangles that do not belong to stars are considered
+
+            - Takes into account the Effective Area per Spangle
+
+                asp = Area of Individual Spangle
+                cos_luz = Cosine of the Incident Light angle
+
+            - Follows the Flux Law (Star Luminosity is taken as 1)
+
+                d_luz = Distance to Light Source
+                stellar_flux = 1/(4*pi*d_luz^2)
+
+        """
+
+        #Considered Spangles
+        body_names = [name for name, body in self.bodies.items() if body.kind != 'Star']
+
+        cond = self.data.name.isin(body_names)*self.data.illuminated
+
+        #Creating stellar_flux attribute
+        self.data['stellar_flux'] = np.zeros(self.data.shape[0])
+
+        #Computing Incident Stellar Flux
+        self.data.stellar_flux[cond] = abs(self.data.asp[cond]*self.data.cos_luz[cond]/(4*np.pi*self.data.d_luz[cond]**2))
+
+
+    def update_DiffuseReflection(self):
+
+        """
+        Computation of the Diffuse Reflected Stellar Flux per Spangle
+
+        Attribute Created:
+
+            reflected_flux = Belongs to Spangles Data object (self.data.reflected_flux)
+
+        Computation:
+
+            - Visible and Illuminated Spangles are able to reflect the Incident Stellar Flux
+
+            - Diffuse Reflection takes into account the Illuminated Side of the Spangles
+
+                cos_obs = Cosine of the Observer Line of Sight angle  
+                cos_luz = Cosine of the Incident Light angle
+
+                cos_obs*cos_luz > 0  (Observer perceives the Illuminated Side of the Spangles)
+
+            - Follows the Lambert's Cosine Law
+
+                stellar_flux = Incident Stellar Flux
+                albedo_gray_normal = Wavelength-Independent Normal Albedo
+                            
+                reflected_flux = stellar_flux*albedo_gray_normal*cos_obs
+                
+        """
+
+        #Considered Spangles
+        cond = self.data.illuminated*self.data.visible*(self.data.cos_obs*self.data.cos_luz > 0)
+
+        #Creating reflected_flux attribute
+        self.data['reflected_flux'] = np.zeros(self.data.shape[0])
+
+        #Computing Diffuse Reflected Light
+        self.data.reflected_flux[cond] = self.data.stellar_flux[cond]*self.data.albedo_gray_normal[cond]*self.data.cos_obs[cond]
+
