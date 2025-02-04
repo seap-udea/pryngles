@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pryngles &mdash; Pryngles 0.9.10 documentation</title>
+  <title>&lt;no title&gt; &mdash; Pryngles 0.9.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -16,9 +16,11 @@
       <script src="_static/documentation_options.js?v=2ccb3ee0"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="include/modules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,21 +42,10 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">Pryngles</a><ul>
-<li><a class="reference internal" href="#planetary-spangles">PlanetaRY spaNGLES</a></li>
-<li><a class="reference internal" href="#download-and-install">Download and install</a></li>
-<li><a class="reference internal" href="#quick-start">Quick start</a></li>
-<li><a class="reference internal" href="#realistic-scattering-and-polarization">Realistic scattering and polarization</a></li>
-<li><a class="reference internal" href="#tutorials">Tutorials</a></li>
-<li><a class="reference internal" href="#examples">Examples</a></li>
-<li><a class="reference internal" href="#disclaimer">Disclaimer</a></li>
-<li><a class="reference internal" href="#what-s-new">What’s new</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="include/modules.html">API Reference</a></li>
 </ul>
-</li>
-</ul>
-</div>
+
         </div>
       </div>
     </nav>
@@ -69,7 +60,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Pryngles</li>
+      <li class="breadcrumb-item active">&lt;no title&gt;</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -79,296 +70,380 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="pryngles">
-<h1>Pryngles<a class="headerlink" href="#pryngles" title="Link to this heading"></a></h1>
-<section id="planetary-spangles">
-<h2>PlanetaRY spaNGLES<a class="headerlink" href="#planetary-spangles" title="Link to this heading"></a></h2>
-<!--[![PyPi version](https://pypip.in/v/pryngles/badge.png)](https://crate.io/packages/pryngles/)--><!--[![PyPi downloads](https://pypip.in/d/pryngles/badge.png)](https://crate.io/packages/pryngles/)--><!--Other badges: https://shields.io/category/activity --><a class="reference external image-reference" href="https://pypi.org/project/pryngles/"><img alt="version" src="https://img.shields.io/pypi/v/pryngles?color=blue" />
-</a>
-<a class="reference external image-reference" href="https://pypi.org/project/pryngles/"><img alt="downloads" src="https://img.shields.io/pypi/dw/pryngles" />
-</a>
-<a class="reference external image-reference" href="https://pypi.org/project/pryngles/"><img alt="license" src="https://img.shields.io/pypi/l/pryngles" />
-</a>
-<a class="reference external image-reference" href="https://pypi.org/project/pryngles/"><img alt="implementation" src="https://img.shields.io/pypi/implementation/pryngles" />
-</a>
-<a class="reference external image-reference" href="https://pypi.org/project/pryngles/"><img alt="pythonver" src="https://img.shields.io/pypi/pyversions/pryngles" />
-</a>
-<!--[![codesize](https://img.shields.io/github/languages/repo-size/seap-udea/pryngles-public)](https://pypi.org/project/pryngles/)--><!--[![arXiv](http://img.shields.io/badge/arXiv-2004.14121-orange.svg?style=flat)](http://arxiv.org/abs/2004.14121)--><a class="reference external image-reference" href="http://arxiv.org/abs/2207.08636"><img alt="arXiv" src="http://img.shields.io/badge/arXiv-2207.08636-orange.svg?style=flat" />
-</a>
-<a class="reference external image-reference" href="https://ascl.net/2205.016"><img alt="ascl" src="https://img.shields.io/badge/ascl-2205.016-blue.svg?colorB=262255" />
-</a>
-<p><code class="docutils literal notranslate"><span class="pre">Pryngles</span></code> is a <code class="docutils literal notranslate"><span class="pre">Python</span></code> package intended to produce useful
-visualizations of the geometric configuration of a ringed exoplanet
-(an exoplanet with a ring or exoring for short) and more importantly
-to calculate the light curve produced by this kind of planets.  The
-model behind the package has been developed in an effort to predict
-the signatures that exorings may produce not only in the light curve
-of transiting exoplanets (a problem that has been extensively studied)
-but also in the light of stars having non-transiting exoplanets (the
-bright side of the light curve).</p>
-<!--
-*If `PyPI` does not render properly the images if this README please
-check it in our [public github
-repo](https://github.com/seap-udea/pryngles-public).*
---><p>This is an example of what can be done with <code class="docutils literal notranslate"><span class="pre">Pryngles</span></code>:</p>
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
-</p><p>For the science behind the model please refer to the following papers:</p>
-<blockquote>
-<div><p>Zuluaga, J.I., Sucerquia, M. &amp; Alvarado-Montes, J.A. (2022), <strong>The
-bright side of the light curve: a general photometric model for
-non-transiting exorings</strong>, <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S2213133722000476">Astronomy and Computing 40 (2022)
-100623</a>,
-<a class="reference external" href="https://arxiv.org/abs/2207.08636">arXiv:2207.08636</a>.</p>
-</div></blockquote>
-<blockquote>
-<div><p>Sucerquia, M., Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos,
-M., &amp; Bayo, A. (2020), <strong>Scattered light may reveal the existence of
-ringed exoplanets</strong>. Monthly Notices of the Royal Astronomical
-Society: Letters, 496(1), L85-L90.</p>
-</div></blockquote>
-<p align="center"> <img
-src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif"
-alt="Animation" width="400"/> </p></section>
-<section id="download-and-install">
-<h2>Download and install<a class="headerlink" href="#download-and-install" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">pryngles</span></code> is available in <code class="docutils literal notranslate"><span class="pre">PyPI</span></code>, <a class="reference external" href="https://pypi.org/project/pryngles/">https://pypi.org/project/pryngles/</a>.
-To install it, just execute:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">pryngles</span>
-</pre></div>
-</div>
-<p>If you prefer, you may download and install from the
-<a class="reference external" href="https://pypi.org/project/pryngles/#files">sources</a>.</p>
-</section>
-<section id="quick-start">
-<h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
-<p>Import the package and some useful utilities:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pryngles</span> <span class="k">as</span> <span class="nn">pr</span>
-<span class="kn">from</span> <span class="nn">pryngles</span> <span class="kn">import</span> <span class="n">Consts</span>
-</pre></div>
-</div>
-<blockquote>
-<div><p><strong>NOTE</strong>: If you are working in <code class="docutils literal notranslate"><span class="pre">Google</span> <span class="pre">Colab</span></code> before producing any plot please load the
-matplotlib backend:</p>
-</div></blockquote>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</pre></div>
-</div>
-<p>Any calculation in <code class="docutils literal notranslate"><span class="pre">Pryngles</span></code> starts by creating a planetary system:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">=</span><span class="n">pr</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
-<span class="n">S</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;Star&quot;</span><span class="p">,</span><span class="n">radius</span><span class="o">=</span><span class="n">Consts</span><span class="o">.</span><span class="n">rsun</span><span class="o">/</span><span class="n">sys</span><span class="o">.</span><span class="n">ul</span><span class="p">,</span><span class="n">limb_coeffs</span><span class="o">=</span><span class="p">[</span><span class="mf">0.65</span><span class="p">])</span>
-<span class="n">P</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;Planet&quot;</span><span class="p">,</span><span class="n">parent</span><span class="o">=</span><span class="n">S</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="n">e</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">radius</span><span class="o">=</span><span class="n">Consts</span><span class="o">.</span><span class="n">rsaturn</span><span class="o">/</span><span class="n">sys</span><span class="o">.</span><span class="n">ul</span><span class="p">)</span>
-<span class="n">R</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;Ring&quot;</span><span class="p">,</span><span class="n">parent</span><span class="o">=</span><span class="n">P</span><span class="p">,</span><span class="n">fi</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span><span class="n">fe</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span><span class="n">i</span><span class="o">=</span><span class="mi">30</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
-<span class="n">RP</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">ensamble_system</span><span class="p">(</span><span class="n">lamb</span><span class="o">=</span><span class="mi">90</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="n">beta</span><span class="o">=</span><span class="mi">90</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>In the example before the planet has a ring extending from 1.5 to 2.5
-planetary radius which is inclined 30 degrees with respect to the
-orbital plane. It has an orbit with semimajor axis of 0.2 and
-eccentricity 0.0.</p>
-<p>Once the system is set we can <em>ensamble</em> a simulation, ie. creating an
-object able to produce a light-curve.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">RP</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">ensamble_system</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>To see how the surface of the planet and the rings looks like run:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">RP</span><span class="o">.</span><span class="n">plotRingedPlanet</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>You may change the position of the star in the orbit and see how the
-appearance of the planet changes:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">RP</span><span class="o">.</span><span class="n">changeStellarPosition</span><span class="p">(</span><span class="mi">45</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
-<span class="n">RP</span><span class="o">.</span><span class="n">plotRingedPlanet</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Below is the sequence of commands to produce your first light curve:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="n">RP</span><span class="o">.</span><span class="n">changeObserver</span><span class="p">([</span><span class="mi">90</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="mi">30</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">])</span>
-<span class="n">lambs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">+</span><span class="mf">0.0</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="o">+</span><span class="mi">360</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">Rps</span><span class="o">=</span><span class="p">[]</span>
-<span class="n">Rrs</span><span class="o">=</span><span class="p">[]</span>
-<span class="n">ts</span><span class="o">=</span><span class="p">[]</span>
-<span class="k">for</span> <span class="n">lamb</span> <span class="ow">in</span> <span class="n">lambs</span><span class="p">:</span>
-    <span class="n">RP</span><span class="o">.</span><span class="n">changeStellarPosition</span><span class="p">(</span><span class="n">lamb</span><span class="p">)</span>
-    <span class="n">ts</span><span class="o">+=</span><span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">t</span><span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">ut</span><span class="o">/</span><span class="n">Consts</span><span class="o">.</span><span class="n">day</span><span class="p">]</span>
-    <span class="n">RP</span><span class="o">.</span><span class="n">updateOpticalFactors</span><span class="p">()</span>
-    <span class="n">RP</span><span class="o">.</span><span class="n">updateDiffuseReflection</span><span class="p">()</span>
-    <span class="n">Rps</span><span class="o">+=</span><span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">Rip</span><span class="o">.</span><span class="n">sum</span><span class="p">()]</span>
-    <span class="n">Rrs</span><span class="o">+=</span><span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">Rir</span><span class="o">.</span><span class="n">sum</span><span class="p">()]</span>
-
-<span class="n">ts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
-<span class="n">Rps</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Rps</span><span class="p">)</span>
-<span class="n">Rrs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Rrs</span><span class="p">)</span>
-
-<span class="c1">#Plot</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">=</span><span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span><span class="n">Consts</span><span class="o">.</span><span class="n">ppm</span><span class="o">*</span><span class="n">Rps</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Planet&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span><span class="n">Consts</span><span class="o">.</span><span class="n">ppm</span><span class="o">*</span><span class="n">Rrs</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Ring&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span><span class="n">Consts</span><span class="o">.</span><span class="n">ppm</span><span class="o">*</span><span class="p">(</span><span class="n">Rps</span><span class="o">+</span><span class="n">Rrs</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Planet+Ring&quot;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [days]&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Flux anomaly [ppm]&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">();</span>
-</pre></div>
-</div>
-<p>And <em>voilà</em>!</p>
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/example-light-curve.png" alt="Light curve"/>
-</p><p>Let’s have some <code class="docutils literal notranslate"><span class="pre">Pryngles</span></code>.</p>
-</section>
-<section id="realistic-scattering-and-polarization">
-<h2>Realistic scattering and polarization<a class="headerlink" href="#realistic-scattering-and-polarization" title="Link to this heading"></a></h2>
-<p>Starting in version 0.9.x, Pryngles is able to compute fluxes using a
-more realistic model for scattering that includes polarization. The
-new features are not yet flexible enough but they can be used to
-create more realistic light curves.</p>
-<p>These new features are based on the science and Fortran code developed
-by Prof. Daphne Stam and collaborators, and adapted to Pryngles
-environment by Allard Veenstra (Fortran and Python wrapping) and Jorge
-I. Zuluaga (translation to C and <code class="docutils literal notranslate"><span class="pre">ctypes</span></code>). For the science behind the
-scattering and polarization code see:</p>
-<blockquote>
-<div><p>Rossi, L., Berzosa-Molina, J., &amp; Stam, D. M. (2018). PyMieDAP: a
-Python–Fortran tool for computing fluxes and polarization signals of
-(exo) planets. Astronomy &amp; Astrophysics, 616,
-A147. <a class="reference external" href="https://arxiv.org/abs/1804.08357">arXiv:1804.08357</a></p>
-</div></blockquote>
-<p>Below is a simple example of how to compute the light curve of a
-ringed planet whose atmosphere and ring scatters reallistically the
-light of the star. The code compute the components of the Stokes
-vector and the degree of polarization of the diffusely reflected light
-on the system.</p>
-<p>As shown in the example before, we first need to create the system:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nspangles</span><span class="o">=</span><span class="mi">1000</span>
-<span class="n">sys</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
-<span class="n">S</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;Star&quot;</span><span class="p">,</span><span class="n">radius</span><span class="o">=</span><span class="n">Consts</span><span class="o">.</span><span class="n">rsun</span><span class="o">/</span><span class="n">sys</span><span class="o">.</span><span class="n">ul</span><span class="p">,</span><span class="n">limb_coeffs</span><span class="o">=</span><span class="p">[</span><span class="mf">0.65</span><span class="p">])</span>
-<span class="n">P</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;Planet&quot;</span><span class="p">,</span><span class="n">primary</span><span class="o">=</span><span class="n">S</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">e</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-          <span class="n">radius</span><span class="o">=</span><span class="n">Consts</span><span class="o">.</span><span class="n">rsaturn</span><span class="o">/</span><span class="n">sys</span><span class="o">.</span><span class="n">ul</span><span class="p">,</span><span class="n">nspangles</span><span class="o">=</span><span class="n">nspangles</span><span class="p">)</span>
-<span class="n">R</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;Ring&quot;</span><span class="p">,</span><span class="n">primary</span><span class="o">=</span><span class="n">P</span><span class="p">,</span><span class="n">fi</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span><span class="n">fe</span><span class="o">=</span><span class="mf">2.25</span><span class="p">,</span>
-          <span class="n">i</span><span class="o">=</span><span class="mi">30</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="n">roll</span><span class="o">=</span><span class="mi">90</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="n">nspangles</span><span class="o">=</span><span class="n">nspangles</span><span class="p">)</span>
-<span class="n">RP</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">ensamble_system</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Then generate the light curve:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
-<span class="n">RP</span><span class="o">.</span><span class="n">changeObserver</span><span class="p">([</span><span class="o">-</span><span class="mi">90</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="mi">60</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">])</span>
-<span class="n">lambs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">90</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="mi">450</span><span class="o">*</span><span class="n">Consts</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span><span class="mi">181</span><span class="p">)</span>
-
-<span class="n">ts</span><span class="o">=</span><span class="p">[]</span>
-<span class="n">Rps</span><span class="o">=</span><span class="p">[]</span>
-<span class="n">Rrs</span><span class="o">=</span><span class="p">[]</span>
-<span class="n">Pp</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">Pr</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">Ptot</span><span class="o">=</span><span class="p">[]</span>
-<span class="k">for</span> <span class="n">lamb</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">lambs</span><span class="p">):</span>
-    <span class="n">RP</span><span class="o">.</span><span class="n">changeStellarPosition</span><span class="p">(</span><span class="n">lamb</span><span class="p">)</span>
-    <span class="n">ts</span><span class="o">+=</span><span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">t</span><span class="o">*</span><span class="n">RP</span><span class="o">.</span><span class="n">CU</span><span class="o">.</span><span class="n">UT</span><span class="p">]</span>
-    <span class="n">RP</span><span class="o">.</span><span class="n">updateOpticalFactors</span><span class="p">()</span>
-    <span class="n">RP</span><span class="o">.</span><span class="n">updateReflection</span><span class="p">()</span>
-    <span class="n">Rps</span><span class="o">+=</span><span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">Rip</span><span class="o">.</span><span class="n">sum</span><span class="p">()]</span>
-    <span class="n">Rrs</span><span class="o">+=</span><span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">Rir</span><span class="o">.</span><span class="n">sum</span><span class="p">()]</span>
-    <span class="n">Pp</span> <span class="o">+=</span> <span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">Ptotp</span><span class="p">]</span>
-    <span class="n">Pr</span> <span class="o">+=</span> <span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">Ptotr</span><span class="p">]</span>
-    <span class="n">Ptot</span><span class="o">+=</span><span class="p">[</span><span class="n">RP</span><span class="o">.</span><span class="n">Ptot</span><span class="p">]</span>
-
-<span class="n">ts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
-<span class="n">Rps</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Rps</span><span class="p">)</span>
-<span class="n">Rrs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Rrs</span><span class="p">)</span>
-<span class="n">Pp</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Pp</span><span class="p">)</span>
-<span class="n">Pr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Pr</span><span class="p">)</span>
-<span class="n">Ptot</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Ptot</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>And plot it:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#Plot</span>
-<span class="n">fig</span><span class="p">,</span><span class="n">axs</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lambs</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="n">Rps</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Planet&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lambs</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="n">Rrs</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Ring&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lambs</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="n">Rps</span><span class="o">+</span><span class="n">Rrs</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Planet + Ring&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Flux anomaly [ppm]&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">pr</span><span class="o">.</span><span class="n">Plot</span><span class="o">.</span><span class="n">pryngles_mark</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lambs</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="n">Pp</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Planet&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lambs</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="n">Pr</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Ring&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lambs</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="n">Ptot</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Planet + Ring&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Degree of polarization [-]&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">pr</span><span class="o">.</span><span class="n">Plot</span><span class="o">.</span><span class="n">pryngles_mark</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;True anomaly [deg]&quot;</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>The resulting polarization and light-curve will be:</p>
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/example-polarization-light-curve.png" alt="Polarization and Light curve"/>
-</p></section>
-<section id="tutorials">
-<h2>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h2>
-<p>We have prepared several <code class="docutils literal notranslate"><span class="pre">Jupyter</span></code> tutorials to guide you in the usage
-of the package. The tutorials evolve as the package is being optimized.</p>
-<ul class="simple">
-<li><p><strong>Quickstart</strong> [<a class="reference external" href="https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-quickstart.ipynb">Download</a>,
-<a class="reference external" href="https://bit.ly/pryngles-tutorials-quickstart">Google Colab</a>]. In
-this tutorial you will learn the very basics about the package.</p></li>
-<li><p><strong>Developers</strong>
-[<a class="reference external" href="https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-developers.ipynb">Download</a>,
-<a class="reference external" href="https://bit.ly/pryngles-tutorials-developers">Google Colab</a>]. In
-this tutorial you will find a detailed description and
-exemplification of almost every part of the package.  It is
-especially intended for developers, however it may also be very
-useful for finding code snippets useful for science applications.
-As expected, it is under construction as the package is being
-developed.</p></li>
+  <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="include/modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="include/pryngles.html">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.body">pryngles.body module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.body.Body"><code class="docutils literal notranslate"><span class="pre">Body</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.body.Body.show_tree"><code class="docutils literal notranslate"><span class="pre">Body.show_tree()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.body.Body.spangle_body"><code class="docutils literal notranslate"><span class="pre">Body.spangle_body()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.body.Body.update_body"><code class="docutils literal notranslate"><span class="pre">Body.update_body()</span></code></a></li>
 </ul>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
-<p>Working with <code class="docutils literal notranslate"><span class="pre">Pryngles</span></code> we have created several <code class="docutils literal notranslate"><span class="pre">Jupyter</span></code> notebooks to
-illustrate many of its capabilities.  In the examples below you will
-find the package at work to do actual science:</p>
-<ul class="simple">
-<li><p><strong>Full-science exploration</strong> [<a class="reference external" href="https://github.com/seap-udea/pryngles-public/blob/master/pryngles-examples-exploration.ipynb">Download</a>,
-<a class="reference external" href="https://bit.ly/pryngles-examples-exploration">Google Colab</a>].  In
-this example we include the code we used to generate the plots of
-the release paper
-<a class="reference external" href="https://arxiv.org/abs/2207.08636">arXiv:2207.08636</a> as a complete
-example of how the package can be used in a research context.</p></li>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.body.Observer"><code class="docutils literal notranslate"><span class="pre">Observer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.body.Planet"><code class="docutils literal notranslate"><span class="pre">Planet</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.body.Planet.update_planet"><code class="docutils literal notranslate"><span class="pre">Planet.update_planet()</span></code></a></li>
 </ul>
-</section>
-<section id="disclaimer">
-<h2>Disclaimer<a class="headerlink" href="#disclaimer" title="Link to this heading"></a></h2>
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/disco-planet.jpeg" alt="Logo" width="150"/>
-</p><p>This is the <em>disco</em> version of Pryngles.  We are improving resolution,
-performance, modularity and programming standards for future releases.</p>
-</section>
-<section id="what-s-new">
-<h2>What’s new<a class="headerlink" href="#what-s-new" title="Link to this heading"></a></h2>
-<p>For a detailed list of the newest features introduced in the latest
-releases pleas check <a class="reference external" href="https://github.com/seap-udea/pryngles-public/blob/master/WHATSNEW.md">What’s
-new</a>.</p>
-<hr class="docutils" />
-<p>This package has been designed and written originally by Jorge
-I. Zuluaga, Mario Sucerquia &amp; Jaime A. Alvarado-Montes with the
-contribution of Allard Veenstra (C) 2022</p>
-</section>
-</section>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.body.Ring"><code class="docutils literal notranslate"><span class="pre">Ring</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.body.Ring.update_ring"><code class="docutils literal notranslate"><span class="pre">Ring.update_ring()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.body.Star"><code class="docutils literal notranslate"><span class="pre">Star</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.body.Star.update_body"><code class="docutils literal notranslate"><span class="pre">Star.update_body()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.body.Star.update_star"><code class="docutils literal notranslate"><span class="pre">Star.update_star()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.consts">pryngles.consts module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.consts.BODY_KINDS"><code class="docutils literal notranslate"><span class="pre">BODY_KINDS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts"><code class="docutils literal notranslate"><span class="pre">Consts</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.au"><code class="docutils literal notranslate"><span class="pre">Consts.au</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.aus"><code class="docutils literal notranslate"><span class="pre">Consts.aus</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.cm"><code class="docutils literal notranslate"><span class="pre">Consts.cm</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.d"><code class="docutils literal notranslate"><span class="pre">Consts.d</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.day"><code class="docutils literal notranslate"><span class="pre">Consts.day</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.days"><code class="docutils literal notranslate"><span class="pre">Consts.days</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.deg"><code class="docutils literal notranslate"><span class="pre">Consts.deg</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.g"><code class="docutils literal notranslate"><span class="pre">Consts.g</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.get_all"><code class="docutils literal notranslate"><span class="pre">Consts.get_all()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.get_physical"><code class="docutils literal notranslate"><span class="pre">Consts.get_physical()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.gram"><code class="docutils literal notranslate"><span class="pre">Consts.gram</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.gyr"><code class="docutils literal notranslate"><span class="pre">Consts.gyr</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.hr"><code class="docutils literal notranslate"><span class="pre">Consts.hr</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.jyr"><code class="docutils literal notranslate"><span class="pre">Consts.jyr</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.kg"><code class="docutils literal notranslate"><span class="pre">Consts.kg</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.km"><code class="docutils literal notranslate"><span class="pre">Consts.km</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.kyr"><code class="docutils literal notranslate"><span class="pre">Consts.kyr</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.m"><code class="docutils literal notranslate"><span class="pre">Consts.m</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.massist"><code class="docutils literal notranslate"><span class="pre">Consts.massist</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.mearth"><code class="docutils literal notranslate"><span class="pre">Consts.mearth</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.mjupiter"><code class="docutils literal notranslate"><span class="pre">Consts.mjupiter</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.mmars"><code class="docutils literal notranslate"><span class="pre">Consts.mmars</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.mmercury"><code class="docutils literal notranslate"><span class="pre">Consts.mmercury</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.mneptune"><code class="docutils literal notranslate"><span class="pre">Consts.mneptune</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.mpluto"><code class="docutils literal notranslate"><span class="pre">Consts.mpluto</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.msaturn"><code class="docutils literal notranslate"><span class="pre">Consts.msaturn</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.msolar"><code class="docutils literal notranslate"><span class="pre">Consts.msolar</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.msun"><code class="docutils literal notranslate"><span class="pre">Consts.msun</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.muranus"><code class="docutils literal notranslate"><span class="pre">Consts.muranus</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.mvenus"><code class="docutils literal notranslate"><span class="pre">Consts.mvenus</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.myr"><code class="docutils literal notranslate"><span class="pre">Consts.myr</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.parsec"><code class="docutils literal notranslate"><span class="pre">Consts.parsec</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.pc"><code class="docutils literal notranslate"><span class="pre">Consts.pc</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.ppb"><code class="docutils literal notranslate"><span class="pre">Consts.ppb</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.ppm"><code class="docutils literal notranslate"><span class="pre">Consts.ppm</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.rad"><code class="docutils literal notranslate"><span class="pre">Consts.rad</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.rearth"><code class="docutils literal notranslate"><span class="pre">Consts.rearth</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.rjupiter"><code class="docutils literal notranslate"><span class="pre">Consts.rjupiter</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.rsaturn"><code class="docutils literal notranslate"><span class="pre">Consts.rsaturn</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.rsun"><code class="docutils literal notranslate"><span class="pre">Consts.rsun</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.s"><code class="docutils literal notranslate"><span class="pre">Consts.s</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.sidereal_yr"><code class="docutils literal notranslate"><span class="pre">Consts.sidereal_yr</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.solarmass"><code class="docutils literal notranslate"><span class="pre">Consts.solarmass</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.sunmass"><code class="docutils literal notranslate"><span class="pre">Consts.sunmass</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.year"><code class="docutils literal notranslate"><span class="pre">Consts.year</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.years"><code class="docutils literal notranslate"><span class="pre">Consts.years</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.yr"><code class="docutils literal notranslate"><span class="pre">Consts.yr</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.yr2pi"><code class="docutils literal notranslate"><span class="pre">Consts.yr2pi</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.consts.Consts.yrs"><code class="docutils literal notranslate"><span class="pre">Consts.yrs</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.consts.PPPDOUBLE"><code class="docutils literal notranslate"><span class="pre">PPPDOUBLE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.consts.REBOUND_CARTESIAN_PROPERTIES"><code class="docutils literal notranslate"><span class="pre">REBOUND_CARTESIAN_PROPERTIES</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.extensions">pryngles.extensions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.ExtensionUtil"><code class="docutils literal notranslate"><span class="pre">ExtensionUtil</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.ExtensionUtil.cub2ptr"><code class="docutils literal notranslate"><span class="pre">ExtensionUtil.cub2ptr()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.ExtensionUtil.mat2ptr"><code class="docutils literal notranslate"><span class="pre">ExtensionUtil.mat2ptr()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.ExtensionUtil.ptr2cub"><code class="docutils literal notranslate"><span class="pre">ExtensionUtil.ptr2cub()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.ExtensionUtil.ptr2mat"><code class="docutils literal notranslate"><span class="pre">ExtensionUtil.ptr2mat()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.ExtensionUtil.vec2ptr"><code class="docutils literal notranslate"><span class="pre">ExtensionUtil.vec2ptr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.FourierCoefficients"><code class="docutils literal notranslate"><span class="pre">FourierCoefficients</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.FourierCoefficients.nfou"><code class="docutils literal notranslate"><span class="pre">FourierCoefficients.nfou</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.FourierCoefficients.nmat"><code class="docutils literal notranslate"><span class="pre">FourierCoefficients.nmat</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.FourierCoefficients.nmugs"><code class="docutils literal notranslate"><span class="pre">FourierCoefficients.nmugs</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.FourierCoefficients.rfou"><code class="docutils literal notranslate"><span class="pre">FourierCoefficients.rfou</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.FourierCoefficients.rtra"><code class="docutils literal notranslate"><span class="pre">FourierCoefficients.rtra</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.FourierCoefficients.xmu"><code class="docutils literal notranslate"><span class="pre">FourierCoefficients.xmu</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.StokesScatterer"><code class="docutils literal notranslate"><span class="pre">StokesScatterer</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.StokesScatterer.calculate_stokes"><code class="docutils literal notranslate"><span class="pre">StokesScatterer.calculate_stokes()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.extensions.StokesScatterer.read_fourier"><code class="docutils literal notranslate"><span class="pre">StokesScatterer.read_fourier()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.header">pryngles.header module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.legacy">pryngles.legacy module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.CanonicalUnits"><code class="docutils literal notranslate"><span class="pre">CanonicalUnits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Conf"><code class="docutils literal notranslate"><span class="pre">Conf</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Conf.FIGDIR"><code class="docutils literal notranslate"><span class="pre">Conf.FIGDIR</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const"><code class="docutils literal notranslate"><span class="pre">Const</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.G"><code class="docutils literal notranslate"><span class="pre">Const.G</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.Msun"><code class="docutils literal notranslate"><span class="pre">Const.Msun</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.Rsat"><code class="docutils literal notranslate"><span class="pre">Const.Rsat</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.Rsun"><code class="docutils literal notranslate"><span class="pre">Const.Rsun</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.au"><code class="docutils literal notranslate"><span class="pre">Const.au</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.days"><code class="docutils literal notranslate"><span class="pre">Const.days</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.deg"><code class="docutils literal notranslate"><span class="pre">Const.deg</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.hours"><code class="docutils literal notranslate"><span class="pre">Const.hours</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.rad"><code class="docutils literal notranslate"><span class="pre">Const.rad</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Const.yr"><code class="docutils literal notranslate"><span class="pre">Const.yr</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Extra"><code class="docutils literal notranslate"><span class="pre">Extra</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Extra.drawPryngles"><code class="docutils literal notranslate"><span class="pre">Extra.drawPryngles()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Extra.prynglesMark"><code class="docutils literal notranslate"><span class="pre">Extra.prynglesMark()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet"><code class="docutils literal notranslate"><span class="pre">RingedPlanet</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.animateRingedPlanet"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.animateRingedPlanet()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.changeObserver"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.changeObserver()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.changeStellarPosition"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.changeStellarPosition()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.compute_polarimetic_curve"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.compute_polarimetic_curve()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.lambertian_test"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.lambertian_test()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.plotRingedPlanet"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.plotRingedPlanet()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.plotRingedPlanetFlux"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.plotRingedPlanetFlux()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.printState"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.printState()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.readData"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.readData()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.rotation_matrix_z"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.rotation_matrix_z()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updateDiffuseReflection"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updateDiffuseReflection()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updateOpticalFactors"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updateOpticalFactors()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updatePhysicalProperties"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updatePhysicalProperties()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updateProperties"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updateProperties()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updateReflection"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updateReflection()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updateShine"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updateShine()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updateSpangles"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updateSpangles()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.RingedPlanet.updateTransit"><code class="docutils literal notranslate"><span class="pre">RingedPlanet.updateTransit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample"><code class="docutils literal notranslate"><span class="pre">Sample</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample.genCosineWeightedUnitHemisphere"><code class="docutils literal notranslate"><span class="pre">Sample.genCosineWeightedUnitHemisphere()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample.genUnitCircle"><code class="docutils literal notranslate"><span class="pre">Sample.genUnitCircle()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample.genUnitCircleWithGaps"><code class="docutils literal notranslate"><span class="pre">Sample.genUnitCircleWithGaps()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample.genUnitHemisphere"><code class="docutils literal notranslate"><span class="pre">Sample.genUnitHemisphere()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample.genUnitSphere"><code class="docutils literal notranslate"><span class="pre">Sample.genUnitSphere()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample.plotSample"><code class="docutils literal notranslate"><span class="pre">Sample.plotSample()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Sample.purgeSample"><code class="docutils literal notranslate"><span class="pre">Sample.purgeSample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util"><code class="docutils literal notranslate"><span class="pre">Util</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.attenuationFactor"><code class="docutils literal notranslate"><span class="pre">Util.attenuationFactor()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.calcAngularDistance"><code class="docutils literal notranslate"><span class="pre">Util.calcAngularDistance()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.calcRingedPlanetArea"><code class="docutils literal notranslate"><span class="pre">Util.calcRingedPlanetArea()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.calcStartingPosition"><code class="docutils literal notranslate"><span class="pre">Util.calcStartingPosition()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.checkAngle"><code class="docutils literal notranslate"><span class="pre">Util.checkAngle()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.convertE2f"><code class="docutils literal notranslate"><span class="pre">Util.convertE2f()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.convertf2E"><code class="docutils literal notranslate"><span class="pre">Util.convertf2E()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.difAngles"><code class="docutils literal notranslate"><span class="pre">Util.difAngles()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.divArray"><code class="docutils literal notranslate"><span class="pre">Util.divArray()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.funcNormalRing"><code class="docutils literal notranslate"><span class="pre">Util.funcNormalRing()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.limbDarkening"><code class="docutils literal notranslate"><span class="pre">Util.limbDarkening()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.limbDarkeningNormalization"><code class="docutils literal notranslate"><span class="pre">Util.limbDarkeningNormalization()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.loadObject"><code class="docutils literal notranslate"><span class="pre">Util.loadObject()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.saveObject"><code class="docutils literal notranslate"><span class="pre">Util.saveObject()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.setAxis2dEqual"><code class="docutils literal notranslate"><span class="pre">Util.setAxis2dEqual()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.solveKeplerEquation"><code class="docutils literal notranslate"><span class="pre">Util.solveKeplerEquation()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.transformLoc2EquSpherical"><code class="docutils literal notranslate"><span class="pre">Util.transformLoc2EquSpherical()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.transformRecLat"><code class="docutils literal notranslate"><span class="pre">Util.transformRecLat()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.legacy.Util.transfromLoc2Equ"><code class="docutils literal notranslate"><span class="pre">Util.transfromLoc2Equ()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.misc">pryngles.misc module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.misc.Misc"><code class="docutils literal notranslate"><span class="pre">Misc</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.misc.Misc.calc_hash"><code class="docutils literal notranslate"><span class="pre">Misc.calc_hash()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.misc.Misc.flatten"><code class="docutils literal notranslate"><span class="pre">Misc.flatten()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.misc.Misc.get_data"><code class="docutils literal notranslate"><span class="pre">Misc.get_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.misc.Misc.get_methods"><code class="docutils literal notranslate"><span class="pre">Misc.get_methods()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.misc.Misc.print_df"><code class="docutils literal notranslate"><span class="pre">Misc.print_df()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.misc.Misc.retrieve_data"><code class="docutils literal notranslate"><span class="pre">Misc.retrieve_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.orbit">pryngles.orbit module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.Orbit"><code class="docutils literal notranslate"><span class="pre">Orbit</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.Orbit.ORBIT_SIMULATIONS"><code class="docutils literal notranslate"><span class="pre">Orbit.ORBIT_SIMULATIONS</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.Orbit.calculate_orbit"><code class="docutils literal notranslate"><span class="pre">Orbit.calculate_orbit()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.Orbit.get_states"><code class="docutils literal notranslate"><span class="pre">Orbit.get_states()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.OrbitUtil"><code class="docutils literal notranslate"><span class="pre">OrbitUtil</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.OrbitUtil.build_system"><code class="docutils literal notranslate"><span class="pre">OrbitUtil.build_system()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.Orbody"><code class="docutils literal notranslate"><span class="pre">Orbody</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.orbit.Orbody.show_tree"><code class="docutils literal notranslate"><span class="pre">Orbody.show_tree()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.plot">pryngles.plot module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot"><code class="docutils literal notranslate"><span class="pre">Plot</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot.animate_rebound"><code class="docutils literal notranslate"><span class="pre">Plot.animate_rebound()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot.calc_flyby"><code class="docutils literal notranslate"><span class="pre">Plot.calc_flyby()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot.circle3d"><code class="docutils literal notranslate"><span class="pre">Plot.circle3d()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot.draw_pryngles"><code class="docutils literal notranslate"><span class="pre">Plot.draw_pryngles()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot.pryngles_mark"><code class="docutils literal notranslate"><span class="pre">Plot.pryngles_mark()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot.rgb"><code class="docutils literal notranslate"><span class="pre">Plot.rgb()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.plot.Plot.rgb_sample"><code class="docutils literal notranslate"><span class="pre">Plot.rgb_sample()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.sampler">pryngles.sampler module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.sampler.Sampler"><code class="docutils literal notranslate"><span class="pre">Sampler</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.sampler.Sampler.gen_circle"><code class="docutils literal notranslate"><span class="pre">Sampler.gen_circle()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.sampler.Sampler.gen_ring"><code class="docutils literal notranslate"><span class="pre">Sampler.gen_ring()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.sampler.Sampler.gen_sphere"><code class="docutils literal notranslate"><span class="pre">Sampler.gen_sphere()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.sampler.Sampler.plot"><code class="docutils literal notranslate"><span class="pre">Sampler.plot()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.sampler.Sampler.purge_sample"><code class="docutils literal notranslate"><span class="pre">Sampler.purge_sample()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.sampler.Sampler.update_normals"><code class="docutils literal notranslate"><span class="pre">Sampler.update_normals()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.scatterer">pryngles.scatterer module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.BlackBodySurface"><code class="docutils literal notranslate"><span class="pre">BlackBodySurface</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.BlackBodySurface.get_albedo"><code class="docutils literal notranslate"><span class="pre">BlackBodySurface.get_albedo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.LambertianGrayAtmosphere"><code class="docutils literal notranslate"><span class="pre">LambertianGrayAtmosphere</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.LambertianGrayAtmosphere.get_albedo"><code class="docutils literal notranslate"><span class="pre">LambertianGrayAtmosphere.get_albedo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.LambertianGraySurface"><code class="docutils literal notranslate"><span class="pre">LambertianGraySurface</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.LambertianGraySurface.get_albedo"><code class="docutils literal notranslate"><span class="pre">LambertianGraySurface.get_albedo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.NeutralSurface"><code class="docutils literal notranslate"><span class="pre">NeutralSurface</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.NeutralSurface.get_albedo"><code class="docutils literal notranslate"><span class="pre">NeutralSurface.get_albedo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.Scatterer"><code class="docutils literal notranslate"><span class="pre">Scatterer</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.Scatterer.get_albedo"><code class="docutils literal notranslate"><span class="pre">Scatterer.get_albedo()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.Scatterer.register"><code class="docutils literal notranslate"><span class="pre">Scatterer.register()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.scatterer.Scatterer.reset_catalogue"><code class="docutils literal notranslate"><span class="pre">Scatterer.reset_catalogue()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.science">pryngles.science module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.science.Plane"><code class="docutils literal notranslate"><span class="pre">Plane</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Plane.get_projection"><code class="docutils literal notranslate"><span class="pre">Plane.get_projection()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Plane.get_z"><code class="docutils literal notranslate"><span class="pre">Plane.get_z()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Plane.is_above"><code class="docutils literal notranslate"><span class="pre">Plane.is_above()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Plane.is_below"><code class="docutils literal notranslate"><span class="pre">Plane.is_below()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Plane.plot_plane"><code class="docutils literal notranslate"><span class="pre">Plane.plot_plane()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Plane.plot_point"><code class="docutils literal notranslate"><span class="pre">Plane.plot_point()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science"><code class="docutils literal notranslate"><span class="pre">Science</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.cartesian"><code class="docutils literal notranslate"><span class="pre">Science.cartesian()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.cospherical"><code class="docutils literal notranslate"><span class="pre">Science.cospherical()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.direction"><code class="docutils literal notranslate"><span class="pre">Science.direction()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.get_convexhull"><code class="docutils literal notranslate"><span class="pre">Science.get_convexhull()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.limb_darkening"><code class="docutils literal notranslate"><span class="pre">Science.limb_darkening()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.pcylindrical"><code class="docutils literal notranslate"><span class="pre">Science.pcylindrical()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.points_in_hull"><code class="docutils literal notranslate"><span class="pre">Science.points_in_hull()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Science.rotation_matrix()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.science.Science.spherical"><code class="docutils literal notranslate"><span class="pre">Science.spherical()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.spangler">pryngles.spangler module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler"><code class="docutils literal notranslate"><span class="pre">Spangler</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.get_mem_usage"><code class="docutils literal notranslate"><span class="pre">Spangler.get_mem_usage()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.plot2d"><code class="docutils literal notranslate"><span class="pre">Spangler.plot2d()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.plot3d"><code class="docutils literal notranslate"><span class="pre">Spangler.plot3d()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.populate_spangler"><code class="docutils literal notranslate"><span class="pre">Spangler.populate_spangler()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.reset_state"><code class="docutils literal notranslate"><span class="pre">Spangler.reset_state()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.set_intersect"><code class="docutils literal notranslate"><span class="pre">Spangler.set_intersect()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.set_luz"><code class="docutils literal notranslate"><span class="pre">Spangler.set_luz()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.set_observer"><code class="docutils literal notranslate"><span class="pre">Spangler.set_observer()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.set_positions"><code class="docutils literal notranslate"><span class="pre">Spangler.set_positions()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.set_scale"><code class="docutils literal notranslate"><span class="pre">Spangler.set_scale()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.update_illumination_state"><code class="docutils literal notranslate"><span class="pre">Spangler.update_illumination_state()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.update_intersection_state"><code class="docutils literal notranslate"><span class="pre">Spangler.update_intersection_state()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.spangler.Spangler.update_visibility_state"><code class="docutils literal notranslate"><span class="pre">Spangler.update_visibility_state()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.system">pryngles.system module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.system.System"><code class="docutils literal notranslate"><span class="pre">System</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.add"><code class="docutils literal notranslate"><span class="pre">System.add()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.ensamble_system"><code class="docutils literal notranslate"><span class="pre">System.ensamble_system()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.initialize_simulation"><code class="docutils literal notranslate"><span class="pre">System.initialize_simulation()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.integrate"><code class="docutils literal notranslate"><span class="pre">System.integrate()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.integrate_perspective"><code class="docutils literal notranslate"><span class="pre">System.integrate_perspective()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.load_from"><code class="docutils literal notranslate"><span class="pre">System.load_from()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.remove"><code class="docutils literal notranslate"><span class="pre">System.remove()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.reset"><code class="docutils literal notranslate"><span class="pre">System.reset()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.reset_state"><code class="docutils literal notranslate"><span class="pre">System.reset_state()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.save_to"><code class="docutils literal notranslate"><span class="pre">System.save_to()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.spangle_system"><code class="docutils literal notranslate"><span class="pre">System.spangle_system()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.status"><code class="docutils literal notranslate"><span class="pre">System.status()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.update_DiffuseReflection"><code class="docutils literal notranslate"><span class="pre">System.update_DiffuseReflection()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.update_StellarFlux"><code class="docutils literal notranslate"><span class="pre">System.update_StellarFlux()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.update_body"><code class="docutils literal notranslate"><span class="pre">System.update_body()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.update_perspective"><code class="docutils literal notranslate"><span class="pre">System.update_perspective()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.update_scatterers"><code class="docutils literal notranslate"><span class="pre">System.update_scatterers()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.system.System.update_units"><code class="docutils literal notranslate"><span class="pre">System.update_units()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles.version">pryngles.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="include/pryngles.html#module-pryngles">Module contents</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.Image"><code class="docutils literal notranslate"><span class="pre">Image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.PrynglesCommon"><code class="docutils literal notranslate"><span class="pre">PrynglesCommon</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.PrynglesCommon.load_from"><code class="docutils literal notranslate"><span class="pre">PrynglesCommon.load_from()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.PrynglesCommon.save_to"><code class="docutils literal notranslate"><span class="pre">PrynglesCommon.save_to()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.Verbose"><code class="docutils literal notranslate"><span class="pre">Verbose</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.Verbose.VERBOSITY"><code class="docutils literal notranslate"><span class="pre">Verbose.VERBOSITY</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.Verbose.print"><code class="docutils literal notranslate"><span class="pre">Verbose.print()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#id0"><code class="docutils literal notranslate"><span class="pre">Verbose.VERBOSITY</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#id17"><code class="docutils literal notranslate"><span class="pre">Verbose.print()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.get_ipython"><code class="docutils literal notranslate"><span class="pre">get_ipython</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.get_ipython.magic"><code class="docutils literal notranslate"><span class="pre">get_ipython.magic()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.get_ipython.run_cell_magic"><code class="docutils literal notranslate"><span class="pre">get_ipython.run_cell_magic()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="include/pryngles.html#pryngles.get_ipython.run_line_magic"><code class="docutils literal notranslate"><span class="pre">get_ipython.run_line_magic()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="include/pryngles.html#pryngles.verbose"><code class="docutils literal notranslate"><span class="pre">verbose()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="include/modules.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
