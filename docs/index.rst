@@ -1,6 +1,14 @@
-.. pryngles documentation master file, created by
-   sphinx-quickstart on Wed Jan 22 12:41:02 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+..
+   .. nbgallery::
+
+   nb/Flux_Test
 
 .. mdinclude:: ../README.md
+   :end-line: 57
+
+.. toctree::
+   :titlesonly:
+   :hidden:
+
+   include/README.rst
+   include/api.rst
