@@ -1,4 +1,5 @@
 sphinx-rtd-theme
 sphinx-mdinclude
 sphinx
+pryngles
 #nbsphinx
