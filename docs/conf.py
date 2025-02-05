@@ -5,7 +5,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, os.path.abspath('../src/pryngles'))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -19,7 +19,7 @@ release = '0.9.10'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [#'nbsphinx', 
-              'sphinx_mdinclude', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+              'sphinx_mdinclude', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.viewcode']
 
 # nbsphinx_execute = 'never'
 
