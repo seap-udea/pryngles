@@ -22,7 +22,7 @@ setuptools.setup(
     # BASIC DESCRIPTION
     # ######################################################################
     name='pryngles',
-    author="Jorge I. Zuluaga, Allard Veenstra, Jaime A. Alvarado, Mario Sucerquia",
+    author="Jorge I. Zuluaga, Allard Veenstra, Sebastian Numpaque, Mario Sucerquia and Jaime A. Alvarado-Montes",
     author_email="jorge.zuluaga@udea.edu.co",
     description="PlanetaRY spanGLES: general photometry of planets, rings and shadows",
     long_description=long_description,
