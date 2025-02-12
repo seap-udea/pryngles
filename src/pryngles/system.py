@@ -744,8 +744,8 @@ class System(PrynglesCommon):
         self._set_luz()
 
         #Set Photomety Values
-        self.update_StellarFlux()
-        self.update_DiffuseReflection()
+        # self.update_StellarFlux()
+        # self.update_DiffuseReflection()
         
     
     def update_body(self,body,**props):
@@ -935,7 +935,7 @@ class System(PrynglesCommon):
         self.data['stellar_flux'] = np.zeros(self.data.shape[0])
 
         #Computing Incident Stellar Flux
-        self.data.stellar_flux[cond] = abs(self.data.asp[cond]*self.data.cos_luz[cond]/(4*np.pi*self.data.d_luz[cond]**2))
+        self.data.stellar_flux[cond] = abs(self.data.asp_luz[cond]*self.data.cos_luz[cond]/(4*np.pi*self.data.d_luz[cond]**2))
 
 
     def update_DiffuseReflection(self):
@@ -968,7 +968,7 @@ class System(PrynglesCommon):
         """
 
         #Considered Spangles
-        cond = self.data.illuminated*self.data.visible*(self.data.cos_obs*self.data.cos_luz > 0)
+        cond = self.data.illuminated*self.data.visible*(self.data.cos_obs*self.data.cos_luz > 0)*(~self.data.hidden)
 
         #Creating reflected_flux attribute
         self.data['reflected_flux'] = np.zeros(self.data.shape[0])
@@ -976,3 +976,61 @@ class System(PrynglesCommon):
         #Computing Diffuse Reflected Light
         self.data.reflected_flux[cond] = self.data.stellar_flux[cond]*self.data.albedo_gray_normal[cond]*self.data.cos_obs[cond]
 
+
+    def update_Transit(self):
+
+        """
+        Computation of the Stellar Flux Drop for Transiting Spangles
+
+        Attribute Created:
+
+            transit_flux = Belongs to Spangles Data object (self.data.transit_flux)
+
+        Computation:
+
+            - Only Transiting Spangles over Star-Kind Bodies are taking into account
+
+            asp = Area of Individual Spangle
+            tau_gray_optical = Total Optical Depth for Spangle
+            beta_values = Attenuation Factor
+            limb_coeff = Limb-Darkening Coefficient
+            norm_limb_coeff = Normalization of Limb-Darkening Coefficient
+            rhos = Projected Distance between Spangle and the Star's Center
+            cos_obs = Cosine of the Observer Line of Sight angle over the Spangle
+
+            - Follows the Limb-Darkening Laws:
+
+            Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
+            Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
+
+            - According to Zuluaga et. al. (2022)
+
+            transit_flux = beta_values*asp*cos_obs*limb_darkening
+
+        """
+
+        #Creating transit_flux attribute
+        self.data['transit_flux'] = np.zeros(self.data.shape[0])
+
+        #Over all Stars
+        for star in self.bodies:
+
+            if self.bodies[star].kind == 'Star':
+
+                #Considered Spangles
+                cond = self.data.transit_over_obs.str.fullmatch(rf'^{star}[^&]*&$')*(~self.data.hidden)
+
+                #Source-Spangle Projected Distance
+                rhos = self.data.transit_over_obs[cond].str.extract(r':([^:]*)&', expand = False).astype(float)
+
+                #Optical Parameters
+                limb_coeff = self.bodies[star].limb_coeffs
+                norm_limb_coeff = self.bodies[star].norm_limb_darkening
+
+                beta_values = 1 - np.exp(-self.data.tau_gray_optical[cond]/abs(self.data.cos_obs[cond]))
+
+                star_scale = self.bodies[star].radius
+                limb_darkening = Util.limbDarkening(rhos, 1, limb_coeff, norm_limb_coeff)
+
+                #Computing Stellar Flux Drop
+                self.data.transit_flux[cond] += beta_values*abs(self.data.cos_obs[cond])*limb_darkening*(self.data.asp_obs[cond]/star_scale**2)
