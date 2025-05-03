@@ -1,4 +1,4 @@
-sphinx-rtd-theme
+pydata-sphinx-theme
 sphinx-mdinclude
 sphinx
 pryngles

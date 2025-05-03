@@ -62,7 +62,7 @@ class Const(object):
 
     #Constants of nature
     au=1.496e11 #meters
-    G=6.67e-11 # m^3/(kg*s^2)
+    G=6.67408e-11 # m^3/(kg*s^2)
 
     #Time
     hours=3600 # seconds
@@ -1189,9 +1189,9 @@ class RingedPlanet(object):
     ##############################################################
     def __init__(self,
                  #Units
-                 CU=CanonicalUnits(UL=Const.au,UM=Const.Msun),
+                 CU=CanonicalUnits(UL=Consts.au,UM=Consts.msun),
                  #Basic
-                 Rstar=Const.Rsun/Const.au,Rplanet=Const.Rsat/Const.au,
+                 Rstar=Consts.rsun/Consts.au,Rplanet=Consts.rsaturn/Consts.au,
                  Rint=1.5,Rext=2.5,i=30*DEG,roll=0*DEG,a=0.2,e=0.6,
                  #Orbit 
                  Mstar=1,x=0,lambq=0,t0=0,kepler=False,

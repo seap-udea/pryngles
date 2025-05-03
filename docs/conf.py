@@ -21,6 +21,11 @@ release = '0.9.10'
 extensions = [#'nbsphinx', 
               'sphinx_mdinclude', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.viewcode']
 
+napoleon_numpy_docstring = True
+napoleon_google_docstring = False 
+# autodoc_default_flags = ['members', 'undoc-members']
+
+
 # nbsphinx_execute = 'never'
 
 templates_path = ['_templates']
@@ -31,5 +36,12 @@ pygment_style = 'sphinx'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = "pydata_sphinx_theme"
 html_static_path = ['_static']
+html_theme_options = {
+    "logo": {
+        "image_light": "pryngles_logo.png",
+        "image_dark": "pryngles_logo.png",
+        "text": f"{project} {release} Documentation",
+    },
+    }

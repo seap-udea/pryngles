@@ -875,10 +875,10 @@ class Spangler(PrynglesCommon):
             return
             
         #Update positions in the intersection reference frame
-        self.data.loc[cond,["x_int","y_int","z_int"]]=        [np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
+        self.data.loc[cond,["x_int","y_int","z_int"]]= [np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
         
         #Center of the object in the observer reference system
-        center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center)               for sp,c_ecl,c_equ in zip(self.data[cond].name,
+        center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center) for sp,c_ecl,c_equ in zip(self.data[cond].name,
                                              np.array(self.data[cond].center_ecl),
                                              np.array(self.data[cond].center_equ))]
         self.data.loc[cond,"center_int"]=pd.Series(center_int).values
@@ -890,7 +890,7 @@ class Spangler(PrynglesCommon):
             self.data.loc[cond,"z_cen_int"]=np.array(center_int)[:,2]
     
         #Pseudo-cylindrical coordinates in the observer system
-        self.data.loc[cond,["rho_int","az_int","cosf_int"]]=        [sci.pcylindrical(r) for r in          np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
+        self.data.loc[cond,["rho_int","az_int","cosf_int"]]=[sci.pcylindrical(r) for r in np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
     
         #Compute distance to intersection of each spangle and the 
         if self.infinite:
@@ -923,12 +923,66 @@ class Spangler(PrynglesCommon):
             self.data.loc[cond,"cos_int"]=[spy.vdot(n_ecl,n_int) for n_ecl in self.data.ns_ecl[cond]]
         else:
             #In this case n_int is a per-spangle variable
-            self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int)                                        for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
+            self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int) for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
             
         #Set areas
         self.data.loc[cond,"asp_int"]=self.data.loc[cond,"asp"]
         
         return cond,n_int,d_int
+
+    def normalize_areas(self):
+
+        """
+        Set normalization factor of area projection in Intersection/Observer/Light-Source Frames
+        Also corrects for the area projection for flux computation  (Expected Area/Facet-Based Area)
+
+        Attribute Modified:
+
+            asp_int/obs/luz = Projected area of individual Spangle in Intersection/Observer/Light-Source Frame
+
+        Computation:
+
+        - Only face-on Spangles in line-of-sight are taking into account (cos >= 0)
+
+            asp = Area of Individual Spangle
+            cos = Cosine between the line-of-sight and each Spangle
+            scale = Body Lenght Scale (Radius)
+            r_int = Internal Radius (Only for Ring)
+
+        - Normalization Factor by Areas Relation 
+
+            expected_area = Projected Disk Area -> pi*(1 - r_int^2)*(scale^2)*cos
+            facets_area = Sum of face-on Spangles area -> sum(asp*cos)
+
+            norm_factor = expected_area/facets_area
+            
+        - Area Correction by Perspective
+
+            asp_int/obs/luz = asp*norm_factor
+
+        """
+
+        # Over each Body
+        for i, name in enumerate(self.name):
+
+            #Only Face-On Spangles
+            cond_name = (self.data.name == name)
+            cond = cond_name*(self.data.cos_obs >= 0)*(~self.data.hidden)
+
+            #Only for Ring
+            r_int = self.spanglers[i].sample.ri if hasattr(self.spanglers[i].sample, 'ri') else 0
+
+            asp = self.data[cond_name].asp.iloc[0]
+            scale = self.data[cond_name].scale.iloc[0]
+            cos = self.data[cond].cos_obs.iloc[0] if r_int != 0 else 1
+
+            #Normalization
+            expected_area = np.pi*(1 - r_int**2)*scale**2*cos
+            norm_factor = expected_area/(asp*self.data[cond].cos_obs).sum()
+
+            #Area Correction
+            self.data.loc[cond_name, 'asp_int'] *= norm_factor
+
     
     def _calc_qhulls(self):
         
@@ -1592,19 +1646,20 @@ class Spangler(PrynglesCommon):
                 hull["below"]=sum(below)
                 
             #Correct areas
-            if geometry != SAMPLER_GEOMETRY_CIRCLE:
-                cond=(self.data.name==name)&(self.data.cos_int>=0)&(~self.data.hidden)
+        self.normalize_areas()
+            # if geometry != SAMPLER_GEOMETRY_CIRCLE:
+            #     cond=(self.data.name==name)&(self.data.cos_int>=0)&(~self.data.hidden)
                 
-                #This what the sum actually is
-                ahull_expected=(self.data.loc[cond,"asp_int"]*abs(self.data.loc[cond,"cos_int"])).sum()
-                #This is the expected value
-                ahull=np.pi*scale**2
+            #     #This what the sum actually is
+            #     ahull_expected=(self.data.loc[cond,"asp_int"]*abs(self.data.loc[cond,"cos_int"])).sum()
+            #     #This is the expected value
+            #     ahull=np.pi*scale**2
                 
-                #Normalization factor to get sum = ahull
-                norma=ahull/ahull_expected
+            #     #Normalization factor to get sum = ahull
+            #     norma=ahull/ahull_expected
                 
-                #Final area
-                self.data.loc[cond,"asp_int"]*=norma
+            #     #Final area
+            #     self.data.loc[cond,"asp_int"]*=norma
         
     def update_visibility_state(self):
         """Update states and variables related to visibility

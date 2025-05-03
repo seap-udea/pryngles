@@ -10,5 +10,11 @@
    :titlesonly:
    :hidden:
 
-   include/README.rst
-   include/api.rst
+   include/getting_started/getting_started
+   include/api/api
+   include/tutorials/tutorials
+   include/contributing
+   
+------------
+
+This package has been designed and written originally by Jorge I. Zuluaga, Allard Veenstra, Sebastian Numpaque, Mario Sucerquia and Jaime A. Alvarado-Montes (C) 2022, 2023, 2024, 2025
