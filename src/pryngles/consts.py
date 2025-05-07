@@ -39,9 +39,40 @@ except:
 IN_JUPYTER='ipykernel' in sys.modules
 
 class Consts(object):
-    """Constants class
     """
+    The ``pr.Consts`` class is where we define all physical and astronomical constants. It contains the ``rebound`` imported constants and so the defined ones
+    """
+
+    # Mathematical constants
+    rad=180/np.pi
+    deg=1/rad
+    ppm=1e6 #parts per million factor
+    ppb=1e9 #parts per billion factor
+
+    #Size of reference objects
+    rearth=6378.137e3 #m, volumetric mean radius, source: 
+    rsun=695700e3 #m, nominal solar radius, source: 
+    rjupiter=71492e3 #m, equatorial radius, source: 
+    rsaturn=60268e3 #m, equatorial radius, source:
+
     def get_physical():
+        """
+        To get all **physical** constants in ``pryngles``. 
+
+        Returns
+        -------
+        :
+            all_physical : list
+             List containing all the strings for physical constants in package
+
+        Examples
+        --------
+        >>> pr.Consts.get_physical()
+        ['au', 'aus', 'cm', 'd', 'day', 'days', 'deg', 'g', 'gram', 'gyr', 'hr', 'jyr', 'kg',
+        'km', 'kyr', 'm', 'massist', 'mearth', 'mjupiter', 'mmars', 'mmercury', 'mneptune', 'mpluto',
+        'msaturn', 'msolar', 'msun', 'muranus', 'mvenus', 'myr', 'parsec', 'pc', 'ppb', 'ppm', 'rad', 
+        'rearth', 'rjupiter', 'rsaturn', 'rsun', 's', 'solarmass', 'sunmass', 'year', 'years', 'yr', 'yrs']
+        """
         import pryngles as pr
         all_constants=[]
         for key in Consts.__dict__.keys():
@@ -51,6 +82,24 @@ class Consts(object):
         return sorted(all_constants)
 
     def get_all():
+        """
+        To get all **numerical** constants in ``pryngles``.
+
+        Returns
+        -------
+        :
+            all_numerical : list
+             List containing all the strings for numerical constants in package
+
+        Examples
+        --------
+        Because some of numerical constants are grouped by modules, you can get those specifying it's module in uppercase.
+
+        >>> [const for const in pr.Consts.get_all() if 'SPANGLER' in const]
+        ['SPANGLER_AREAS', 'SPANGLER_COLUMNS', 'SPANGLER_COLUMNS_DOC', 'SPANGLER_COL_COPY', 'SPANGLER_COL_INT', 'SPANGLER_COL_LUZ',
+        'SPANGLER_COL_OBS', 'SPANGLER_DEBUG_FIELDS', 'SPANGLER_EPS_BORDER', 'SPANGLER_EQUIV_COL', 'SPANGLER_KEY_ORDERING',
+        'SPANGLER_KEY_SUMMARY', 'SPANGLER_LENGTHS', 'SPANGLER_SOURCE_STATES', 'SPANGLER_VECTORS', 'SPANGLER_VISIBILITY_STATES']
+        """
         import pryngles as pr
         all_constants=[]
         for key in pr.__dict__.keys():
@@ -59,12 +108,6 @@ class Consts(object):
                 all_constants+=[key]
         return sorted(all_constants)
 
-#Mathematical constants
-Consts.rad=180/np.pi
-Consts.deg=1/Consts.rad
-Consts.ppm=1e6 #parts per million factor
-Consts.ppb=1e9 #parts per billion factor
-
 #Physical constants
 GSI=units.convert_G(["m","s","kg"]) # G constant in SI units
 for const in "times","lengths","masses":
@@ -72,19 +115,15 @@ for const in "times","lengths","masses":
     for key in values:
         exec(f"Consts.{key}=values[key]")
 
-#Size of reference objects
-Consts.rearth=6378.137e3 #m, volumetric mean radius, source: 
-Consts.rsun=695700e3 #m, nominal solar radius, source: 
-Consts.rjupiter=71492e3 #m, equatorial radius, source: 
-Consts.rsaturn=60268e3 #m, equatorial radius, source: 
-
-#For compatibility purposes with legacy: remove when legacy is retired
+#For compatibility purposes with legacy
 RAD=Consts.rad
 DEG=Consts.deg
+#Remove when legacy is retired
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants of module extensions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 import ctypes
 DOUBLE = ctypes.c_double
 PDOUBLE = ctypes.POINTER(DOUBLE)
@@ -113,18 +152,29 @@ REBOUND_ORBITAL_PROPERTIES=dict(
     #true longitude (Omega + omega + f), mean anomaly (Omega + omega + M)
     theta=0,l=0,
 )
+"""
+`dict` : Defines the possible keys used to initialize a particle with orbital properties in ``rebound``.
+
+- **m** (float) — Mass of the particle.
+- **x**, **y**, **z** (float) — Cartesian position components.
+- **vx**, **vy**, **vz** (float) — Cartesian velocity components.
+- **a**, **e**, **f**, **omega**, **inc**, **Omega** (float) — Orbital Parameters
+- **M**, **E** (float) — Mean and Eccentric anomaly.
+- **T** (float) — Time of periapsis passage.
+- **theta**, **l** (float) — True and Mean longitude.
+"""
+
 
 REBOUND_CARTESIAN_PROPERTIES=dict(
-    #Cartesian coordinates
-    x=0,y=0,z=0,vx=0,vy=0,vz=0,    
+    x=0,y=0,z=0,vx=0,vy=0,vz=0, 
 )
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants of module sampler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-""" Sampler presets are the values of N 
-    for which there are already stored samples
-"""
+# """ Sampler presets are the values of N 
+#     for which there are already stored samples
+# """
 SAMPLER_PRESETS = ["sphere", "circle", "ring"]
 
 SAMPLER_SPHERE_PRESETS = np.array(
@@ -135,15 +185,36 @@ SAMPLER_SPHERE_PRESETS = np.array(
     list(np.arange(4000, 5000, 500))+\
     [5000]
 )
+"""
+Examples
+-------------
+
+>>> pr.SAMPLER_SPHERE_PRESETS
+array([ 100,  200,  300,  400,  500,  600,  700,  800,  900, 1000, 1200, 1400,
+        1600, 1800, 2000, 2300, 2600, 2900, 3000, 3400, 3800, 4000, 4500, 5000])
+"""
+
 SAMPLER_CIRCLE_PRESETS = np.arange(100, 6000, 100)
+"""
+Examples
+--------------
+
+>>>  pr.SAMPLER_CIRCLE_PRESETS
+array([ 100,  200,  300,  400,  500,  600,  700,  800,  900, 1000, 1100,
+        1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200,
+        2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3100, 3200, 3300,
+        3400, 3500, 3600, 3700, 3800, 3900, 4000, 4100, 4200, 4300, 4400,
+        4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500,
+        5600, 5700, 5800, 5900])
+"""
 
 SAMPLER_MIN_RING = 10
 
 #Geometries
-SAMPLER_GEOMETRY_CIRCLE=0
-SAMPLER_GEOMETRY_SPHERE=1
+SAMPLER_GEOMETRY_CIRCLE=0 #:
+SAMPLER_GEOMETRY_SPHERE=1 #:
 
-SAMPLE_SHAPES=[]
+SAMPLE_SHAPES=[] #:
 
 SAMPLE_SHAPES+=["circle"]
 
@@ -169,37 +240,37 @@ __s=-1
 
 #Spangles for planets with a rocky surface
 __s+=1
-SPANGLE_SOLID_ROCK=__s
+SPANGLE_SOLID_ROCK=__s #:
 SPANGLE_COLORS[__s]=[27,0.5,1.0]
 
 #Spangles for planets with a rocky surface
 __s+=1
-SPANGLE_SOLID_ICE=__s
+SPANGLE_SOLID_ICE=__s #:
 SPANGLE_COLORS[__s]=[27,0.5,1.0]
 
 #Spangles for planets with atmospheres
 __s+=1
-SPANGLE_ATMOSPHERIC=__s
+SPANGLE_ATMOSPHERIC=__s #:
 SPANGLE_COLORS[__s]=[27,0.5,1.0]
 
 #Spangles for planets with liquid surface
 __s+=1
-SPANGLE_LIQUID=__s
+SPANGLE_LIQUID=__s #:
 SPANGLE_COLORS[__s]=[195,0.7,0.5]
 
 #Ring or disks spangles
 __s+=1
-SPANGLE_GRANULAR=__s
+SPANGLE_GRANULAR=__s #:
 SPANGLE_COLORS[__s]=[0,0.7,0.4]
 
 #Gasseous spangle
 __s+=1
-SPANGLE_GASEOUS=__s
+SPANGLE_GASEOUS=__s #:
 SPANGLE_COLORS[__s]=[27,0.5,1.0]
 
 #Stellar spangle
 __s+=1
-SPANGLE_STELLAR=__s
+SPANGLE_STELLAR=__s #:
 SPANGLE_COLORS[__s]=[59,0.7,1.0]
 
 #List of semitransparent spangles
@@ -313,7 +384,7 @@ SPANGLER_COLUMNS=odict({
     "unset":True, #State has not been set
     "hidden":False, #The spangle is not taken into account for photometry
     "source":False, #The spangle belongs to a light-source (it does not reflect light)
-})
+}) #:
 SPANGLER_VISIBILITY_STATES=odict({
     #Spangle state
     "visible":False, #The spangle is visible from observer
@@ -580,12 +651,48 @@ SPANGLER_COLUMNS.update(SPANGLER_SOURCE_STATES)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants of module body
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-BODY_KINDS=[]
+BODY_KINDS=[] #:
 
-"""
-These are the default attributes for any body.
-"""
 BODY_DEFAULTS=dict()
+""" 
+`dict` : Defines the default keys and values used to initialize an astrophysical body.
+
+- **name** (str or None) — The name of the body. Defaults to None.
+- **name_by_kind** (bool) — If True, the name will be automatically generated based on the body's kind. Defaults to False.
+- **source** (object or None) — The source object associated with this body. Defaults to None.
+
+**Orbit Parameters:**
+
+- **m** (float) — Mass of the body. Defaults to 1.
+
+**Physics Parameters:**
+
+- **radius** (float) — Radius of the body. Defaults to 1.
+- **prot** (float) — Rotational period of the body. Defaults to 1.
+- **i** (float) — Inclination of the rotational axis in radians. Defaults to 0.
+- **roll** (float) — Roll angle for orientation. Defaults to 0.
+- **alpha** (float) — Zero meridian of the body in radians. Defaults to 0.
+- **q0** (float) — Initial longitude (azimuthal angle) at time t0 in radians. Defaults to 0.
+
+**Optics Parameters:**
+
+- **nspangles** (int) — Number of spangles used to sample the body's surface. Defaults to 1000.
+- **spangle_type** (``pr.consts``) — Type of spangle used. Defaults to :data:`~ consts.SPANGLE_SOLID_ROCK`.
+- **shape** (str) — The overall shape of the body. Defaults to "sphere".
+- **geometry_args** (dict) — Dictionary of arguments to configure the body's geometry. Defaults to an empty dictionary.
+- **seed** (int) — Random seed for spangle generation. Defaults to 0.
+- **preset** (bool) — If True, use a preset distribution of spangles. Defaults to True.
+- **albedo_gray_spherical** (float) — Wavelength-independent spherical albedo (0 to 1). Defaults to 1.
+- **albedo_gray_normal** (float) — Wavelength-independent normal albedo (0 to 1). Defaults to 1.
+- **tau_gray_optical** (float) — Wavelength-independent optical depth (non-negative). Defaults to 0.
+
+**Legacy Parameters:**
+
+- **primary** (object or None) — The primary body this body might orbit (legacy). Defaults to None.
+- **optics** (dict) — Dictionary containing optical properties (legacy). Defaults to an empty dictionary.
+- **orbit** (dict) — Dictionary containing orbital properties (legacy). Defaults to an empty dictionary.
+- **physics** (dict) — Dictionary containing physical properties (legacy). Defaults to an empty dictionary.
+"""
 BODY_DEFAULTS.update(odict(
     
     name=None,
@@ -624,19 +731,24 @@ BODY_DEFAULTS.update(odict(
 
 BODY_KINDS=[]
 
-"""
-These are the default attributes for bodies of the kind 'Star'.
-"""
 STAR_DEFAULTS=deepcopy(BODY_DEFAULTS)
+"""
+`dict` : Defines the default attributes for bodies of the kind 'Star'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`
+
+- **radius** (float) — Radius of the star. Defaults to 0.1.
+- **limb_coeffs** (list of floats) — List of limb darkening coefficients. Defaults to an empty list.
+- **spangle_type** (constant) — Type of spangle used for the star's surface. Defaults to  :data:`~ consts.SPANGLE_STELLAR`.
+- **shape** (str) — The overall shape of the star. Defaults to "sphere".
+"""
 STAR_DEFAULTS.update(odict(
 
     #Orbit: update
     #Same as body
     radius=0.1,
-    
+
     #Physics: update
     #Same as Body
-    
+
     #Optical properties: update
     limb_coeffs=[],
     spangle_type=SPANGLE_STELLAR,
@@ -644,19 +756,28 @@ STAR_DEFAULTS.update(odict(
 ))
 BODY_KINDS+=["Star"]
 
-"""
-These are the default attributes for bodies of the kind 'Planet'.
-"""
+# """
+# These are the default attributes for bodies of the kind 'Planet'.
+# """
 PLANET_DEFAULTS=deepcopy(BODY_DEFAULTS)
+"""
+`dict` : Defines the default attributes for bodies of the kind 'Planet'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`
+
+- **a** (float) — Semi-major axis of the planet's orbit. Defaults to 1.
+- **e** (float) — Eccentricity of the planet's orbit. Defaults to 0.
+- **radius** (float) — Radius of the planet. Defaults to 0.1.
+- **spangle_type** (constant) — Type of spangle used for the planet's surface. Defaults to :data:`~ consts.SPANGLE_ROCK`.
+- **geometry** (str) — The geometry of the planet's surface representation. Defaults to "sphere".
+"""
 PLANET_DEFAULTS.update(odict(
-    
+
     #Orbit: update
     a=1,e=0,
-    
+
     #Physics: update
     #Same as Body
     radius=0.1,
-    
+
     #Optical: update
     spangle_type=SPANGLE_SOLID_ROCK,
     geometry="sphere",
@@ -664,25 +785,41 @@ PLANET_DEFAULTS.update(odict(
 BODY_KINDS+=["Planet"]
 
 RING_DEFAULTS=deepcopy(BODY_DEFAULTS)
+"""
+`dict` : Defines the default attributes for bodies of the kind 'Ring'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`.
+
+- **fi** (float) — Inner radius of the ring. Defaults to 1.5.
+- **fe** (float) — Outer radius of the ring. Defaults to 2.0.
+- **taur** (float) — Radial optical depth of the ring. Defaults to 0.4.
+- **spangle_type** (constant) — Type of spangle used for the ring particles. Defaults to :data:`~ consts.SPANGLE_GRANULAR`.
+- **shape** (str) — The overall shape of the body. Defaults to "ring".
+
+Note that Rings typically do not utilize orbital properties in the same way as other body kinds
+"""
 RING_DEFAULTS.update(odict(
 
     #Orbit: update
     #Same as Body altough ring has not orbit properties
-    
+
     #Physics: update
     #Same as Body
     fi=1.5,
     fe=2.0,
     taur=0.4,
-    
+
     #Optics: update
     spangle_type=SPANGLE_GRANULAR,
     shape="ring",
 ))
-
 BODY_KINDS+=["Ring"]
 
 OBSERVER_DEFAULTS=deepcopy(BODY_DEFAULTS)
+"""
+`dict` : Defines the default attributes for bodies of the kind 'Observer'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`.
+
+- **lamb** (float) — Ecliptic longitude of the observer in radians. Defaults to 0.
+- **beta** (float) — Ecliptic latitude of the observer in radians. Defaults to 0.
+"""
 OBSERVER_DEFAULTS.update(odict(
     lamb=0,
     beta=0,
@@ -707,6 +844,24 @@ LEGACY_PHYSICAL_PROPERTIES=dict(
     #Stellar limb darkening
     limb_cs=[],
 )
+"""
+`dict` : Defines legacy physical properties used from the old-version interface :data:`legacy.RingedPlanet`.
+
+- **AS** (float) — Single scattering albedo. Defaults to 1.
+- **AL** (float) — Lambertian albedo. Defaults to 1.
+- **taug** (float) — Geometrical opacity of rings. Defaults to 1.0.
+- **diffeff** (float) — Diffraction efficiency of rings. Defaults to 1.0.
+- **reflection_rings_law** (callable) — Function defining the law of diffuse reflection on the ring surface. Takes two arguments (likely angles) and returns a reflection coefficient. Defaults to a lambda function returning the first argument.
+- **wavelength** (float) — Observation wavelength in meters. Defaults to 550e-9.
+- **limb_cs** (list - array) — Stellar limb darkening coefficients (legacy). Defaults to an empty list.
+- **particles** (dict) — Dictionary containing properties of ring particles
+    - **q** (int) — Power-law exponent for the size distribution. Defaults to 3.
+    - **s0** (float) — Reference particle size in meters. Defaults to 100e-6.
+    - **smin** (float) — Minimum particle size in meters. Defaults to 1e-2.
+    - **smax** (float) — Maximum particle size in meters. Defaults to 1e2.
+    - **Qsc** (float) — Scattering efficiency. Defaults to 1.
+    - **Qext** (float) — Extinction efficiency. Defaults to 2.
+"""
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants of module scatterer

@@ -3,7 +3,6 @@ Getting Started
 
 .. toctree::
    :titlesonly:
-   :numbered:
    :hidden:
 
    installation
@@ -34,18 +33,18 @@ These interfaces are, in the present version of the package, somewhat compatible
 
       sys = pr.System()
 
-      S = sys.add(kind="Star",
-                  physics=dict(radius=Consts.rsun/sys.ul),
-                  optics=dict(limb_coeffs=[0.65]))
+      S = sys.add(kind = "Star",
+                  physics = dict(radius = Consts.rsun/sys.ul),
+                  optics = dict(limb_coeffs = [0.65]))
 
-      P = sys.add(kind="Planet", primary=S,
-                  orbit=dict(a=0.2, e=0.0),
-                  physics=dict(radius=Consts.rsaturn/sys.ul))
+      P = sys.add(kind = "Planet", primary = S,
+                  orbit = dict(a = 0.2, e = 0.0),
+                  physics = dict(radius = Consts.rsaturn/sys.ul))
 
-      R = sys.add(kind="Ring", primary=P,
-                  physics=dict(fi=1.5, fe=2.5, i=30*Consts.deg))
+      R = sys.add(kind = "Ring", primary = P,
+                  physics = dict(fi = 1.5, fe = 2.5, i = 30*Consts.deg))
 
-      O = sys.add(kind="Observer",
-                  optics=dict(lamb=90*Consts.deg, beta=90*Consts.deg))
+      O = sys.add(kind = "Observer",
+                  optics = dict(lamb = 90*Consts.deg, beta = 90*Consts.deg))
 
       RP = sys.ensamble_system()

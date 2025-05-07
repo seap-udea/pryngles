@@ -57,7 +57,7 @@ alt="Animation" width="400"/> </p>
 
 ## Download and Install
 
-- **From PyPI**:
+### From PyPI:
 
 `Pryngles` is available in `PyPI`, https://pypi.org/project/pryngles/.
 To install it, just execute:
@@ -66,7 +66,7 @@ To install it, just execute:
    pip install -Uq pryngles
 ```
 
-- **From sources**:
+### From soruces:
 
 If you prefer, you may download from the
 [sources](https://pypi.org/project/pryngles/#files) or directly from our GitHub repository.
@@ -88,9 +88,9 @@ In case you want to contribute to our package, please use an editable installing
 $ cd pryngles
 $ pip install -e .
 ```
-- **In GoogleColab**:
+### In GoogleColab:
 
-If you prefer the `GoogleColab` environment, you may also install `pryngles` by executing:
+If you are used to `GoogleColab` environment, you may also install `pryngles` by executing:
 
 ```python
 !pip install -Uq pryngles
@@ -98,7 +98,7 @@ If you prefer the `GoogleColab` environment, you may also install `pryngles` by 
 
 ## Quickstart
 
-¿Getting started using `pryngles`?
+¿Getting started using `pryngles`?  
 Please import the package and some useful utilities:
 
 ```python
