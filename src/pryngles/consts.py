@@ -40,7 +40,15 @@ IN_JUPYTER='ipykernel' in sys.modules
 
 class Consts(object):
     """
-    The ``pr.Consts`` class is where we define all physical and astronomical constants. It contains the ``rebound`` imported constants and so the defined ones
+    The ``pr.Consts`` class is where we define all physical and astronomical constants. 
+    It contains the ``rebound`` imported constants and so the defined ones
+
+    Examples
+    ---------------
+    >>> pr.Consts.au # AU (Astronomical Unit)
+    149597870700.0
+    >>> pr.Consts.msun # Solar Mass`
+    1.9884754159665356e+30
     """
 
     # Mathematical constants
@@ -225,15 +233,15 @@ SAMPLE_SHAPES+=["sphere"]
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Constants of module spangler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-"""
-    Colors: Given in hue (0-360), level (0: black-1: white), saturation (0-1)
+# """
+#     Colors: Given in hue (0-360), level (0: black-1: white), saturation (0-1)
    
-    For colors: 
-        https://htmlcolorcodes.com/es/
+#     For colors: 
+#         https://htmlcolorcodes.com/es/
    
-    When searching for colors use:
-        Plot.rgb_sample(59)
-"""
+#     When searching for colors use:
+#         Plot.rgb_sample(59)
+# """
 #Type of spangles
 SPANGLE_COLORS=dict()
 __s=-1
@@ -736,9 +744,14 @@ STAR_DEFAULTS=deepcopy(BODY_DEFAULTS)
 `dict` : Defines the default attributes for bodies of the kind 'Star'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`
 
 - **radius** (float) — Radius of the star. Defaults to 0.1.
-- **limb_coeffs** (list of floats) — List of limb darkening coefficients. Defaults to an empty list.
+- **limb_coeffs** (list of floats) — List of limb darkening coefficients [2]. Its lenght defines the model to implement [1]. **Defaults = `[]`**.
 - **spangle_type** (constant) — Type of spangle used for the star's surface. Defaults to  :data:`~ consts.SPANGLE_STELLAR`.
 - **shape** (str) — The overall shape of the star. Defaults to "sphere".
+
+References
+---------------
+[1] Models for Limb-Darkening: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
+[2] Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
 """
 STAR_DEFAULTS.update(odict(
 
@@ -756,9 +769,6 @@ STAR_DEFAULTS.update(odict(
 ))
 BODY_KINDS+=["Star"]
 
-# """
-# These are the default attributes for bodies of the kind 'Planet'.
-# """
 PLANET_DEFAULTS=deepcopy(BODY_DEFAULTS)
 """
 `dict` : Defines the default attributes for bodies of the kind 'Planet'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`

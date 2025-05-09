@@ -126,39 +126,27 @@ Orbital Constants
 
 .. autodata:: pryngles.consts.REBOUND_ORBITAL_PROPERTIES
    :no-value:
-   :no-index:
 
 
 Sampler Constants
 ^^^^^^^^^^^^^^^^^^^^
 
-.. .. automodule:: pryngles.consts
-..    :no-index:
-..    :member-order: bysource
-..    :members: SAMPLE_SHAPES, SAMPLER_PRESETS
-..    :no-value:
-
 These are the numerical attributes to define the body shapes we consider in ``pryngles`` to Spangle and Sampling its surface. 
 For `Stars`, `Planets` and `Moons` it defines a sphere-sampling. `Ring` is considered as a circle-sampling with a circle-sampling hole
 
 .. autodata:: pryngles.consts.SAMPLE_SHAPES
-   :no-index:
 
 .. autodata:: pryngles.consts.SAMPLER_GEOMETRY_SPHERE
-   :no-index:
 
 .. autodata:: pryngles.consts.SAMPLER_GEOMETRY_CIRCLE
-   :no-index:
 
 Sample presets are the values of `N-Spangles` for which there are already stored samples
 
 .. autodata:: pryngles.consts.SAMPLER_SPHERE_PRESETS
    :no-value:
-   :no-index:
 
 .. autodata:: pryngles.consts.SAMPLER_CIRCLE_PRESETS
    :no-value:
-   :no-index:
 
 Spangler Constants
 ^^^^^^^^^^^^^^^^^^^^
@@ -195,9 +183,9 @@ In order to characterize the radiation-matter interaction on each discrete unit 
 .. csv-table::
    :header: "Key","Data Type","Description","Units/Values"
    
-   "name","str","Identification of the body having the spangler.","Body name (``pr.Body.name``)"
-   "spangle_type","``pr.consts``","Type of spangle. For a list of spangle types, see the constants module.","(e.g., :data:`~ constants.SPANGLE_SOLID_ROCK`)"
-   "geometry","``pr.consts``","Geometry of the spangle. (See Sampler module constants).","(e.g., :data:`~ sampler.SAMPLER_GEOMETRY_CIRCLE`)"
+   "name","str","Identification of the body having the spangler.","Body name (:data:`~ pryngles.body.Body.name`)"
+   "spangle_type",":data:`~ pryngles.consts`","Type of spangle. For a list of spangle types, see the constants module.","(e.g., :any:`consts.SPANGLE_SOLID_ROCK`)"
+   "geometry",":data:`~ pryngles.consts`","Geometry of the spangle. (See Sampler module constants).","(e.g., :any:`consts.SAMPLER_GEOMETRY_CIRCLE`)"
    "scale","float","The length scale of the body, e.g., for a ring this is the outer radius.","Length unit (e.g., km, :math:`u_l`)"
    "n_equ","list, `array`","Direction of the equator of the body with respect to the barycenter.","[x, y, z] (unit vector)"
    "alpha_equ","float","Zero meridian of the equatorial system.","radians"
@@ -262,7 +250,7 @@ In order to characterize the radiation-matter interaction on each discrete unit 
    "azim_obs_luz","float","Difference between the azimuth of the observer over the spangle and that of the light-source.","radians"
    "asp","float","Effective area of the spangle in 3D.","Area units"
    "dsp","float","Effective diameter of spangle, :math:`d_{sp} = 2 \sqrt{(a_{sp} / \pi)}`.","Length units"
-   "scatterer","str","Hash (identifier) of the scatterer used for this spangle.","Hash string (:data:`~ scatterer.SCATTERER`)"
+   "scatterer","str","Hash (identifier) of the scatterer used for this spangle.","Hash string (:any:`scatterer.SCATTERER`)"
    "albedo_gray_normal","float","Wavelength-independent normal albedo.","dimensionless (0 to 1)"
    "albedo_gray_spherical","float","Wavelength-independent spherical albedo.","dimensionless (0 to 1)"
    "tau_gray_optical","float","Wavelength-independent optical depth.","dimensionless (non-negative)"
@@ -295,29 +283,18 @@ These are the numerical attributes and its defaults physical parameters to defin
 
 .. autodata:: pryngles.consts.BODY_DEFAULTS
    :no-value:
-   :no-index:
 
 .. autodata:: pryngles.consts.STAR_DEFAULTS
    :no-value:
-   :no-index:
 
 .. autodata:: pryngles.consts.PLANET_DEFAULTS
    :no-value:
-   :no-index:
 
 .. autodata:: pryngles.consts.RING_DEFAULTS
    :no-value:
-   :no-index:
 
 .. autodata:: pryngles.consts.OBSERVER_DEFAULTS
    :no-value:
-   :no-index:
 
 .. autodata:: pryngles.consts.LEGACY_PHYSICAL_PROPERTIES
    :no-value:
-   :no-index:
-
-.. .. automodule:: pryngles.consts
-..    :member-order: bysource
-..    :members: BODY_KINDS, BODY_DEFAULTS, STAR_DEFAULTS, PLANET_DEFAULTS, RING_DEFAULTS, OBSERVER_DEFAULTS, LEGACY_PHYSICAL_PROPERTIES
-..    :no-value:

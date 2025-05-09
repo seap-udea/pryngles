@@ -13,7 +13,7 @@
    include/getting_started/getting_started
    include/api/api
    include/tutorials/tutorials
-   include/contributing
+   .. include/contributing
    
 ------------
 
