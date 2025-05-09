@@ -44,4 +44,7 @@ html_theme_options = {
         "image_dark": "pryngles_logo.png",
         "text": f"{project} {release} Documentation",
     },
+    "external_links": [
+    {"name": "Source", "url": "https://github.com/seap-udea/pryngles"},
+  ]
     }
