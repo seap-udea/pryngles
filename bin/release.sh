@@ -76,7 +76,7 @@ echo "version='$version'" > src/pryngles/version.py
 # Build package
 ##################################################################
 echo "Building packages..."
-python -m build
+python3 -m build
 
 ##################################################################
 # Uploading the package
@@ -85,8 +85,8 @@ echo
 if [ $qtype -eq 0 ]
 then
     echo "Uploading to Test PyPI (use __token__ as username and pypi-<token> as password)..."
-    python -m twine upload --repository testpypi dist/* --verbose
+    python3 -m twine upload --repository testpypi dist/* --verbose
 else
     echo "Uploading to PyPI (use your username and password)..."
-    python -m twine upload dist/* --verbose
+    python3 -m twine upload dist/* --verbose
 fi

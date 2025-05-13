@@ -83,4 +83,4 @@ pipinstall:
 	@$(PIP) install -e .
 
 import:
-	@$(PYTHON) -c "from pryngles import *;print(version)"
+	@python3 -c "from pryngles import *;print(version)"
