@@ -28,91 +28,89 @@ from matplotlib.patches import Circle, PathPatch
 from mpl_toolkits import mplot3d
 from scipy.spatial.transform import Rotation
 import math
-
+    
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Sampler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Sampler(PrynglesCommon):
-    """    Fibonacci sampling of disks and spheres.
+    """
+    Class for generating evenly distributed points on various geometric shapes 
+    using the Fibonacci spiral algorithm. It allows for customization of the 
+    number of points, random seed for reproducibility, and loading/saving of samples 
+    to binary files. Presets for common geometries like spheres, circles, and rings are also available.
+
+    Parameters
+    ----------------
+    N : `int`
+        Number of points to generate the surface sampling | **Default** = 1000
+
+    seed : `integer`
+        Value of the integer seed of random number generation (if 0 no random seed is set).
+        If a non-zero seed is used the position of the points for a given geometry will be 
+        always the same | **Default** = 0
+
+    filename : `str`
+        To initialize and load object from a binary file.  
+        The binary file should be previously prepared with the method :data:`~ __init__.PrynglesCommon.save_to` of the class.
+        | **Default =** None
+
+    preset : `tuple`
+        To load a preset sample from disk of the type preset. 
+        Preset should have two components:
+
+        - **geometry** (`str`)
+          Possible values are from :any:`consts.SAMPLE_SHAPES`
+    
+        - **geometry_args** (`dict : dict(ri = 0)`)
+          Arguments of the routine to generate sample from preset.
+          Inner radius (``ri``) of the ring when ``geometry = "ring"``    
+
+    Attributes
+    ----------
+    dim : `int`. 
+        Dimension of sampling.
         
-        Initialization attributes:
-            N: integer:
-                Number of points (points).
-            
-        Optional attibutes:
+    ss, pp : `numpy.array`.
+        (N x 3) Position of the points in cartesian and spherical coordinates :math:`(r, θ, \phi)`, 
+        where :math:`θ` is azimutal angle (angle with respecto to x-axis) and :math:`\phi` is "elevation" 
+        (complement of polar angle).
         
-            seed: integer. default = 0:
-                Value of the integer seed of random number generation (if 0 no random seed is set).
-                If a non-zero seed is used the position of the points for a given geometry will be 
-                always the same.
-                
-            filename: string, default = None:
-                Load object from a binary file.  The binary file should be previously prepared with
-                the method .save_to of the class.
+    purged : `bool`
+        ¿Is the sample purged?. Purge is the process by which points too close are
+        removed until the average distance between points is similar | **Default =** `False` 
     
-        Atributes to load data from presets:
+    dmin, dmed, dmax : `float`
+        Minimum, median and maximum distance between points.
     
-            preset: tupe, default = None:
-                If set, we load a preset sample from disk of the type preset.
-                preset should have two components: 
-    
-                    geometry: string:
-                        Possible values: "sphere", "circle", "ring"
-    
-                    geometry_args: dict:
-                        Arguments of the routine to generate sample from preset.  Example:
-    
-                            ri: float, default = 0:
-                                Inner radius of the ring when preset = "ring"
-                    
-        Secondary attributes:
+    ds : `numpy.array`
+        Distances to the nearest neighbor for all the points.
         
-            dim: integer. 
-                Dimension of sampling.
-                
-            ss: numpy array (Nx3).
-                Position of the points in cartesian coordinates, 
-                
-            pp: numpy array (Nx3).
-                Position of the points in spherical coordinates (r,theta,phi), 
-                where theta is azimutal angle (angle with respecto to x-axis) and phi is "elevation" 
-                (complement of polar angle).
-    
-                Notice that this convention is different than that of regular vectorial calculus
-                where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
-                the azimutal one.
-                
-            purged: boolean. default = False:
-                Is the sample purged?.  Purge is the process by which points too close are
-                removed until the average distance between points is similar.
-            
-            dmin, dmed, dmax: float
-                Minimum, median and maximum distance between points.
-            
-            ds: numpy array (N).
-                Distance to the nearest neighbor for all the points.
-                
-            dran: float.
-                Range of distances between points (dmax-dmin).  While the smaller this quantity the better.
-                
-            dstar: float.
-                As measure of distances (sqrt(N)*dmed). Typically this value is between 2.4 and 3.4
-                (see source http://extremelearning.com.au/evenly-distributing-points-on-a-sphere)
-    
-        Other attributes:
+    dran : `float`
+        Range of distances between points (``dmax - dmin``). While the smaller this quantity the better.
         
-            cargs: dictionary.  default = dict(color="k",fill=False,alpha=0.3): 
-                Arguments for plotting the circumference in polar.
-                       
-            wargs: dictionary. default = dict(color="k",lw=0.1): 
-                Arguments for plotting a sphere in 3d space.
-                
-        Notes:
-            
-            This class and module is based on fibpy by Martin Roberts, source code: 
-            https://github.com/matt77hias/fibpy
-        
+    dstar : `float`
+        As measure of distances :math:`\sqrt{N}d_{med}`. Typically this value is between 2.4 and 3.4
+        (see source http://extremelearning.com.au/evenly-distributing-points-on-a-sphere)
+    
+
+    Returns
+    -------
+    :
+        output : :data:`~ sampler.Sampler`
+            Sampler object containing the initialize attribute to compute the surface sampling.
+
+    Raises
+    ------
+    ValueError
+        if ``geometry`` parameter is not a value from :any:`consts.SAMPLE_SHAPES`
+
+    See Also
+    --------
+    save_to()
+        Save object to a binary file | `filename = str`
+    load_to()
+        Read object from a binary file | `filename = str`
     """
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -240,10 +238,29 @@ class Sampler(PrynglesCommon):
 
     def plot(self, spangled=dict(), **args):
         """
-        Plot sample.
+        Method to visualize a plot of the sample generated.
     
-        Parameters:
-            args: scatter plotting options, dictionary.
+        Parameters
+        -----------------------
+        spangled : `dict` 
+            Scatter plotting options
+
+        Examples
+        ----------------
+        >>> # Creating Sampler object
+        >>> sp = pr.Sampler(N = 1000)
+        >>> 
+        >>> # Generate sample in a unitary circle
+        >>> sp.gen_circle()
+        >>> 
+        >>> # Plot the sample
+        >>> sp.plot()
+        >>> sp.ax.set_title(f"Spangler, N = {sp.N}", fontsize = 10)
+        >>> sp.fig.tight_layout()
+
+        .. image:: images/sampler.png
+            :align: center
+            :width: 600px
         """
         sargs= dict(c='k', s=1.5)
         sargs.update(args)
@@ -282,17 +299,30 @@ class Sampler(PrynglesCommon):
         self.fig.tight_layout()
     
     
-    def gen_circle(self, perturbation=1, boundary=2):
+    def gen_circle(self, perturbation = 1, boundary = 2):
         """ Sample points in fibonacci spiral on the unit circle
     
-        Optional parameters:
-    
-            perturbation: type of perturbation (0 normal perturbation, 1 random perturbation), int
-    
-            boundary: type of boundary (0 jagged, >1 smooth)
-    
-        Update:
-            ss, pp
+        Parameters
+        ----------------
+        perturbation : `int`
+            Type of perturbation (0 normal perturbation, 1 random perturbation) 
+            | **Default** = `1`
+        boundary : `int`
+            Type of boundary (0 jagged, >1 smooth) 
+            | **Default** = `2`
+            
+        Examples
+        -----------------
+        >>> # Modify some properties of plot
+        >>> sp.plot(spangled=dict(color='r'))
+        >>>
+        >>> # Show some quantities of the sample, See Attributes of Sampler Class
+        >>> sp.ax.set_title(f"N = {sp.N}, dmed = {sp.dmed:.4f}, deff = {sp.deff:.4f}", fontsize = 10)
+        >>> sp.fig.tight_layout()
+
+        .. image:: images/sampler_gen_circle.png
+            :align: center
+            :width: 600px        
         """
         self._seed_sampler()
         self.geometry = SAMPLER_GEOMETRY_CIRCLE
@@ -348,23 +378,36 @@ class Sampler(PrynglesCommon):
         #Distances
         self._calc_distances()
     
-    def gen_ring(self, ri=0.5, perturbation=1, boundary=2):
-        """ Sample points in fibonacci spiral on the unit circle, but including an inner gap (as in ring)
+    def gen_ring(self, ri = 0.5, perturbation = 1, boundary = 2):
+        """Sample points in fibonacci spiral on the unit circle, but including an inner gap (as in ring)
     
-        Parameters:
-            fi: float, default = 0.5:
-                Inner radius of the ring.
+        Parameters
+        --------------
+        ri: `float`
+            Inner radius of the ring | **default** = `0.5`
+        perturbation : `int`
+            Type of perturbation (0 normal perturbation, 1 random perturbation) 
+            | **Default** = `1`
+        boundary : `int`
+            Type of boundary (0 jagged, >1 smooth) 
+            | **Default** = `2`
     
-        Optional parameters:
-            perturbation: type of perturbation (0 normal perturbation, 1 random perturbation), int
-            boundary: type of boundary (0 jagged, >1 smooth)
-    
-        Example:
-            s.Sample(1000)
-            s.gen_fullring(0.3)
-    
-        Update:
-            ss, pp
+        Example
+        -------------
+        >>> # We can modify our sampling
+        >>> sp.N=500
+        >>>
+        >>> # Generate a sampling for a ring
+        >>> sp.gen_ring(0.5,boundary=1)
+        >>>
+        >>> # Let's plot it!!
+        >>> sp.plot(c = 'r',s = 0.5,spangled = dict(color = 'r',alpha = 0.1))
+        >>> sp.ax.set_title(f"N = {sp.N}, dmin = {sp.dmin:.2e}, dmax = {sp.dmax:.2e}", fontsize = 8);
+        >>> sp.fig.tight_layout()
+
+        .. image:: images/sampler_gen_ring.png
+            :align: center
+            :width: 600px   
         """
         if self.N < SAMPLER_MIN_RING:
             raise ValueError(f"The number of points for a ring shouldn't be lower than {SAMPLER_MIN_RING}.  You provided {self.N}")
@@ -379,14 +422,31 @@ class Sampler(PrynglesCommon):
         #Cut hole
         self._cut_hole(ri)
     
-    def gen_sphere(self, perturbation=1):
-        """ Sample points in the unit sphere following fibonacci spiral
+    def gen_sphere(self, perturbation = 1):
+        """Sample points in the unit sphere following fibonacci spiral
     
-        Optional parameters:
-            perturbation: type of perturbation (0 normal perturbation, 1 random perturbation), int
-    
-        Update:
-            ss, pp
+        Parameters
+        --------------
+        perturbation : `int`
+            type of perturbation (0 normal perturbation, 1 random perturbation) 
+            | **default** = `1`
+
+        Examples
+        -------------
+        >>> # If you want that the spangle position not be different each time use
+        >>> sp = pr.Sampler(N = 1000, seed = 1)
+        >>>
+        >>> # Create a sphere sampling
+        >>> sp.gen_sphere()
+        >>>
+        >>> # And plot it
+        >>> sp.plot()
+        >>> sp.ax.set_title(f"N = {sp.N}, dmin = {sp.dmin:.4f}, dmax = {sp.dmax:.4f}", fontsize = 8);
+        >>> sp.fig.tight_layout()
+
+        .. image:: images/sampler_gen_sphere.png
+            :align: center
+            :width: 600px
         """
         self._seed_sampler()
         self.geometry = SAMPLER_GEOMETRY_SPHERE

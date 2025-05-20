@@ -18,15 +18,10 @@ release = '0.9.10'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = [#'nbsphinx', 
-              'sphinx_mdinclude', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.viewcode']
+extensions = ['sphinx_mdinclude', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.viewcode']
 
 napoleon_numpy_docstring = True
-napoleon_google_docstring = False 
-# autodoc_default_flags = ['members', 'undoc-members']
-
-
-# nbsphinx_execute = 'never'
+napoleon_google_docstring = False
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
