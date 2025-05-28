@@ -29,52 +29,35 @@ from scipy.interpolate import interp1d,interp2d
 # Class Scatterer
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Scatterer(PrynglesCommon,ABC):
-    """An scatterer surface
-    
-    Initialization attributes:
-    
-         params: dictionary:
-             Other parameters of the phase law.
-    
-    Mandatory methods:
-    
-        __init__(self,phase_law:lambda,**params)->int:
-            This method should return a hash of the object.
-            
-        get_albedo(eta:float,zeta:float,delta:float,lamb:float,**params)->float
-            This method must provide the albedo.
-        
-    Class methods:
-    
-        register(scatterer,params):
-            Register scatterer for future uses.
-    
-        reset_catalogue():
-            Reset the catalogue of scatterers.
-            
-            Usage: Scatterer.reset_catalogue()
-    
-    Usage:
-        You can create a Scatterer which implements this class:
-    
-            class MySurface(Scatterer):
-                def __init__(self,**params):
-                    if self.register(self,params):
-                        #Read parameters of the scatterer
-                        self.A=params["A"]
-                        #Initialize scatterer
-                        self._initialize_scatterer()
-    
-                #Mandatory methods
-                def get_albedo(self,eta,zeta,delta,lamb,**params):
-                    albedo=self.AA*eta
-                    return albedo
-    
-                # Private methods to prepare scatterer
-                def _initialize_scatterer(self):
-                    self.AA=self.A**2
-    
-    
+    """
+    Abstract base class for scattering surfaces or atmospheres. 
+    This class defines the interface and registration system for all scatterers
+    used in photometric modeling. 
+
+    Caution
+    ------------
+    Subclasses must implement the ``get_albedo()`` method,
+    which computes the reflectance based on geometric parameters.
+
+    Examples
+    -----------
+    >>> # You can create your own Scatterer
+    >>> class MySurface(Scatterer):
+    >>> 
+    >>>     # Read and initialize scatterer parameters
+    >>>     def __init__(self, **params): 
+    >>>         if self.register(self, params):
+    >>>             self.A = params["A"]
+    >>>             self._initialize_scatterer()
+    >>> 
+    >>>     # Mandatory Method
+    >>>     def get_albedo(self,eta,zeta,delta,lamb,**params):
+    >>>         albedo = self.AA*eta
+    >>>         return albedo
+    >>> 
+    >>>     # Private methods to prepare scatterer
+    >>>     def _initialize_scatterer(self):
+    >>>        self.AA = self.A**2
     """
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,15 +66,17 @@ class Scatterer(PrynglesCommon,ABC):
     
     @abstractmethod
     def __init__(self,**params)->str:
+        """To read and initialize the scatterer parameters"""
         pass
     
     @abstractmethod
     def get_albedo(self,eta:float,zeta:float,delta:float,lamb:float,**params)->float:
+        """Method to compute and provide the geometrical albedo of a scatterer surface"""
         pass
     
     @classmethod
     def register(self,scatterer,params):
-        """Register scatterer
+        """Method to register a particular scatterer
         """
         scatterer.params=params
         scatterer.params["name"]=scatterer.__class__.__name__
@@ -108,8 +93,7 @@ class Scatterer(PrynglesCommon,ABC):
         
     @classmethod
     def reset_catalogue(self):
-        """Reset catalogue of scatterers
-        """
+        """To reset the catalogue of registered scatterers """
         SCATTERERS_CATALOGUE=dict()
         
 
@@ -118,13 +102,16 @@ class Scatterer(PrynglesCommon,ABC):
 # Class NeutralSurface
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class NeutralSurface(Scatterer):
-    """Neutral surface.
+    """
+    Idealized scattering surface with constant unit albedo. 
+    Represents a perfectly reflecting surface, independent of geometry or wavelength.
     """
     def __init__(self,**params):
         if self.register(self,params):
             pass
     
     def get_albedo(self,eta,zeta,delta,lamb,**params):
+        """Returns an albedo of 1 for all inputs"""
         return 1
     
 
@@ -133,13 +120,15 @@ class NeutralSurface(Scatterer):
 # Class BlackBodySurface
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class BlackBodySurface(Scatterer):
-    """Black body surface
+    """
+    Idealized absorbing surface with zero albedo. Represents a perfect black body that absorbs all incoming radiation.
     """
     def __init__(self,**params):
         if self.register(self,params):
             pass
     
     def get_albedo(self,eta,zeta,delta,lamb,**params):
+        """Returns an albedo of 0 for all inputs"""
         return 0
     
 
@@ -148,46 +137,66 @@ class BlackBodySurface(Scatterer):
 # Class LambertianGraySurface
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class LambertianGraySurface(Scatterer):
-    """Lambertian Gray Surface.
+    """
+    This is the scatterer corresponding to a surface having a gray lambertian Albedo with optional phase law.
+    Models a surface that reflects light isotropically with a constant (gray) albedo.
+
+    Parameters
+    ----------
+    AL : `float`
+        Wavelength-independent albedo of the surface (0 ≤ AL ≤ 1). 
+        It is interpreted as the hemispherical albedo under normal incidence.
+
+    phase_law : function, optional
+        | Law of diffuse reflection used to describe the scattering behavior of the surface and compute the angular dependence of the surface albedo.
+        | By default, a Lambertian phase law is assumed:
+
+        .. code-block:: python
+
+            lambda eta, zeta, delta, lamb, params: eta
+        
+        | An alternative commonly used in planetary science is the **Lommel-Seeliger law**:
+
+        .. code-block:: python
+
+            lambda eta, zeta, delta, params: eta*zeta/(eta + zeta)
+
     
-    This is the scatterer corresponding to a surface having a gray lambertian Albedo.
+    Note
+    -----------
+    The phase law can be customized. This are the functional form of Lambert's cosine law & Lommel-Seeliger law.
+
+    .. math::
+
+        f(\eta, \zeta) = 
+        \\begin{cases}
+            \cos\eta, & \\text{(Lambertian phase law)} \\\\
+            \dfrac{\cos\eta \cos \zeta}{\cos\eta + \cos \zeta}, & \\text{(Lommel-Seeliger phase law)}
+        \end{cases}
     
-    Parameters:
+    Where :math:`\eta` is the angle of incidence and :math:`\zeta` is the angle of reflection or emission.
     
-        phase_law: function, default=lambda eta,zeta,delta,lambda:eta :
+    The provided `phase_law` function must follow this prototype:
 
-            Law of reflection (by default is Lambertian, see Russel, 1916)
+    .. code-block:: python
 
-            The phase_law must obey the following prototype:
+        def phase_law(eta, zeta, delta, lamb, **params):
+            '''
+            Phase/Diffuse-Reflection law of the surface.
 
-                phase_law(eta,zeta,delta,lamb,**params):
-                    '''Phase law of the surface
-
-                    Parameters:
-                        eta: float:
-                            cosine of the incoming angle.
-
-                        zeta: float:
-                            cosine of the outgoing angle.
-
-                        delta: float:
-                            difference between the incoming and outgoing azimuth.
-
-                        lamb: float:
-                            Wavelength.
-
-                        parameters: dictionary: 
-                            Other parameters of the phase law.
-
-                    Return:
-                        Wavelength dependent albedo.
-                    '''
-                    ...
-
-                Other law is the Lommel-Seeliger law:
-
-                    phase_law = lambda eta,zeta,delta,params:eta*zeta/(eta+zeta) (see Russel, 1916)
-
+            Parameters
+            ----------
+            eta : float
+                Cosine of the incoming angle.
+            zeta : float
+                Cosine of the outgoing angle.
+            delta : float
+                Azimuthal angle difference between incoming and outgoing directions.
+            lamb : float
+                Wavelength.
+            params : dict
+                Additional parameters required by the phase law.
+            '''
     """
     
     def __init__(self,**params):
@@ -212,6 +221,48 @@ class LambertianGraySurface(Scatterer):
             self._accelerate_lambertian_albedo()
 
     def get_albedo(self,eta,zeta,delta,lamb,**params):
+        """ 
+        Compute the directional albedo for a given incident angle :math:`\eta` in a planetary gray Lambertian surface, assuming a gray, isotropic scattering law. 
+
+        Parameters
+        ----------
+        eta : float
+            Cosine of the incoming angle.
+        zeta : float
+            Cosine of the outgoing angle.
+        delta : float
+            Azimuthal angle difference between incoming and outgoing directions.
+        lamb : float
+            Wavelength.
+        AL : `float`
+            Wavelength-independent albedo of the surface (0 ≤ ``AL`` ≤ 1). 
+            It is interpreted as the hemispherical albedo under normal incidence
+        phase_law : function, optional
+            Law of diffuse reflection used to describe the scattering behavior of the surface and compute the angular dependence of the surface albedo.
+
+        Returns
+        -------
+        :
+            `float`
+                Wavelength-independent Lambertian directional albedo :math:`A_L(\eta)` at the given incident angle :math:`\eta`.
+
+        Note
+        ------------
+        | The directional-dependent albedo is precomputed via numerical integration of the phase law and interpolated for efficiency.
+        Since you provide a value for surface albedo ``AL``, 
+        we implement a root method to find the `single scattering albedo` :math:`\gamma` in order to compute 
+        the directional dependence (:math:`\cos\eta_i`) of albedo (Eq. 12) **[1]**, where :math:`\eta_i` refers to the 
+        incidence angle of the light on each of the surface's `Spangles`.}
+
+        .. math:: 
+
+            A_L(\eta_i) = 2\pi\gamma\int_0^1\\frac{f(\eta_i,\,\zeta)}{\cos\eta_i}\,d(\cos\zeta)
+
+        **[1]** Zuluaga, J. I., Sucerquia, M., & Alvarado-Montes, J. A. (2022). 
+        `The bright side of the light curve: A general photometric model of non-transiting exorings`. 
+        Astronomy and Computing 40 (2022) 100623. `arXiv:2207.08636 <https://arxiv.org/abs/2207.08636>`_
+        """
+
         return self._get_albedo(eta)
         
     #####################################
@@ -239,9 +290,15 @@ class LambertianGraySurface(Scatterer):
 # Class LambertianGrayAtmosphere
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class LambertianGrayAtmosphere(Scatterer):
-    """Lambertian Gray Atmopshere.
+    """
+    This is the scatterer corresponding to a semi-infinite (:math:`\\tau\\to\infty`), plane-parallel atmosphere with gray Lambertian scattering.
+    Models the diffuse reflection properties assuming an atmosphere composed of particles that scatter isotropically
     
-    This is the scatterer corresponding to plane-parallel gray lambertian atmosphere
+    Parameters
+    ----------------
+    AS : `float`
+        Spherical, wavelength-independent albedo of the atmosphere (0 ≤ ``AS`` ≤ 1).
+        It is interpreted as the desired hemispherical albedo under normal incidence.
     """
     
     def __init__(self,**params):
@@ -262,6 +319,58 @@ class LambertianGrayAtmosphere(Scatterer):
             self._accelerate_lambertian_albedo()
 
     def get_albedo(self,eta,zeta,delta,lamb,**params):
+        """ 
+        Compute the directional Lambertian albedo :math:`A_L(\eta)`, at a given incident angle of illumination :math:`\eta`, of a planetary atmosphere
+        assuming gray scattering and a semi-infinite layers.  
+
+        Parameters
+        ----------
+        eta : float
+            Cosine of the incoming angle.
+        zeta : float
+            Cosine of the outgoing angle.
+        delta : float
+            Azimuthal angle difference between incoming and outgoing directions.
+        lamb : float
+            Wavelength.
+        AS : `float`
+            Spherical, wavelength-independent albedo of the atmosphere (0 ≤ ``AS`` ≤ 1).
+            It is interpreted as the desired hemispherical albedo under normal incidence.
+
+        Returns
+        -------
+        :
+            `float`
+                directional-dependent Lambertian albedo :math:`A_L(\eta)` of the atmosphere for a given incident angle :math:`\eta`.
+
+        Note
+        -------
+        For a given spherical albedo, we derive, by root-finding methods, the  `single scattering albedo` :math:`\gamma` that reproduces the desired hemispheric reflectance ``AS`` (Eq. 10) **[2]**
+        
+        .. math::
+
+            A_S = 4 \int_0^1 \int_0^1 \cos \Lambda \cos Z \, \\rho(\gamma, \Lambda, Z) \, d(\cos \Lambda) \, d(\cos Z)
+
+        We also implement a 2D interpolation of pre-tabulated reflection coefficient :math:`\\rho(\gamma, \eta, \zeta)` (Eq. 7) **[2]**, 
+        based on radiative transfer solutions (Table 2.3  in Sobolev, 1975) **[1]** to model the direction-dependent Lambertian albedo efficiently (Eq. 8) **[2]**.
+
+        .. math::
+
+            \\rho(\gamma, \Lambda, Z) = \\frac{\gamma}{4} \\frac{f(\gamma, Z) \, f(\gamma, \Lambda)}{\cos \Lambda + \cos Z}
+
+        .. math::
+
+            A_{L_i}(\Lambda_i) = 2 \int_0^1 \cos Z \, \\rho(\gamma, \Lambda_i, Z) \, d(\cos Z)
+
+
+        References
+        -----------------------
+        **[1]** Sobolev, V. V. (1975). Light Scattering in Planetary Atmospheres. 
+        
+        **[2]** Zuluaga, J. I., Sucerquia, M., & Alvarado-Montes, J. A. (2022). 
+        `The bright side of the light curve: A general photometric model of non-transiting exorings`. 
+        Astronomy and Computing 40 (2022) 100623. `arXiv:2207.08636 <https://arxiv.org/abs/2207.08636>`_
+        """
         return self._get_albedo(eta)
         
     #####################################
