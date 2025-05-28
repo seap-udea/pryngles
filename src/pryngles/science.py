@@ -32,7 +32,9 @@ import matplotlib.pyplot as plt
 # Class Science
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Science(PrynglesCommon):
-    """Science utility Class
+    """
+    The Science utility Class defines all the methods to geometric and scientific useful calculations. 
+    It is a static Class, i.e., that cannot be instantiated and their methods work as regular functions.
     """
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,21 +45,25 @@ class Science(PrynglesCommon):
         """
         Transform cartesian coordinates into spherical coordinates
     
-        Parameters:
+        Parameters
+        ----------
+        xyz : `np.array(N = 3)`
+            Array with components of Cartesian Coordinates 
     
-            xyz: array (3):
-                Cartesian coordinates
-    
-        Return:
-    
-            rqf: array (3):
-                Spherical coordinates (r, theta, phi) where theta is azimutal angle and phi is 
-                elevation (complement of polar angle).                
-    
-                Notice that this convention is different than that of regular vectorial calculus
-                where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
-                the ezimutal one.
-    
+        Returns
+        -------
+        :
+            rqf : `np.array(N = 3)`
+                Spherical coordinates :math:`(r, θ, \phi)` where :math:`θ` is azimutal angle and :math:`\phi` is 
+                elevation (complement of polar angle).
+
+        Examples
+        ------------
+        >>> xyz = [1, 1, 1]
+        >>> 
+        >>> # To Spherical
+        >>> pr.Science.spherical(xyz)
+        array([1.73205081, 0.78539816, 0.61547971])
         """
         r,theta,phi=spy.reclat(np.array(xyz))
         theta=2*mh.pi+theta if theta<0 else theta
@@ -67,16 +73,25 @@ class Science(PrynglesCommon):
     def cospherical(xyz):
         """Transform cartesian coordinates into cosine/sine of spherical angles
         
-        Parameters:
+        Parameters
+        ----------
+        xyz : `np.array(N = 3)`
+            Array with components of Cartesian Coordinates 
     
-            xyz: array (3):
-                Cartesian coordinates
-                
-        Return:
-    
-            cqsqcf: array (3):
-                Cosine/sine of spherical angles (cos theta, sin theta, cos phi) where theta is 
-                azimutal angle and phi is elevation (complement of polar angle).         
+        Returns
+        -------
+        :
+            cqsqcf : `np.array (N = 3)`
+                Cosine/Sine of spherical angles (:math:`\cos θ`, :math:`\sin θ`, :math:`\sin\phi`) where :math:`θ` is 
+                azimutal angle and :math:`\phi` is elevation (complement of polar angle).   
+
+        Examples
+        ------------
+        >>> xyz = [1, 1, 1]
+        >>> 
+        >>> # To Cospherical
+        >>> pr.Science.cospherical(xyz)
+        array([0.70710678, 0.70710678, 0.57735027])     
         """
         rho=(xyz[0]**2+xyz[1]**2)**0.5
         sf=xyz[2]/(rho**2+xyz[2]**2)**0.5
@@ -87,16 +102,25 @@ class Science(PrynglesCommon):
     def pcylindrical(xyz):
         """Transform cartesian coordinates into pseudo cylindrical coordinates
         
-        Parameters:
-    
-            xyz: array (3):
-                Cartesian coordinates
+        Parameters
+        ----------
+        xyz : `np.array(N = 3)`
+            Array with components of Cartesian Coordinates 
                 
-        Return:
-    
-            rhoazcf: array (3):
-                Cylindrical coordinates expresed as rho, phi (azimutal angle) and cos(theta) (cosine
-                of polar angle).    
+        Returns
+        ------------
+        :
+            rhoazcf : `np.array(N = 3)`
+                Cylindrical coordinates expresed as :math:`\\rho, \phi` (azimutal angle) and :math:`\cos\\theta` (cosine
+                of polar angle). 
+
+        Examples
+        ------------
+        >>> xyz = [1, 1, 1]
+        >>> 
+        >>> # To pseudoCylindrical
+        >>> pr.Science.pcylindricak(xyz)
+        array([1.41421356, 0.78539816, 0.57735027]) 
         """
         rho=(xyz[0]**2+xyz[1]**2)**0.5
         r=(xyz[2]**2+rho**2)**0.5
@@ -107,48 +131,64 @@ class Science(PrynglesCommon):
     
     def cartesian(rqf):
         """
-        Transform cartesian coordinates into spherical coordinates
+        Transform spherical coordinates into cartesian coordinates
     
-        Parameters:
-    
-            xyz: array (3):
-                Cartesian coordinates
-    
-        Return:
-    
-            rqf: array (3):
-                Spherical coordinates (r, theta, phi) where theta is azimutal angle and phi is 
-                elevation (complement of polar angle).                
-    
-                Notice that this convention is different than that of regular vectorial calculus
-                where spherical coordinates are (r,theta,phi), but theta is the polar angle and phi 
-                the ezimutal one.
-    
+        Parameters
+        ----------
+        rqf : `np.array(N = 3)`
+            Spherical coordinates :math:`(r, θ, \phi)` where :math:`θ` is azimutal angle and :math:`\phi` is 
+            elevation (complement of polar angle).
+                
+        Returns
+        ------------
+        :
+            xyz : `np.array(N = 3)`
+                Array with components of Cartesian Coordinates
+
+        Examples
+        ------------
+        >>> xyz = [1, 1, 1]
+        >>> 
+        >>> # From Spherical to Cartesian
+        >>> pr.Science.cartesian([1, 30*pr.Consts.deg, 60*pr.Consts.deg])
+        array([0.4330127, 0.25     , 0.8660254])
         """
         return spy.latrec(rqf[0],rqf[1],rqf[2])
-    
+
     def direction(*args):
         """Calculate the direction on which a vector is pointing
         
-        Parameters:
-            args: array:
-                If len(args)==2, components are longitude and latitude of the direction (in degrees).
-                If len(args)==3, components are cartisian coordinates of the vector n.
+        Parameters
+        --------------
+            args : `np.array`
+                If ``len(args) == 2``, components are longitude and latitude (:math:`\lambda,\\beta`) of the direction (in degrees).
+                If ``len(args) == 3``, components are cartisian coordinates of the vector :math:`\hat{n}`.
                 
-        Return:
+        Returns
+        ------------
+        :
+            nx, ny, nz: `float`
+                Cartesian components (if ``len(args) == 2``) of the unitary direction vector :math:`\hat{n}`.
     
-            If len(args)==2:
-            
-                vx,vy,vz: float:
-                    Cartesian components of the vector.
-    
-            If len(args)==2:
-        
-                lamb: float [degrees]:
-                    Longitude (angle with respect to x-axis).
-    
-                beta: float [degrees]:
-                    Latitude (elevation angle with respect to xy-plane).
+            lamb, beta: `float` [deg]
+                If ``len(args) == 3``, Longitude and Latitude (angle with respect to x-axis & elevation angle with respect to xy-plane)
+
+        Raises
+        ----------
+        ValueError
+            In case you provided a wrong number of arguments ``{args}``. It should be 2 or 3 arguments
+        ValueError
+            If Latitude valur for elevation angle should be is not in the interval [-90, 90]
+
+        Examples
+        -----------
+        >>> # Get the Unitary Vector in the direction long = 30, lat = 60
+        >>> Science.direction(30,60)
+        array([0.4330127, 0.25, 0.8660254])
+
+        >>> # Get the Long, Lat values for a direction vector
+        >>> Science.direction(1, 1, 0)
+        (45.0, 0.0)
         """
         if len(args)==3:
             rqf=Science.spherical(list(args))
@@ -163,21 +203,37 @@ class Science(PrynglesCommon):
     
     def rotation_matrix(ez,alpha):
         """
-        Set a rotation matrix from the direction of the ez vector and a rotation angle alpha
+        Set a rotation matrix from the direction of the :math:`\hat{e_z}` vector and a rotation angle :math:`\\alpha`
         
-        Parameter:
-            ez: array (3)
-                vector in the direction of the z-axis. 
+        Parameters
+        -----------------------
+        ez : `np.array(N = 3)`
+            Vector in the direction of the z-axis. 
                 
-            alpha: float (3) [rad]
-                Rotation angle of the x-axis around z-axis (clockwise)
+        alpha : `float` [rad]
+            Rotation angle of the x-axis around z-axis (clockwise)
                 
-        Return:
-            Msys2uni: float (3x3)
-                Rotation matrix from the system defined by ez and the universal system.
+        Returns
+        ---------------
+        :
+            Msys2uni : `np.array(3x3)`
+                Rotation matrix from the system defined by :math:`\hat{e_z}` and the universal system.
                 
-            Muni2sys: float (3x3)
-                Rotation matrix from the universal system to the system defined by ez
+            Muni2sys : `np.array(3x3)`
+                Rotation matrix from the universal system to the system defined by :math:`\hat{e_z}`
+        
+        Note
+        ----------------
+        Universal System refers to the euclidean base :math:`\{\hat{e_i}\}`
+
+        Examples
+        -----------
+        >>> # Rotation matrices from the direction of the z-axis and a roll in the x-y plane
+        >>> Msys2uni, Muni2sys = Science.rotation_matrix([0, 0, 1], 0)
+        >>> print(Msys2uni)
+        [[1. 0. 0.]
+         [0. 1. 0.]
+         [0. 0. 1.]]
         """
         ez,one=spy.unorm(ez)
         ex=spy.ucrss([0,0,1],ez) #Spice is 5 faster for vcrss
@@ -189,42 +245,75 @@ class Science(PrynglesCommon):
         verbose(VERB_VERIFY,"Rotation axis:",ex,ey,ez)
         return Msys2uni,Muni2sys
     
-    def limb_darkening(rho,cs=[0.6562],N=None):
-        """Limb darkening computation
+    def limb_darkening(rho, cs = [0.6562], N = None):
+        """
+        Non-Linear model for Limb-Darkening computation
         
-        Parameters:
-            rho: float:
-                Distance to center of the star in units of stellar radius.
+        Parameters
+        -----------------
+        rho : `float`
+            Distance to center of the star in units of stellar radius.
+            
+        cs : `list`
+            List of limb darkening coefficients. Its lenght determines the model to use between Linear, Quadratic and 3/4 Parameter Non-Linear | **Default** = `[0.6562]`
+            
+        N : `float`
+            Normalization constant | **Default** = `None`
                 
-            cs: list, default = [0.6562]:
-                List of limb darkening coefficients.
-                
-            N: float, default = 1:
-                Normalization constant.
-                
-        Return:
-            I: float:
-                Normalized intensity of the star at rho.
+        Returns
+        -------------
+        :
+            I : `float`
+                Normalized intensity of the star at projected distance :math:`\\rho`.
+
+        Warnings
+        -------------
+        This method will replace :any:`legacy.Util.limbDarkening` for versions > 0.10.x
+
+        Raises
+        ------------------
+        ValueError
+            If `len(cs) > 4`. Limb darkening model not implemented for order greater than 4
         
-        Notes: 
-            Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
-            Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
+        References
+        -------------
+        **[1]** Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
+
+        **[2]** Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
     
-        Test code:
-        
-            fig=plt.figure()
-            ax=fig.gca()
-            rhos=np.linspace(0,1,100)
-            Rs=1
-            coefs=[0.6550]
-            N=Util.limbDarkeningNormalization(coefs)
-            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
-            coefs=[0.6022,0.0654]
-            N=Util.limbDarkeningNormalization(coefs)
-            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))
-            coefs=[0.9724,-0.4962,0.2029]
-            N=Util.limbDarkeningNormalization(coefs)
-            ax.plot(rhos,Util.limbDarkening(rhos,Rs,coefs,N))        
+        Examples
+        -------------
+        >>> # Creating a Figure Plot
+        >>> fig = plt.figure()
+        >>> ax = fig.gca()
+        >>>
+        >>> # Projected distance to Star center
+        >>> rhos = np.linspace(0, 1, 100) # [R_star] units
+        >>> 
+        >>> # Linear Model Computation
+        >>> coefs = [0.6550] 
+        >>> ax.plot(rhos, Science.limb_darkening(rhos,coefs), label = f"coefs = {coefs}")
+        >>> 
+        >>> # Quadratic Model Computation 
+        >>> coefs = [0.6022, 0.0654]
+        >>> ax.plot(rhos, Science.limb_darkening(rhos, coefs), label = f"coefs = {coefs}")
+        >>> 
+        >>> # 3 Parameter Non-Linear Model Computation 
+        >>> coefs=[0.9724, -0.4962, 0.2029]
+        >>> ax.plot(rhos,Science.limb_darkening(rhos,coefs),label=f"coefs = {coefs}")    
+        >>> 
+        >>> # 4 Parameter Non-Linear Model Computation 
+        >>> coefs=[-0.2018, 2.1000, -2.0247, 0.7567]
+        >>> ax.plot(rhos, Science.limb_darkening(rhos, coefs), label = f"coefs = {coefs}")
+        >>>
+        >>> # For decoration purposes
+        >>> ax.legend()
+        >>> ax.set_xlabel(r"$\\rho$")
+        >>> ax.set_ylabel(r"$I(\\rho)/I(0)$")
+
+        .. image:: images/science_limb.png
+            :align: center
+            :width: 600px     
         """
         mu=(1-rho**2)**0.5
         order=len(cs)
@@ -265,46 +354,55 @@ class Science(PrynglesCommon):
         return qhull
         
     def points_in_hull(p, hull, tol=1e-12):
-        """Determine if a set of points are inside a convex hull.
+        """
+        Determine if a set of points are inside a convex hull.
         
-        Parameters:
-            
-            p: numpy array (Nx2):
-                Set of coordinates for points to evaluate.
-        
-            hull: ConvexHull:
-                Convex hull to evaluate.
+        Parameters
+        ---------------    
+        p : `np.array(Nx2)`
+            Set of coordinates for points to evaluate.
+    
+        hull : `scipy.spatial.ConvexHull`
+            Convex hull to evaluate.
                 
-        Return:
-        
-            inside: boolean array (N):
+        Returns
+        ------------
+        :
+            inside : `np.array(N)`
                 Boolean array telling if points are inside the convex hull.
+
+        References
+        ---------------
+        Method taken from https://stackoverflow.com/a/72483841
                 
-        Examples:
-            
-            import numpy as np
-            
-            rng = np.random.default_rng()
-            points = rng.random((30, 2))
-            hull = ConvexHull(points)
-            
-            ps = rng.random((30, 2))-0.5
-            cond=points_in_hull(ps,hull)
-    
-            import matplotlib.pyplot as plt
-            
-            for simplex in hull.simplices:
-                plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
-    
-            for p in ps[cond]:
-                plt.plot(p[0],p[1],'r*')
-    
-            for p in ps[~cond]:
-                plt.plot(p[0],p[1],'co')
-                
-                
-        Notes:
-            Taken from https://stackoverflow.com/a/72483841
+        Examples
+        -------------
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> 
+        >>> # Random sampling points to define a ConvexHull
+        >>> rng = np.random.default_rng()
+        >>> points = rng.random((30, 2))
+        >>> hull = ConvexHull(points)
+        >>> 
+        >>> # Determine which points are inside the ConvexHull
+        >>> ps = rng.random((30, 2))-0.5
+        >>> cond = points_in_hull(ps,hull)
+        >>> 
+        >>> # Plotting the Hull and points in/out it
+        >>> plt.figure()
+        >>> for simplex in hull.simplices:
+        >>>    plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+        >>>
+        >>> for p in ps[cond]:
+        >>>    plt.plot(p[0],p[1],'r*')
+        >>> 
+        >>> for p in ps[~cond]:
+        >>>    plt.plot(p[0],p[1],'co')
+
+        .. image:: images/science_convexhull.png
+            :align: center
+            :width: 600px  
         """
         return np.all(hull.equations[:,:-1] @ p.T + np.repeat(hull.equations[:,-1][None,:], len(p), axis=0).T <= tol, 0)
 
@@ -313,21 +411,41 @@ class Science(PrynglesCommon):
 # Class Plane
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Plane(PrynglesCommon):
-    """A plane in 3d.
+    """Class with methods to construct a plane in 3-Dimensional space. 
+    It is useful for geometric manipulation of points on a ring since it is considered a plane
     
-    Initialization parameters:
+    Parameters
+    ---------------
+    p1, p2, p3 : `np.array(N = 3)`
+        3-set of points to define the plane.
+            
+    Attributes
+    -------------
+    a, b, c, d : `float`
+        Coefficients of the equation of the plane
+
+        .. math::
+           a x + b y + c z + d = 0
         
-        p1,p2,p3: array(3):
-            Points on the plane.
+    nx, ny, nz : `float`
+        Cartesian components of normal vector to the plane
             
-    Attributes:
-        a,b,c,d: float:
-            Coefficients of the equation of the plane.
-            a x + b y + c z + d = 0
-            
-    Notes:
-        This class has been optimized removing all vectorial
-        operations. This reduce considerably the execution time.
+    Note
+    -------------
+    This class has been optimized removing all vectorial
+    operations. This reduce considerably the execution time.
+
+    Examples
+    -----------
+    >>> # Create a plane from a set of 3 points
+    >>> p1 = [-1, 2, 1]
+    >>> p2 = [0, -3, 2]
+    >>> p3 = [1, 1, -4]
+    >>> plane = pr.Plane(p1, p2, p3)
+    >>> plane.plot_plane()
+    
+    .. image:: images/science_plane.png
+            :align: center
     """
     def __init__(self,p1,p2,p3):
         x1,y1,z1=p1
@@ -360,16 +478,36 @@ class Plane(PrynglesCommon):
     def get_projection(self,p):
         """Find the projected point on the surface of the plane.
         
-        Parameters:
-            p: list (3):
-                Coordinates of the point.
+        Parameters
+        ------------
+        p : `list`
+            Cartesian coordinates of the point.
         
-        Return:
-            v: list (3):
-                Coordinates of projection point.
+        Returns
+        ----------
+        :
+            v : `list`:
+                Cartesian coordinates of projection point.
                 
-            d: float:
-                Distance.
+            d : `float`
+                Distance from evaluated point to its projection
+
+        Examples
+        -----------
+        >>> # From the previous plane constructed
+        >>> p_test = [2,2,5]
+        >>> v, dist = plane.get_projection(p)
+        >>>
+        >>> print(f'Distance: {dist}')
+        >>> print(f'Projection: {v}')
+        Distance: 4.015478735955178
+        Projection: [-1.67741935483871, 1.0099255583126552, 3.727047146401985]
+
+        >>> # We can also plot this point and its projection
+        >>> plane.plot_plane(p = p, alpha = 0.1, color = 'r')
+        
+        .. image:: images/science_plane_point.png
+            :align: center
         """
         
         #Distance
@@ -395,12 +533,20 @@ class Plane(PrynglesCommon):
     def is_above(self,p,vdir):
         """Check if a point is above or below a plane with respect to a given direction
         
-        Parameters:
-            p: list (3):
-                Coordinates of the point.
+        Parameters
+        --------------
+        p : `list`
+            Cartesian coordinates of the point.
                 
-            vidr: list (3):
-                Direction with respect to
+        vidr : `list`
+            Vector direction
+
+        Examples
+        ---------
+        >>> # With this method, we can evaluate if a point is or not transiting over a Ring
+        >>> p = [2, 2, 5]
+        >>> print(f"Is transiting: {plane.is_above(p, [0, 0, -1]    )}")
+        Is transiting:  False
         """
         v,d=self.get_projection(p)        
         #Sign of (v-p).vdir
