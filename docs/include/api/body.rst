@@ -9,7 +9,7 @@ optical parameters to an astrophysical body within a simulation for an arbitrary
    :member-order: bysource
 
 Inheritance from Body Class
---------------------------
+----------------------------------
 
 Base class :data:`~ body.Body` provides fundamental attributes for all astrophysical bodies in a simulated extrasolar system. 
 Subclasses :data:`~ body.Star`, :data:`~ body.Planet`, and :data:`~ body.Ring` inherit from :data:`~ body.Body` and specialize its functionality: 

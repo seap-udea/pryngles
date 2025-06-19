@@ -19,7 +19,7 @@ Thus, for instance, the module :doc:`Spangler <spangler>` contains a general-pur
   - :doc:`body`: Classes and methods used to create and spangle astrophysical bodies.
   - :doc:`orbit`: Main module to create hierarchical N-body system.
   - :doc:`system`: This is the most important module. It contains the classes and methods used to define a planetary system, spangle it, and calculate light-curves.
-  - :doc:`legacy`: This module contains all the classes and routines of the legacy ``RingedPlanet`` interface to Pryngles. This interface will be deprecated in version 2.0.
+  .. - :doc:`legacy`: This module contains all the classes and routines of the legacy ``RingedPlanet`` interface to Pryngles. This interface will be deprecated in version 2.0.
 
 .. toctree::
    :titlesonly:
@@ -33,5 +33,3 @@ Thus, for instance, the module :doc:`Spangler <spangler>` contains a general-pur
    science
    spangler
    system
-   legacy
-
