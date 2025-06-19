@@ -1,8 +1,3 @@
-..
-   .. nbgallery::
-
-   nb/Flux_Test
-
 .. mdinclude:: ../README.md
    :end-line: 57
 
