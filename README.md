@@ -55,6 +55,15 @@ For the science behind the model please refer to the following papers:
 src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif"
 alt="Animation" width="400"/> </p>
 
+## API Documentation
+
+We are excited to announce that the first version of the `Pryngles` API documentation is now available online!  
+You can explore detailed descriptions of all classes, functions, and modules at:
+
+👉 [https://pryngles.readthedocs.io](https://pryngles.readthedocs.io)
+
+This resource will be updated as the package evolves. We welcome your feedback and suggestions!
+
 ## Download and Install
 
 ### From PyPI:

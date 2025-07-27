@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../src/pryngles'))
 project = 'Pryngles'
 copyright = '2025, Jorge I. Zuluaga, Allard Veenstra, Sebastian Numpaque, Mario Sucerquia and Jaime A. Alvarado-Montes'
 author = 'Zuluaga et al.'
-release = '0.9.10'
+release = '0.9.12'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

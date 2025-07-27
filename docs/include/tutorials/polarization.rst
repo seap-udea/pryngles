@@ -2,5 +2,5 @@ Scattering and Polarization
 ==============================
 
 .. mdinclude:: ../../../README.md
-    :start-line: 198
-    :end-line: 306
+    :start-line: 207
+    :end-line: 315

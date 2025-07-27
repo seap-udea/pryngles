@@ -5,6 +5,6 @@ Download and Install
 This section will guide you through the steps required to install and set up the package
 
 .. mdinclude:: ../../../README.md
-    :start-line: 58
-    :end-line: 98
+    :start-line: 67
+    :end-line: 107
     

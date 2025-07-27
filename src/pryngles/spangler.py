@@ -40,54 +40,97 @@ from tqdm import tqdm
 # Class Spangler
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Spangler(PrynglesCommon):
-    """A Spangler associated to an object or set of objects.
+    """
+    Represents a collection of spangles associated with one or more astrophysical objects.
+
+    A `Spangler` object discretizes the surface of bodies into "spangles" — discrete units used to
+    model light-matter interactions, such as photometry, in the `Pryngles` package. It supports
+    two initialization modes: creating a new spangler for a single object or joining multiple
+    existing spanglers.
+
+    Parameters
+    ----------
+    spanglers : list of Spangler, optional
+        List of `Spangler` objects to join into a single spangler. If provided, the object
+        aggregates the spangles from all listed spanglers. Default is an empty list.
+    nspangles : int, optional
+        Number of spangles to generate for a single object. Must be positive. Default is 1.
+    name : str, optional
+        Name identifying the body associated with the spangles. If None, a random 16-bit hash
+        is generated. Default is None.
+    n_equ : array-like (3,), optional
+        Unit vector normal to the equatorial plane of the body in the equatorial system.
+        Default is [0, 0, 1].
+    alpha_equ : float, optional
+        Roll angle of the x-axis in the equatorial system, in radians. Currently not implemented.
+        Default is 0.
+    center_equ : array-like (3,), optional
+        Position of the spangler’s center in the equatorial system, in length units.
+        Default is [0, 0, 0].
+    center_ecl : array-like (3,), optional
+        Position of the spangler’s center in the ecliptic system, in length units.
+        Default is [0, 0, 0].
+    w : float, optional
+        Angular velocity of the body’s rotation, in radians per unit time. Default is 0.
+    q0 : float, optional
+        Initial longitude at time t=0, in radians. Default is 0.
+
+    Attributes
+    ----------
+    nspangles : int
+        Total number of spangles in the spangler.
+    data : pandas.DataFrame
+        DataFrame containing detailed information about each spangle, including positions,
+        orientations, and states across reference systems. See :data:`pryngles.consts.SPANGLER_COLUMNS`
+        for column descriptions.
+    name : str or list of str
+        Name(s) of the body (or bodies, if joined) associated with the spangles.
+    shape : str
+        Geometry of the spangler ("vanilla", "circle", "ring", "sphere", or "Join" for joined spanglers).
+    sample : Sampler or None
+        Associated `Sampler` object used to generate spangle positions, if applicable.
+    n_obs : np.ndarray (3,)
+        Unit vector towards the observer in the ecliptic system.
+    n_luz : np.ndarray (3,)
+        Unit vector towards the light source in the ecliptic system.
+    M_equ2ecl : dict
+        Transformation matrices from equatorial to ecliptic coordinates, keyed by body name.
+    qhulls : dict
+        Convex hulls of spangles for intersection calculations, keyed by body name.
+
+    Raises
+    ------
+    AssertionError
+        If a provided spangler in `spanglers` is not an instance of `Spangler`.
+    ValueError
+        If duplicate names are found when joining spanglers.
+
         
-       There are two ways to initialize a Spangler:
-        
-            Creating a Spangler for a single object:
-            
-                Mandatory:
-    
-                    nspangles: int, default = 0:
-                        Number of spangles in spangling.
-    
-                Optional:
-    
-                    body_hash: string, default = None:
-                        Hash identifying the body to which spangles are associated 
-                        (see Body documentation for explanation about hash).
-    
-                    spangle_type: int, default = 0:
-                        Type of spangle (see *_SPANGLE in Consts module).
-    
-                    n_equ: numpy Array (3), default = [0,0,1]:
-                        unitary vector normal to {equ} (equatorial) plane.
-    
-                    alpha_equ: float, default = 0:
-                        Roll angle of x-axis of equatorial system (not implemented yet)
-    
-                    center_equ: numpy Array (3), default = [0,0,0]:
-                        Position of the spnagler in the {equ} (equatorial) system.
-    
-                    center_ecl: numpy Array (3), default = [0,0,0]:
-                        Position of the spnagler in the {ecl} (ecliptic) system.
-                        
-                    w, q0: float [rad/ut, rad], default = 0, 0:
-                        Angular velocity and reference latitude at t = 0.
-    
-            Joining a set of Spanglers (several objects):
-    
-                spanglers: list of Spanglers. default = []:
-                    Set of spanglers to join.
-    
-    Core attributes:
-    
-        nspangles: int:
-            Total number of spangles.
-    
-        data: Pandas DataFrame: 
-            Dataframe containing all the information about the spangling.
-            For Columns see global variable SPANGLER_COLUMNS.
+    Examples
+    ------------
+    >>> # Let's create a planet and spangle it!!
+    >>>
+    >>> # First create your body
+    >>> earth = pr.Body(kind = "Planet",
+    ...                 defaults = pr.PLANET_DEFAULTS,
+    ...                 parent = None,
+    ...                 name = "Earth",
+    ...                 radius = 1.0)
+    >>>
+    >>> ring = pr.Ring(parent=earth, fi = 1.5, fe = 2)  
+    >>>
+    >>> # Now spangle it
+    >>> earth.spangle_body()
+    >>> ring.spangle_body()  
+    >>>
+    >>> # Join the bodies
+    >>> ringedplanet = pr.Spangler(spanglers=[earth.sg, ring.sg])
+    >>>
+    >>> # Now you can visualize it                 
+    >>> ringedplanet.plot2d() 
+
+    .. image:: images/spangler_example.png
+        :align: center
     """
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,7 +227,22 @@ class Spangler(PrynglesCommon):
                 self.data=pd.DataFrame(columns=self._defaults.keys())
         
     def reset_state(self):
-        """Reset spangler state
+        """
+        Resets the state of all spangles to their initial values.
+
+        This method clears all visibility and illumination states, marking them as unset,
+        and resets intersection-related fields.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Modifies the `data` DataFrame in-place, resetting columns listed in
+        :data:`pryngles.consts.SPANGLER_SOURCE_STATES` and
+        :data:`pryngles.consts.SPANGLER_VISIBILITY_STATES` to False, setting "unset" to True,
+        and clearing "hidden_by_*" and "transit_over_*" fields.
         """
         self.data[list(SPANGLER_SOURCE_STATES)+list(SPANGLER_VISIBILITY_STATES)]=False
         self.data["unset"]=True
@@ -193,11 +251,24 @@ class Spangler(PrynglesCommon):
             self.data["transit_over_"+coords]=""
 
     def set_scale(self,scale):
-        """Set scale
-        
-        scale: float:
-            New scale.  All lengths will be multiplied by scale, areas by scale**2 and
-            vector components by scale.
+        """
+        Adjusts the scale of all length and area attributes of the spangles.
+
+        Parameters
+        ----------
+        scale : float
+            Scaling factor. Lengths are multiplied by `scale`, areas by `scale**2`, and
+            vector components by `scale`.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Updates the `data` DataFrame in-place, affecting columns in
+        :data:`pryngles.consts.SPANGLER_LENGTHS`, :data:`pryngles.consts.SPANGLER_AREAS`,
+        and :data:`pryngles.consts.SPANGLER_VECTORS`. Sets the `scale` attribute.
         """
         self.scale=scale
         self.data[SPANGLER_LENGTHS]*=self.scale
@@ -207,11 +278,29 @@ class Spangler(PrynglesCommon):
         
     def _join_spanglers(self,spanglers):
         """
-        Join spanglers into a single spangler
+        Combines multiple `Spangler` objects into a single spangler.
 
-        Parameters:
-            spanglers: list of Spanglers:
-                Spanglers to join.
+        Parameters
+        ----------
+        spanglers : list of Spangler
+            List of `Spangler` objects to join.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If any element in `spanglers` is not a `Spangler` instance.
+        ValueError
+            If duplicate names are found among the spanglers.
+
+        Notes
+        -----
+        Modifies the current instance by aggregating the `data` DataFrames, merging
+        transformation matrices, and updating attributes like `nspangles` and `name`.
+        The resulting `shape` is set to "Join".
         """
         self.name=[]
         for spangler in spanglers:
@@ -241,15 +330,25 @@ class Spangler(PrynglesCommon):
         self.nspangles=len(self.data)
         
     def get_mem_usage(self,info=False):
-        """Get size of the Spangler DataFrame in megabytes
+        """
+        Calculates the memory usage of the spangler’s DataFrame.
 
-        Optional parameters:
-            info: boolean, default = False:
-                Get detailed information on memory usage.
-                
-        Return:
-            mem_usage: float:
-                Size in Mb of the memomory usage.
+        Parameters
+        ----------
+        info : bool, optional
+            If True, prints detailed memory usage information. Default is False.
+
+        Returns
+        -------
+        float
+            Memory usage in megabytes.
+
+        Examples
+        --------
+        >>> sp = Spangler(nspangles=1000)
+        >>> sp.get_mem_usage()
+        0.123  # Example output, actual value depends on data
+        >>> sp.get_mem_usage(info=True)  # Prints detailed info
         """
         mem_usage=self.data.memory_usage(deep=True).sum()/1024**2
         if info:
@@ -267,41 +366,34 @@ class Spangler(PrynglesCommon):
                       t=None
                      ):
         """
-        Set the positions and orientation of spanglers in all reference systems.
+        Updates the positions and orientations of spangles across reference systems.
 
-        Parameters:
+        Parameters
+        ----------
+        n_equ : array-like (3,), optional
+            Normal vector to the equatorial plane. If provided, updates transformation matrices.
+            Default is an empty list.
+        alpha_equ : float, optional
+            Roll angle of the x-axis in the equatorial system, in radians (not implemented).
+            Default is 0.
+        center_equ : array-like (3,), optional
+            Center position in the equatorial system, in length units. Default is an empty list.
+        center_ecl : array-like (3,), optional
+            Center position in the ecliptic system, in length units. Default is an empty list.
+        t : float, optional
+            Time in unit time. If provided, updates equatorial coordinates based on rotation.
+            Default is None.
 
-            n_equ: list/array (3), default = []:
-                Normal vector towards north pole equatorial system.
+        Returns
+        -------
+        None
 
-            alpha_equ: float, default = 0:
-                Roll angle of x-axis of equatorial system (not implemented yet)
-
-            center_equ: list/array (3), default = []:
-                Location of the center of the body with respect to the barycenter in the equatorial system.
-
-            center_ecl: list/array (3), default = []:
-                Location of the center of the body with respect to the barycenter in the ecliptic system.
-
-            t: float, default = None:
-                Time.  This quantity is used to update the equatorial coordinates.
-                If None, equatorial coordinates are not set.
-
-        Return:
-            None
-
-        Update:
-    
-            If n_equ:
-                Rotation matrices M_equ2ecl
-
-            If t is provided:
-                Coordinates of the spangles in the equatorial, (x_equ,y_equ,z_equ).
-                Normals to the spangle (ns_equ)
-
-            In all cases:
-                Coordinates of the spangles, (x_ecl,y_ecl,z_ecl).
-            
+        Notes
+        -----
+        Updates the `data` DataFrame columns including "center_equ", "center_ecl", "n_equ",
+        "q_equ", "x_equ", "y_equ", "z_equ", "ns_equ", "x_ecl", "y_ecl", "z_ecl", "ns_ecl",
+        "wx_ecl", and "wy_ecl". Transformation matrices in `M_equ2ecl` are updated if `n_equ`
+        is provided.
         """
         verbose(VERB_VERIFY,f"Setting positions")
 
@@ -394,29 +486,33 @@ class Spangler(PrynglesCommon):
                           shape="circle",preset=False,spangle_type=SPANGLE_SOLID_ROCK,
                           scale=1,seed=0,**shape_args):
         
-        """Populate data of a Spangler using points generated with a given geometry.
-        
-        Parameters:
-                
-            shape: string, default = "circle":
-                Shape of the Sampler.  Available: "circle", "ring", "sphere".
-    
-            spangle_type: int, default = SPANGLE_SOLID_ROCK:
-                Type of spangle.  See Constants module for a list of spangle types.
-    
-            preset: boolean, default = False:
-                If true the spangler is populated with preset data (see class Sampler for details).
-                
-            scale: float. default = 1:
-                Scale size of the object.
-                
-            seed: integer. default = 0:
-                Value of the integer seed of random number generation (if 0 no random seed is set).
-                If a non-zero seed is used the position of the spangle will be always the same.
-                
-            shape_args: dictionary:
-                See Sampler methods documentation.
-                 
+        """
+        Populates the spangler with spangles based on a specified geometry.
+
+        Parameters
+        ----------
+        shape : str, optional
+            Geometry of the spangler. Options are "circle", "ring", or "sphere". Default is "circle".
+        preset : bool, optional
+            If True, uses a precomputed sample from :class:`pryngles.sampler.Sampler`. Default is False.
+        spangle_type : int, optional
+            CousinsType of spangle, as defined in :mod:`pryngles.consts` (e.g, :data:`pryngles.consts.SPANGLE_SOLID_ROCK`).
+            Default is `SPANGLE_SOLID_ROCK`.
+        scale : float, optional
+            Scaling factor for the spangle sizes and positions. Default is 1.
+        seed : int, optional
+            Seed for random number generation. If 0, no seed is set. Default is 0.
+        **shape_args : dict
+            Additional arguments for the `Sampler` geometry generation (e.g., `ri` for "ring").
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Updates the `data` DataFrame with spangle positions, normals, and areas. For "ring" shapes,
+        adds hidden spangles at the inner border. Calls :meth:`set_positions` to update coordinates.
         """
         #Check if preset
         if preset:
@@ -511,7 +607,22 @@ class Spangler(PrynglesCommon):
         self.set_positions()
         
     def _update_column_order(self):
-        """Reorder columns in a more convenient way.
+        """
+        Reorders the columns of the `data` DataFrame for consistency.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If any column in `data` is not present in :data:`pryngles.consts.SPANGLER_KEY_ORDERING`.
+
+        Notes
+        -----
+        Modifies the `data` DataFrame in-place based on the order defined in
+        :data:`pryngles.consts.SPANGLER_KEY_ORDERING`.
         """
         for col in self.data.columns:
             if col not in SPANGLER_KEY_ORDERING:
@@ -531,53 +642,35 @@ class Spangler(PrynglesCommon):
                statemark=0,
                show_directions=False
               ):
-        """Plot spangle in 3d.
-    
-        Optional parameters:
-        
-            coords: list of strings, default = ["x_ecl","y_ecl","z_ecl"]:
-                Which coordinates do you want to plot.  
-                Available: equ, ecl, obs, luz, int.
-                
-            only: string, default = None:
-                Plot only the object with this hash.        
-    
-            center_at: string, default = None:
-                Hash of the object around which the plotting will be centered at (see name column
-                of the Spangler DataFrame).
-                
-            not_plot: list of strings, default = []:
-                List of object hashes to not plot.
-                
-            fsize: tuple (2), default = 5:
-                Size of the figure.  The parameter figsize used at creating the figure will be 
-                figsize = (fsize,fsize).
-    
-            factor: float, default = 1.2:
-                Size of the coordinate axes.  factor = 1 correspond to axis equal to maximum and minumum.
-                
-            statemark: float, default = 0:
-                If different than 0 mark with state the spangles in 3d plot.  
-                It will mark the 1-markstate spangles in plot.
-                
-            show_directions: boolean, default = False:
-                If True show the direction of normal vectors to spangles and vectors directed from the 
-                origin of the intersection system of reference to the spangles.
-                
-        Color coding:
-            
-            Determinative of color:
-            
-                By default or in darkness: color of darkness (dark blue)
-            
-                If illuminated: color of the spangle.
-            
-                If in shadow: color of shadow.
-            
-            Modification of the color: 
-            
-                If not visible: reduce level of color to half
-    
+        """
+        Visualizes the spangles in a 3D plot.
+
+        Parameters
+        ----------
+        coords : str, optional
+            Coordinate system to plot. Options are "equ", "ecl", "obs", "luz", "int". Default is "ecl".
+        only : str, optional
+            Name of the single object to plot. If provided, overrides other filters. Default is None.
+        center_at : str, optional
+            Name of the object to center the plot around. Default is None.
+        not_plot : list of str, optional
+            Names of objects to exclude from the plot. Default is an empty list.
+        fsize : float, optional
+            Size of the figure in inches (square figure). Default is 5.
+        factor : float, optional
+            Scaling factor for axis limits relative to the maximum range. Default is 1.2.
+        statemark : float, optional
+            Fraction of spangles to mark with their state (0 to 1). If 0, no marks are shown. Default is 0.
+        show_directions : bool, optional
+            If True, displays normal vectors and intersection direction vectors. Default is False.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Sets the `fig3d` and `ax3d` attributes. Spangle colors reflect their illumination and visibility states.
         """
         bgcolor='k'
     
@@ -783,58 +876,36 @@ class Spangler(PrynglesCommon):
                       center=None,
                       name=None,
                      ):
-        """Set the positions and orientation of spanglers in an intersection direction
-    
-        Parameters:
-    
-            nvec: list/array (3), default = [0,0,1]:
-                Vector pointing towards the vantage point from where the intersection will be computed. 
-                It can be normalized or not.  The components are in the ecliptic reference system.
-                            
-            alpha: float, default = 0:
-                Roll angle of x-axis.
-                
-            center: list/array (3), default = None:
-                Location of the vantage point in the ecliptic reference system.
-                If None, we assume that the vantage point is at an infinite distance.
-                
-            name: string, default = None:
-                Spangler hash to which the transformation will be applied.
-    
-        Return:
-        
-            cond: boolean array:
-                Over which spangles the transformation was applied.
-                
-            n_int: array (3):
-                Normal vector towards the vantage point.
-                
-            d_int: float:
-                Distance to vantage point.  If 'center' is None, this distance is set to numpy.inf.
-                
-        Create:
-        
-            qhulls: dictionary:
-                Convex hulls of bodies from this vantage point.
-                
-                key: 
-                    name
-                
-                value: 
-                    list with hulls corresponding to each name.
-                
-        Update:
-    
-            Coordinates of the spangles in the intersection system, (x_int,y_int,z_int).
-    
-            Normal to spangles in the intersection system, ns_int.
-            
-            
-        Notes:
-            If the intersection direction is in the center of the body (for instance, when a ring or a bubble 
-            is illuminated from the center), set intersect to True for all spangles and compute the distance and
-            relative orientation (cos_int) of the spangles correspondingly.
-    
+        """
+        Sets the positions and orientations of spangles in the intersection reference system.
+
+        Parameters
+        ----------
+        nvec : array-like (3,), optional
+            Vector towards the intersection vantage point in the ecliptic system. Default is [0, 0, 1].
+        alpha : float, optional
+            Roll angle of the x-axis in the intersection system, in radians. Default is 0.
+        center : array-like (3,), optional
+            Position of the vantage point in the ecliptic system. If None, assumes infinite distance.
+            Default is None.
+        name : str, optional
+            Name of the specific object to apply the transformation to. If None, applies to all.
+            Default is None.
+
+        Returns
+        -------
+        tuple
+            - cond : np.ndarray
+                Boolean mask indicating which spangles were updated.
+            - n_int : np.ndarray (3,)
+                Normalized vector towards the vantage point.
+            - d_int : float
+                Distance to the vantage point (infinite if `center` is None).
+
+        Notes
+        -----
+        Updates the `data` DataFrame with intersection coordinates and states, and sets attributes
+        like `n_int`, `d_int`, and `M_ecl2int`.
         """
         
         verbose(VERB_SIMPLE,
@@ -930,8 +1001,19 @@ class Spangler(PrynglesCommon):
         
         return cond,n_int,d_int
 
-    def normalize_areas(self):
+    def _normalize_areas(self):
+        """
+        Normalizes the projected areas of spangles in intersection, observer, and light-source frames.
 
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Adjusts `asp_int`, `asp_obs`, and `asp_luz` columns in the `data` DataFrame based on the
+        expected geometric area versus the sum of facet areas, considering only face-on spangles.
+        """
         """
         Set normalization factor of area projection in Intersection/Observer/Light-Source Frames
         Also corrects for the area projection for flux computation  (Expected Area/Facet-Based Area)
@@ -986,7 +1068,17 @@ class Spangler(PrynglesCommon):
     
     def _calc_qhulls(self):
         
-        """Compute convex hulls for a given intersection configuration
+        """
+        Computes convex hulls for spangles in the intersection configuration.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Populates the `qhulls` attribute with convex hulls for each object, handling cases with holes
+        (e.g., rings). Used internally by intersection state updates.
         """
         
         #Convex hulls
@@ -1058,19 +1150,27 @@ class Spangler(PrynglesCommon):
                
     
     def set_observer(self,nvec=[0,0,1],alpha=0,center=None):
-        """Set the positions and orientation of spanglers in the observer system.
-    
-        Parameters:
-    
-            nvec: list/array (3), default = [0,0,1]:
-                Normal vector towards the observer.
-    
-            alpha: float, default = 0:
-                Roll angle of x-axis of observer system.
-                
-            center: list/array(3), default = None:
-                Define the position of the vantage point in the ecliptic system.
-                
+        """
+        Sets the positions and orientations of spangles in the observer reference system.
+
+        Parameters
+        ----------
+        nvec : array-like (3,), optional
+            Vector towards the observer in the ecliptic system. Default is [0, 0, 1].
+        alpha : float, optional
+            Roll angle of the x-axis in the observer system, in radians. Default is 0.
+        center : array-like (3,), optional
+            Position of the observer in the ecliptic system. If None, assumes infinite distance.
+            Default is None.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Updates the `data` DataFrame with observer coordinates and sets the "visible" state.
+        Calls :meth:`set_intersect` internally.
         """
         verbose(VERB_SIMPLE,f"Setting observer")
         
@@ -1109,28 +1209,30 @@ class Spangler(PrynglesCommon):
         self.data.loc[cond,"visible"]=True
         
     def set_luz(self,nvec=[0,0,1],alpha=0,center=None,name=None):
-        """Set the positions and orientation of spanglers in the light-source system.
-    
-        Parameters:
-    
-            nvec: list/array (3), default = [0,0,1]:
-                Normal vector towards the observer.
-    
-            alpha: float, default = 0:
-                Roll angle of x-axis of observer system.
-                
-            center: list/array(3), default = None:
-                Define the position of the vantage point in the ecliptic system.
-    
-            name: string, default = None:
-                Body to apply this light direction
-                
-        Update:
-            This method update the 'illuminated' and 'transmit' states.
-                    
-        Note:
-            For updating the 'transmit' state it is required that the observer be set.
-            
+        """
+        Sets the positions and orientations of spangles in the light-source reference system.
+
+        Parameters
+        ----------
+        nvec : array-like (3,), optional
+            Vector towards the light source in the ecliptic system. Default is [0, 0, 1].
+        alpha : float, optional
+            Roll angle of the x-axis in the light-source system, in radians. Default is 0.
+        center : array-like (3,), optional
+            Position of the light source in the ecliptic system. If None, assumes infinite distance.
+            Default is None.
+        name : str, optional
+            Name of the specific object to apply the light direction to. If None, applies to all.
+            Default is None.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Updates the `data` DataFrame with light-source coordinates and sets "illuminated" and
+        "transmit" states. Requires :meth:`set_observer` to be called first for accurate transmission.
         """
        
         verbose(VERB_SIMPLE,f"Setting light-source")
@@ -1191,81 +1293,81 @@ class Spangler(PrynglesCommon):
         )
         self.data.loc[cond,"transmit"]=True
         
-    
     def plot2d(self,
-               coords="obs",
-               center_at=None,
-               include=[],
-               exclude=[],
-               axis=True,
-               fsize=5,
-               newfig=True,
-               show_azim=False,
-               highlight=None,
-               maxval=None
-              ):
+                coords="obs",
+                center_at=None,
+                include=[],
+                exclude=[],
+                axis=True,
+                fsize=5,
+                newfig=True,
+                show_azim=False,
+                highlight=None,
+                maxval=None,
+                bgdark = True
+                ):
         """
-        Plot spangle.
-    
-        Basic parameters:
-        
-            coords: string, default = obs:
-                which coordinates do you want to use. Available: 'equ', 'ecl', 'int', 'obs', 'luz'.
-        
-        Other parameters:
-                
-            center_at: string, default = None:
-                Hash of the object around which the plotting will be centered at (see name column
-                of the Spangler DataFrame).
-                
-            include: string, default = None:
-                List of objects (hashes) to plot exclusively.
-                        
-            exclude: list of strings, default = []:
-                List of objects (hashes) to not plot.
-                
-            fsize: integer, default = 5:
-                Size of figure
-                
-            newfig: boolean, default = True:
-                If True a new figure is created.  The False value is intended for animations.
-                
-            show_azim: boolean, default = False:
-                If True show azimuth of the observer and light source direction on each spangle.
-                
-            highlight: tuple, default = None:
-            
-                A tuple containing:
-        
-                    1) A boolean mask telling which spangles to highlight
-                    2) A dictionary with options for a scatter command
-                    
-                Example:
-                    
-                    #Highlight all the spangles belonging to star which are visible
-                    cond=(sys.data.name=="Star")&(sys.data.visible)
-                    sys.sg.plot2d(highlight=(cond,dict(c='c')))
-                    
-                If the dictionary is empty it uses the default dict(s=1,c='w')
-                
-            maxval: float, default = None:
-                Change range of plot.  If None it is calculated automatically.
+        Visualizes the spangles in a 2D plot.
+
+        Parameters
+        ----------
+        coords : str, optional
+            Coordinate system to plot. Options are "equ", "ecl", "int", "obs", "luz". Default is "obs".
+        center_at : str, optional
+            Name of the object to center the plot around. Default is None.
+        include : list of str, optional
+            Names of objects to exclusively include in the plot. Default is an empty list.
+        exclude : list of str, optional
+            Names of objects to exclude from the plot. Default is an empty list.
+        axis : bool, optional
+            If True, displays coordinate axes. Default is True.
+        fsize : float, optional
+            Size of the figure in inches (square figure). Default is 5.
+        newfig : bool, optional
+            If True, creates a new figure. If False, reuses the existing one (for animations).
+            Default is True.
+        show_azim : bool, optional
+            If True, displays azimuth directions for observer and light source. Default is False.
+        highlight : tuple, optional
+            Tuple of (condition, scatter_options) to highlight specific spangles. Default is None.
+        maxval : float, optional
+            Maximum value for plot range. If None, computed automatically. Default is None.
+        bgdark : bool, optional
+            If True, uses a dark background. Default is True.
+
+        Returns
+        -------
+        tuple
+            - x_cen : float
+                X-coordinate of the plot center.
+            - y_cen : float
+                Y-coordinate of the plot center.
+
+        Notes
+        -----
+        Sets the `fig2d` and `ax2d` attributes. Spangle colors and sizes reflect their states.
         """
         
         #Global properties of the plot
-        bgcolor='k'
+        if bgdark:
+            bgcolor='k'
+            textcolor = 'w'
+        else:
+            bgcolor='w'
+            textcolor = 'k'
+
         fig_factor=fsize/5
-    
+
         #Create figure and axes
         if "fig2d" not in self.__dict__ or newfig:
             fig=plt.figure(figsize=(fsize,fsize))
             fig.patch.set_facecolor(bgcolor)
             ax=fig.add_subplot(111,facecolor=bgcolor)
-    
+
             #Keep figure and axe
             self.fig2d=fig
             self.ax2d=ax
-    
+
         #Convert list 
         include_string=[]
         for body in include:
@@ -1274,7 +1376,7 @@ class Spangler(PrynglesCommon):
             else:
                 include_string+=[body]
         include=include_string
-    
+
         exclude_string=[]
         for body in exclude:
             if isinstance(body,PrynglesCommon):
@@ -1285,7 +1387,7 @@ class Spangler(PrynglesCommon):
         
         if isinstance(center_at,PrynglesCommon):
             center_at=center_at.name
-    
+
         #Plot only a set of objects
         if len(include)>0:
             
@@ -1300,11 +1402,11 @@ class Spangler(PrynglesCommon):
                     
             #Center at the first object in the list
             center_at=include[0]
-    
+
         #Center of plot
         cond=(self.data.name==center_at)
         x_cen,y_cen,z_cen=self.data[cond][[f"x_{coords}",f"y_{coords}",f"z_{coords}"]].mean() if sum(cond)>0 else np.array([0,0,0])
-    
+
         #Select plotting bodies
         cond_included=(~self.data.hidden)&(~self.data.name.isin(exclude))
         num_included=sum(cond_included)
@@ -1317,7 +1419,7 @@ class Spangler(PrynglesCommon):
         cond_maxval=cond_maxval if sum(cond_maxval)>0 else [True]*num_included        
         if not maxval:
             maxval=1.2*np.abs(np.array(data[cond_maxval][[f"x_{coords}",f"y_{coords}"]])-np.array([x_cen,y_cen])).max()
-    
+
         #Function to determine the size of the spangles
         size_factor=1/2.5
         size_points=lambda dsp,cos_obs:size_factor*(dsp[cond])*abs(cos_obs)**0.5
@@ -1334,7 +1436,7 @@ class Spangler(PrynglesCommon):
         cond=[True]*len(data)
         sizes[cond]=0
         """
-    
+
         #Illuminated
         cond=(data.visible)&(data.illuminated)
         verbose(VERB_SIMPLE,f"Visible and illuminated: {cond.sum()}")
@@ -1342,11 +1444,11 @@ class Spangler(PrynglesCommon):
                                 SPANGLE_COLORS[stype][1]*min((cos_luz*cos_obs+0.3),1),
                                 SPANGLE_COLORS[stype][2]],
                                 to_hex=True) for stype,cos_luz,cos_obs in zip(data[cond].spangle_type,
-                                                                           abs(data[cond].cos_luz),
-                                                                           abs(data[cond].cos_obs))
-                     ] #Object color
+                                                                            abs(data[cond].cos_luz),
+                                                                            abs(data[cond].cos_obs))
+                        ] #Object color
         sizes[cond]=size_points(data.dsp[cond],data.cos_obs[cond])
-    
+
         #Not illuminated
         cond=(data.visible)&(~data.illuminated)
         verbose(VERB_SIMPLE,f"Visible and not illuminated: {cond.sum()}")
@@ -1358,13 +1460,13 @@ class Spangler(PrynglesCommon):
         verbose(VERB_SIMPLE,f"Visible and not illuminated: {cond.sum()}")
         colors[cond]=Plot.rgb(SHADOW_COLOR_LUZ,to_hex=True)
         sizes[cond]=size_points(data.dsp[cond],data.cos_obs[cond])
-    
+
         if coords!="obs":
             #Not visible
             cond=(~data.visible)&(data[f"z_{coords}"]>0)
             colors[cond]=Plot.rgb(SHADOW_COLOR_OBS,to_hex=True)
             sizes[cond]=size_points(data.dsp[cond],data.cos_obs[cond])
-    
+
         #Transmitting
         cond=(data.visible)&(data.transmit)&(data.illuminated)
         verbose(VERB_SIMPLE,f"Visible, illuminated and transmitting: {cond.sum()}")
@@ -1372,9 +1474,9 @@ class Spangler(PrynglesCommon):
                                 SPANGLE_COLORS[stype][1]*min((cos_luz*cos_obs+0.3),1)/2,
                                 SPANGLE_COLORS[stype][2]],
                                 to_hex=True) for stype,cos_luz,cos_obs in zip(data[cond].spangle_type,
-                                                                           abs(data[cond].cos_luz),
-                                                                           abs(data[cond].cos_obs))
-                     ] #Object color
+                                                                            abs(data[cond].cos_luz),
+                                                                            abs(data[cond].cos_obs))
+                        ] #Object color
         sizes[cond]=size_points(data.dsp[cond],data.cos_obs[cond])
         
         ##########################################################
@@ -1405,10 +1507,10 @@ class Spangler(PrynglesCommon):
         if show_azim:
             #Choose which directions to show
             cond=(self.data["cos_"+coords]>=0)&(~self.data.hidden)&(cond_included)&(self.data["spangle_type"]!=SPANGLE_STELLAR)
-    
+
             #Options of arrows showing direction
             quiver_args=dict(scale=15,scale_units='width',
-                             width=0.005,alpha=0.6,zorder=+1000,headwidth=0)
+                                width=0.005,alpha=0.6,zorder=+1000,headwidth=0)
             
             #Quiver plot of azimuth for light
             azx=[mh.cos(x) for x in self.data[cond].azim_luz]
@@ -1416,29 +1518,29 @@ class Spangler(PrynglesCommon):
             
             
             self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
-                             azx,azy,color='m',label="Az.luz",**quiver_args)
-    
+                                azx,azy,color='m',label="Az.luz",**quiver_args)
+
             #Quiver plot of azimuth for observer
             azx=[mh.cos(x) for x in self.data[cond].azim_luz]
             azy=[mh.sin(x) for x in self.data[cond].azim_luz]
             self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
-                             azx,azy,color='w',label="Az.obs",**quiver_args)
-    
+                                azx,azy,color='y',label="Az.obs",**quiver_args)
+
             #Quiver plot of elevation for light
             tx=np.sqrt(1-self.data[cond].cos_int**2).values
             ty=self.data[cond].cos_int.values
             self.ax2d.quiver(self.data[cond]["x_"+coords]-x_cen,self.data[cond]["y_"+coords]-y_cen,
-                             tx,ty,color='c',label="Elev.luz",**quiver_args)
-    
+                                tx,ty,color='c',label="Elev.luz",**quiver_args)
+
             #Legend decoration
-            leg=self.ax2d.legend(loc='lower right',facecolor='k',ncol=3,prop={'size':8},
-                                 bbox_to_anchor=(0.5, -0.05, 0.5, 0.5))
+            leg=self.ax2d.legend(loc='lower right',facecolor=bgcolor,ncol=3,prop={'size':8},
+                                    bbox_to_anchor=(0.5, -0.05, 0.5, 0.5))
             frame=leg.get_frame()
-            frame.set_edgecolor("k")
+            frame.set_edgecolor(bgcolor)
             for text in leg.get_texts():
-                text.set_color("w")
+                text.set_color(textcolor)
             axis=False
-    
+
         ##########################################################
         #Highlight spangles
         ##########################################################
@@ -1446,30 +1548,30 @@ class Spangler(PrynglesCommon):
             if len(highlight)<2:
                 raise AssertionError("Highlight should include conditions and scatter options")
             
-            def_args_scatter=dict(c='w',s=0.1,marker='*')
+            def_args_scatter=dict(c=textcolor,s=0.1,marker='*')
             cond_highlight,args_scatter=highlight
             def_args_scatter.update(args_scatter)
             self.ax2d.scatter(self.data[cond_highlight&cond_included]["x_"+coords]-x_cen,
-                              self.data[cond_highlight&cond_included]["y_"+coords]-y_cen,
-                              **def_args_scatter)
+                                self.data[cond_highlight&cond_included]["y_"+coords]-y_cen,
+                                **def_args_scatter)
             
         ##########################################################
         #Show axis and other labels
         ##########################################################
         if newfig and axis:
-            self.ax2d.plot([xmin,xmax],[0,0],'w-',alpha=0.3)
-            self.ax2d.plot([0,0],[ymin,ymax],'w-',alpha=0.3)
-            self.ax2d.text(xmax,0,fr"$x_{{{coords}}}$",color='w',alpha=0.5,fontsize=8*fig_factor)
-            self.ax2d.text(0,ymax,fr"$y_{{{coords}}}$",color='w',alpha=0.5,fontsize=8*fig_factor)
-    
+            self.ax2d.plot([xmin,xmax],[0,0], textcolor + '-',alpha=0.3)
+            self.ax2d.plot([0,0],[ymin,ymax], textcolor + '-',alpha=0.3)
+            self.ax2d.text(xmax,0,fr"$x_{{{coords}}}$",color=textcolor,alpha=0.5,fontsize=8*fig_factor)
+            self.ax2d.text(0,ymax,fr"$y_{{{coords}}}$",color=textcolor,alpha=0.5,fontsize=8*fig_factor)
+
             #Scale
             center_text=""
             if center_at:
                 center_text=f", Center at '{center_at}'"
             self.ax2d.text(0,0,f"Axis scale: {maxval*factor:.2g}{center_text}",
-                      fontsize=8*fig_factor,color='w',
-                      transform=self.ax2d.transAxes)
-    
+                        fontsize=8*fig_factor,color=textcolor,
+                        transform=self.ax2d.transAxes)
+
         ##########################################################
         #Decorate plot
         ##########################################################
@@ -1490,15 +1592,15 @@ class Spangler(PrynglesCommon):
                 lamb=self.rqf_int[1]*Consts.rad
                 phi=self.rqf_int[2]*Consts.rad
             coords_label=f"($\lambda$,$\\beta$) : ({lamb:.1f}$^\circ$,{phi:.1f}$^\circ$)"
-    
+
             if coords=="ecl":
                 coords_label=""
-    
+
             label_obs=f"{coords} {coords_label}"
             self.ax2d.text(0.5,1.01,f"{label_obs}",
-                         transform=self.ax2d.transAxes,ha='center',
-                         color='w',fontsize=10*fig_factor)
-    
+                            transform=self.ax2d.transAxes,ha='center',
+                            color=textcolor,fontsize=10*fig_factor)
+
             self.ax2d.axis("off")
             Plot.pryngles_mark(self.ax2d)
         
@@ -1509,19 +1611,34 @@ class Spangler(PrynglesCommon):
         self.fig2d.tight_layout()
         
         return x_cen,y_cen
-    
+            
     
     def update_intersection_state(self,excluded=[],included=[]):
-        """Update state of intersections
-        
-        Otional Parameters:
-            exluded: list, default = []:
-                List of objects to exclude from the calculation.
-                
-            included: list, default = []:
-                Objects to include in the calculation.
-        
-        """    
+        """
+        Updates the intersection states of spangles.
+
+        Parameters
+        ----------
+        excluded : list of str, optional
+            Names of objects to exclude from intersection calculations. Default is an empty list.
+        included : list of str, optional
+            Names of objects to include in intersection calculations. If empty, includes all not excluded.
+            Default is an empty list.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If no intersection vantage point has been set (i.e., `qhulls` is empty) or if all objects
+            are excluded.
+
+        Notes
+        -----
+        Updates the "intersect" state and related fields in the `data` DataFrame based on convex hulls.
+        """   
         #Update qhulls using the latest intersection state
         self._calc_qhulls()
         
@@ -1646,7 +1763,7 @@ class Spangler(PrynglesCommon):
                 hull["below"]=sum(below)
                 
             #Correct areas
-        self.normalize_areas()
+        self._normalize_areas()
             # if geometry != SAMPLER_GEOMETRY_CIRCLE:
             #     cond=(self.data.name==name)&(self.data.cos_int>=0)&(~self.data.hidden)
                 
@@ -1662,7 +1779,17 @@ class Spangler(PrynglesCommon):
             #     self.data.loc[cond,"asp_int"]*=norma
         
     def update_visibility_state(self):
-        """Update states and variables related to visibility
+        """
+        Updates visibility states and related variables of spangles.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Calls :meth:`update_intersection_state` and updates "visible", "hidden_by_obs", and
+        "transit_over_obs" in the `data` DataFrame.
         """
         self.update_intersection_state()
         self.data[SPANGLER_COL_OBS]=self.data[SPANGLER_COL_INT]
@@ -1672,7 +1799,25 @@ class Spangler(PrynglesCommon):
         self.data.visible=self.data.visible&self.data.intersect
     
     def update_illumination_state(self,excluded=[],included=[]):
-        """Update states and variables related to illumination
+        """
+        Updates illumination states and related variables of spangles.
+
+        Parameters
+        ----------
+        excluded : list of str, optional
+            Names of objects to exclude from illumination calculations. Default is an empty list.
+        included : list of str, optional
+            Names of objects to include in illumination calculations. If empty, includes all not excluded.
+            Default is an empty list.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Calls :meth:`update_intersection_state` and updates "illuminated", "shadow", and related
+        fields in the `data` DataFrame.
         """
         self.update_intersection_state(excluded,included)
         self.data[SPANGLER_COL_LUZ]=self.data[SPANGLER_COL_INT]
