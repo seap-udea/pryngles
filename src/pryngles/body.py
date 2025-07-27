@@ -187,7 +187,7 @@ class Body(Orbody):
         #Rotational angular velocity
         self.wrot=2*np.pi/self.prot
         #Rotation axis
-        self.n_equ=sci.cartesian([1,self.roll,90*Consts.deg-self.i])
+        self.n_equ = Science.cartesian([1,self.roll,90*Consts.deg-self.i])
     
     def show_tree(self):
         print(RenderTree(self))
@@ -305,7 +305,7 @@ class Star(Body):
         verbose(VERB_VERIFY,"Updating properties of Star")
         
         #Compute limbdarkening at r = 0 to initialize normalization constant
-        sci.limb_darkening(0,self.limb_coeffs)
+        Science.limb_darkening(0,self.limb_coeffs)
         
         #Store limb darkening normalization
         self.norm_limb_darkening=SCIENCE_LIMB_NORMALIZATIONS[hash(tuple(self.limb_coeffs))]

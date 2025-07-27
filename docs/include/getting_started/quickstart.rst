@@ -2,5 +2,5 @@ Quickstart
 =================
 
 .. mdinclude:: ../../../README.md
-    :start-line: 99
-    :end-line: 197
+    :start-line: 108
+    :end-line: 206

@@ -259,12 +259,12 @@ class Science(PrynglesCommon):
             
         N : `float`
             Normalization constant | **Default** = `None`
-                
+            
         Returns
         -------------
         :
             I : `float`
-                Normalized intensity of the star at projected distance :math:`\\rho`.
+            Normalized intensity of the star at projected distance :math:`\\rho`.
 
         Warnings
         -------------
@@ -275,12 +275,22 @@ class Science(PrynglesCommon):
         ValueError
             If `len(cs) > 4`. Limb darkening model not implemented for order greater than 4
         
-        References
+        Note
         -------------
+        This method implements the non-linear limb-darkening model described in **[1]** and implements limb darkening coefficients from **[2]**.
+
+        .. math::
+
+            \\mu = (1-\\rho^2)^{1/2}
+
+        .. math::
+
+            \\frac{I(\\mu)}{I(0)} = 1-\\sum_n c_n(1-\\mu^{n/2})
+
         **[1]** Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
 
         **[2]** Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
-    
+
         Examples
         -------------
         >>> # Creating a Figure Plot

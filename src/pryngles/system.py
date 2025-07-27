@@ -27,64 +27,65 @@ from tqdm import tqdm
 # Class System
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class System(PrynglesCommon):
-    """Creates a planetary system.
-    
-        Initialization attributes:
-    
-            units: list of strings, default = ['au','msun','yr2pi']:
-                Units used in calculations following the conventions and signs of rebound.
-                The order SHOULD always be MKS: length, mass, time (in that order)
-    
-        Optional attributes:
-    
-            resetable: boolean, default = False:
-                If True the system is resetable, namely you can reset it to the initial system.
-                
-            filename: string, default = None:
-                File to load system.
-    
-        Derived attributes:
-    
-            sim: Class Simulation:
-                Rebound Simulation object.
-    
-            ul, um, ut: float [SI units]:
-                Value of the conversion factors for each unit.
-    
-            G: float [ul^3/ut^2/um]
-                Value of the gravitational constant.
-    
-            bodies: dictionary:
-                Bodies in the system.
-    
-            nbodies: int:
-                Number of bodies.
-    
-            nparticles: int:
-                Numbre of particles in rebound simulation.
-    
-            spangler: Class Spangler:
-                Spangler object with all the spangles in the system.
-    
-        Examples:
-    
-            #Create a system
-            sys=System(units=["au","msun","yr"])
-            sys.sim.integrator='whfast'
-            sys.sim.dt=0.01
-    
-            #Add star (by default, m = 1)
-            S=sys.add()
-    
-            #Add planet, when an object is added, it is automatically spangled
-            P=sys.add("Planet",radius=0.1,m=1e-3,a=1,e=0.2)
-    
-            #Add moon: orbital elements are respect to ecliptic system
-            M=sys.add("Planet",parent=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
-    
-            #Add ring system
-            R=sys.add("Ring",parent=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)
-    
+    """
+    High-level interface for building spangled planetary systems.
+    Integrates Rebound simulations with the Pryngles spangling pipeline to generate discrete surface facets,
+    manage bodies, compute photometric states, and evolve dynamics.
+
+    Parameters
+    ----------
+    filename : `str`
+        Path to a saved system file to load. If provided, units and resetable
+        parameters are ignored | **Default:** None
+    units : `list` 
+        Three-element list of str specifying units for length, mass, and time
+        as recognized by Rebound (order: length, mass, time) | **Default:** ['au', 'msun', 'yr2pi']
+    resetable : `bool`
+        Whether the system state can be snapshotted and reset to initial | **Default:** False
+
+    Attributes
+    ----------
+    sim : `rebound.Simulation`
+        Underlying Rebound simulation instance (None until initialized).
+    ul, um, ut : `float`
+        Conversion factors from internal units to SI (meters, kilograms, seconds).
+    G : `float`
+        Gravitational constant in chosen units.
+    bodies : `odict`
+        Ordered dictionary of :any:`body.Body` instances in the system, keyed by name.
+    nbodies : `int`
+        Number of bodies in `bodies`.
+    nparticles : `int`
+        Number of particles in the Rebound simulation.
+    n_obs : `np.array(3)`
+        Normalized observer direction vector :math:`\hat{n}` in the system's coordinate frame.
+    sg : :any:`spangler.Spangler`
+        Spangler instance covering all system facets.
+    spangle_scatterers : `dict`
+        Mapping from :any:`spangler.Spangler` type attribute to :any:`scatterer.Scatterer` classes and options.
+        This means that for spangles of the type :any:`consts.SPANGLE_ATMOSPHERIC` Pryngles will 
+        instantiate an object of the class :any:`scatterer.LambertianGrayAtmosphere` to compute their scattering.
+
+    Examples
+    --------
+    >>> # Create a new system with default units
+    >>> sys = System(units=['au','msun','yr2pi'])
+    >>> 
+    >>> # Now you can add bodies to the system
+    >>> star = sys.add('Star', m=1.0)
+    >>> planet = sys.add('Planet', parent=star, m=1e-3, a=1.0, e=0.1)
+    >>>
+    >>> # Initialize the simulation
+    >>> sys.initialize_simulation()
+    >>>
+    >>> # Spangle the bodies to compute photometry
+    >>> sys.spangle_system()
+    >>> 
+    >>> # You can visualize the system
+    >>> sys.sg.plot2d(include = ['Star', 'Planet'])
+
+    .. image:: images/system_init.png
+        :align: center
     """
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -182,7 +183,19 @@ class System(PrynglesCommon):
         }
         
     def update_units(self,units):
-        """Update units of the system
+        """
+        Set or change the internal unit conversion factors.
+
+        Parameters
+        ----------
+        units :  `list`
+            Three-element string of Rebound-recognized units: [length, mass, time]. 
+            You can see the defined ones in :any:`consts.REBOUND_ORBITAL_PROPERTIES`
+
+        Raises
+        ------
+        ValueError
+            If any unit string is not recognized by Rebound.
         """
         #Check units
         if units[0] not in rb.units.lengths_SI:
@@ -235,7 +248,9 @@ class System(PrynglesCommon):
         return True if self.sg else False
     
     def reset_state(self):
-        """Reset the state of the spangler
+        """
+        Restore Spangler visibility and illumination to initial.
+        Calls :meth:`Spangler.reset_state` and clears observer/light flags.
         """
         self.sg.reset_state()
         self._observer_set=False
@@ -244,12 +259,16 @@ class System(PrynglesCommon):
     def save_to(self,filename):
         """Save system from file
         
-        Parameters:
-            filename: string:
-                Path to file where the object will be pickled.
-                
-        Result:
-            File 'filename' for regular object and 'filename.rbin' for rebound simulation
+        Parameters
+        ----------
+        filename : str
+            Base filename (without extension) for saving.
+
+        Returns
+        --------------
+        :
+            filename : str
+             Rebound state is saved as filename + '.rbin'.
         """
         if self._simulated:
             #Rebound file
@@ -273,11 +292,16 @@ class System(PrynglesCommon):
     def load_from(self,filename):
         """Load system from filename
                 
-        Parameters:
-            filename: string:
-                Path to file where the object will be pickled.
-                There to be 2 files: 'filename' (with the regular object) and filename.rbin with 
-                rebound simulation.
+        Parameters
+        ----------
+        filename : str
+            Base filename (without extension) used for pickle and Rebound state.
+
+        Returns
+        ------------
+        :
+            sim : ``rebound.Simulation``
+             :data:`~ system.System.sim` attribute loaded from file
         """
         #Load system
         self=PrynglesCommon.load_from(self,filename)
@@ -291,6 +315,13 @@ class System(PrynglesCommon):
             self.sim=rb.Simulation(rb_filename)
         
     def status(self):
+        """
+        Print a summary of the current system and particles.
+
+        Note
+        ---------
+        If not yet initialized, prompts for initialization.
+        """
         if self._simulated:
             print(f"System with {self.nbodies} bodies and {self.nparticles} particles (rings and disk are not particles)")
             self.sim.status()
@@ -303,13 +334,20 @@ class System(PrynglesCommon):
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     def update_scatterers(self):
-        """Update the scatterers of the spangles
+        """
+        Instantiate scatterer objects for all spangles lacking one.
+
+        Raises
+        ------
+        AssertionError
+            If spangles have not yet been generated via :data:`~ system.System.spangle_system()`.
         """
         if not self._spangled:
             raise AssertionError("You need to spangle the system before updating the scatterers.")
         
         #Update scatterer only for the non-assigned one
         cond=(self.data.scatterer=="")
+        
         for index in self.data[cond].index:
             #Get spangle
             spangle=self.data.loc[index]
@@ -320,50 +358,58 @@ class System(PrynglesCommon):
             #Build options of scatterers from options description
             scatterer_options={**dict(zip(spangle_options.keys(),spangle[list(spangle_options.values())]))}
             #Instantiate object of scatterer and save hash into DataFrame
-            self.data.loc[index,"scatterer"]=spangle_scatterer(**scatterer_options).hash
+            self.data.loc[index,"scatterer"] = spangle_scatterer(**scatterer_options) #.hash To not save hash but the Scatterer object
     
+    def update_albedos(self):
+        """ 
+        Compute directional-dependent Lambertian albedo per spangle. 
+        It implements :data:`~ scatterer.Scatterer.get_albedo()` method. See our :doc:`scatterer` for the theory behind our models
+
+        Note
+        ------
+        Applies only to non-stellar spangles, i.e., with no :data:`~ consts.SPANGLE_STELLAR` attribute
+        """
+
+        # Creating lambertian_albedo column for directional-dependent albedo for surface/atmosphere scattering
+        self.data['lambertian_albedo'] = 0.0
+
+        # Only planetary surfaces are taken into account
+        cond = (self.data['spangle_type'] != 6) & (self.data['cos_luz'] >= 0)
+    
+        # Initialize Lambertian Albedo columns into de DataFrame
+        self.data.loc[cond, "lambertian_albedo"] = self.data.loc[cond].apply(
+            lambda sp: sp["scatterer"].get_albedo(
+                eta = sp["cos_obs"], zeta = 0, delta = 0, lamb = 0.55), axis = 1)
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Tested methods from module file system
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     def add(self,kind="Star",parent=None,**props):
-        """Add an object to the system
-        
-        Examples:
-        
-            sys=System()
-            S=sys.add("Star",m=2)
-        
-        Parameters:
-        
-            kind: string, default = "Star":
-                Kind of object: Star, Planet, Ring (see BODY_KINDS).
-        
-            parent: Body, default = None:
-                Parent object of the body.
-                
-            props: dictionary:
-                List of properties of the body.
-                
-        Returns:
-            
-            Body
-                Body added to the system.
-                
-        Examples:
-            #Add star (by default, m = 1)
-            S=sys.add()
-    
-            #Add planet, when an object is added, it is automatically spangled
-            P=sys.add("Planet",radius=0.1,m=1e-3,x=1,vy=0.2)
-    
-            #Add moon: orbital elements are respect to ecliptic system
-            M=sys.add("Planet",parent=P,radius=0.01,m=1e-7,a=0.1,e=0.01)
-    
-            #Add ring system
-            R=sys.add("Ring",parent=P,fi=1.5,fe=2.5,albedo_gray_normal=0.5,tau_gray_optical=3)        
-            
+        """
+        Add a new Body to the System and auto-spangle it.
+
+        Parameters
+        ----------------
+        kind : `str`
+            Type of body to add from :any:`consts.BODY_KINDS` | **Defaults** = `Star`
+        parent : Body or None
+            Parent body (orbital central object); None for the root star.
+        **props : dict
+            Properties forwarded to the Body constructor (mass, radius, orbital elements). It came from :any:`consts.BODY_DEFAULTS`
+
+        Returns
+        -------
+        :
+            output : :any:`body.Body`
+             The newly created Body instance.
+
+        Raises
+        ------
+        AssertionError
+            If kind is None.
+        ValueError
+            If kind not in :any:`consts.BODY_KINDS` or name already exists.    
         """
         if kind is None:
             raise AssertionError("You must provide a valid object kind (Star, Planet, Ring).")
@@ -436,62 +482,42 @@ class System(PrynglesCommon):
         self.__body.source.shined+=[self.__body.name]
         
         verbose(VERB_SIMPLE,f"Object '{kind}' with name '{self.__body.name}' has been added.")
+
+        # if kind == 'Ring':
+        #     self.__body.m = -1
+
         return self.__body
     
     
     def initialize_simulation(self,orbital_tree=None,**rebound_options):
-        """Initialize rebound simulation using a given orbital tree.
-        
-        Parameters:
-            orbital_tree: list of pairs, default = None:
-                A scheme showing how the bodies in the system are organized as in a 
-                hierarchical N-body system (see OrbitUtil.build_system).
-                
-                Examples:
-                    Simple system: star (S), planet (P):
-                        orbital_tree = [S,P]
-                    
-                    System with two planets: star (S), planet 1 (P1), planet 2 (P2):
-                        orbital_tree = [[S,P1],P2]
-                        
-                    System with moon: star (S), planet (P), moon (M):
-                        orbital_tree = [S,[P,M]]
-                        
-                    System with two planets and moons: star (S), planet 1 (P1), moon planet 1 (M), planet 2 (P2):
-                        orbital_tree = [[S,[P1,M]],P2]
-                        
-                    System with two stars and one planet per star:
-                        orbital_tree = [[S1,PS1],[S1,PS2]]
-        
-        Return:
-            orbit: object Orbit:
-                Object containing the hierarchical N-body system.
-        
-        Update:
-            self.sim: Rebound Simulation:
-                Simulation of the system.
-                
-        Note:
-        
-            You can 
         """
+        Build and initialize the Rebound simulation from the orbital tree scheme.
+
+        Note
+        ----------
+        See the :doc:`orbit` for the convenction to construc an orbital tree input
+
+        Parameters
+        ----------
+        orbital_tree : `list`
+            Hierarchical tree of bodies for N-body initialization; see :any:`orbit.OrbitUtil.build_tree`
         
-        #Compile orbital configuration
-        if orbital_tree is None:
-            i=0
-            for name,body in odict(reversed(list(self.bodies.items()))).items():
-                if body == self.root:
-                    continue
-                if body.kind == "Ring":
-                    continue
-                if i == 0:
-                    self.orbital_tree=body
-                else:
-                    self.orbital_tree=[body,self.orbital_tree]
-                i+=1
-            self.orbital_tree=[self.root,self.orbital_tree]
-        else:
-            self.orbital_tree=orbital_tree
+        Returns
+        -------
+        :
+            output : :any:`orbit.Orbit`
+             The Orbit object representing the hierarchical system.
+
+        Raises
+        ------
+        AssertionError
+            If a Body is in System but not in orbital tree.
+        """
+
+        # See Orbit Module for build_tree() method
+        if orbital_tree is None: self.orbital_tree = OrbitUtil.build_tree(self.root)
+
+        else: self.orbital_tree = orbital_tree
         
         #Set the rebound hash of all bodies
         for name,body in self.bodies.items():
@@ -532,19 +558,18 @@ class System(PrynglesCommon):
         return orbit
     
     def remove(self,name):
-        """Remove a body from a system.
-    
-        Parameters:
-            name: string
-                Hash of the body to remove
-        
-        Notes: 
-            Remove eliminate body and all the childs and the childs of the childs.
-    
-        Example:
-            sys=System()
-            S=sys.add(m=2)
-            sys.remove(name=S.name)
+        """
+        Remove a body (and children objects) from the system.
+
+        Parameters
+        ----------
+        name : str
+            Name (hash) of the body to remove.
+
+        Raises
+        ------
+        ValueError
+            If no body with the given name exists.
         """
         
         if name in self.bodies:
@@ -580,20 +605,20 @@ class System(PrynglesCommon):
             raise ValueError(f"No object with hash '{name}' in the system")
     
     def spangle_system(self):
-        """Generate the spangles of the objects in the system
-        
-        Attributes created:
-            
-            spanglers: dictionary of Spangler objects:
-                Spangler corresponding to each object in the system.
-                
-            sp: Spangler:
-                Spangler corresponding to all system.
-                
-        Result:
-            
-            This method create the spangler of the system
-    
+        """
+        Generate :any:`spangler.Spangler` instances for all bodies and join them.
+
+        Attributes
+        ------------
+        sg : :any:`spangler.Spangler`
+            It contains the :data:`~ spangler.Spangler` object in wich we sample and discretize the surface of all bodies defined in system in order to compute light-matter interactions
+        data : `pd.DataFrame`
+            Contains :any:`consts.SPANGLER_COLUMNS` and sets the  default observer/light states.
+
+        Raises
+        ------
+        AssertionError
+            If simulation not yet initialized.
         """
         if not self._simulated:
             raise AssertionError("Before spangling the system you must initialize the simulation: System.initialize_simulation().")
@@ -632,6 +657,9 @@ class System(PrynglesCommon):
         
         #Already spangled
         self._spangled=True
+
+        #Update Scatterers for Albedo Computing
+        self.update_scatterers()
     
     def _set_observer(self,nvec=[0,0,1],alpha=0,center=None):
         """Set the position of the observer
@@ -725,12 +753,20 @@ class System(PrynglesCommon):
             
     def update_perspective(self,n_obs=None,alpha_obs=0,center_obs=None):
         """
-        Update:
+        Set new observer and illumination perspectives for direction values and recompute photometry.
 
-            - Spangles Perspective for Observer (Visibility and Illumination states)
-            - Computation for Incident Stellar Flux and its Diffuse Reflection
-
-        Warning: This function may have slow performance
+        Parameters
+        ----------
+        n_obs : `array_like`
+            Observer direction vector.
+        alpha_obs : `float`
+            Observer roll angle (radians).
+        center_obs : `array_like`
+            Observer position vector.
+        
+        Warning
+        ----------
+        This function may have slow performance
         """
         if n_obs is not None:
             
@@ -749,14 +785,20 @@ class System(PrynglesCommon):
         
     
     def update_body(self,body,**props):
-        """Update properties of a body in the system
-        
-        Parameters:
-            body: string or Body:
-                Body to update
-            
-            props: dict:
-                Dictionary with properties of the object
+        """
+        Update a body's properties before spangling.
+
+        Parameters
+        ----------
+        body : `str` or :data:`~ body.Body`
+            Identifier or instance of the body to update.
+        **props : dict
+            Properties to update (mass, radius, orbital elements).
+
+        Raises
+        ------
+        AssertionError
+            If system already spangled or body not found.
         """
         #Update spangling?
         if self._is_spangled():
@@ -777,7 +819,9 @@ class System(PrynglesCommon):
             raise ValueError(f"You cannot update an orbital property {props} without compromising the full simulation. Rebuild the system from scratch.")
     
     def reset(self):
-        """Reset system to spangling state
+        """
+        Reload system state from the last snapshot.
+        Works only if ``resetable = True`` on creation.
         """
         if self._resetable:
             self.load_from(self._snap_file_name)
@@ -786,18 +830,22 @@ class System(PrynglesCommon):
             print("System is not resetable. Use resetable = True when defining the System or when you spangle it.")
     
     def integrate(self,*args,**kwargs):
-        """Integrate N-Body System
-    
-        Parameters:
-            *args, **kwargs:
-                Mandatory (non-keyword) arguments and optional (keyword) arguments for rebound.integrate.
-            
-        Update:
-            Integrate using integrate Rebound method.
-            
-            Update center of each body and set positions of the Spangles. 
+        """
+        Advance N-body simulation by a given time step, update center of each body and set positions of the Spangles.
+
+        Parameters
+        ----------
+        t : `float`
+            Time for integrate to it
+
+        Raises
+        ------
+        AssertionError
+            If system not yet spangled.
         
-        Note: It doesn´t update the Visibility and Illumination states of the Spangles.
+        Note
+        ---------
+        It doesn´t update the Visibility and Illumination states of the Spangles.
         """
         #Time of integration
         t=args[0]
@@ -826,23 +874,26 @@ class System(PrynglesCommon):
             raise AssertionError("You must first spangle system before setting positions.")
 
     def integrate_perspective(self, t, n_obs = None, alpha_obs = 0, center_obs = None):
-
-        """Rebound Integration of N-Body System and Update Spangles Perspective for Observer
-
-        Parameters: 
-            t: Time for Rebound Integration
-            n_obs, alpha_obs, center_obs: Observer Properties
-
-        Update:
-            Integrate using integrate Rebound method.
-            
-            Update center of each body and set positions of the Spangles.
-
-            Update Visibility and Illumination states of the Spangles
-
-        Warning: This function may have slow performance...
         """
+        Rebound Integration of N-Body System and update center of each body and set positions of the Spangles. 
+        Also update Visibility and Illumination states of the Spangles
 
+
+        Parameters
+        ----------
+        t : float
+            Target time for integration.
+        n_obs : array_like or None
+            Observer direction.
+        alpha_obs : float
+            Observer roll angle.
+        center_obs : array_like or None
+            Observer position.
+
+        Warning
+        --------------
+        This function may have slow performance
+        """
         #Integration
         self.integrate(t)
 
@@ -850,9 +901,17 @@ class System(PrynglesCommon):
         self.update_perspective(n_obs = None, alpha_obs = 0, center_obs = None)
     
     def ensamble_system(self,lamb=0,beta=0,**physics):
-        """Ensamble Ringed Planet
-        
-        This class is for legacy purposes.
+        """
+        Legacy :data:`~ legacy.RingedPlanet` assembly helper.
+
+        Returns
+        -------
+        :
+            output : :data:`~ legacy.RingedPlanet`
+
+        Caution
+        --------
+        It only works on single-planet system for improving performance
         """
         #Check if observer was provided
         if "Observer" in self.bodies:
@@ -902,30 +961,24 @@ class System(PrynglesCommon):
     
 
     def update_StellarFlux(self):
-
         """
-        Computation of the Incident Stellar Flux per Spangle
+        Compute the Incident Stellar Flux for illuminated spangles that do not belong
+        to stars, considering the effective area per spangle and applying the Flux Law
 
-        Attribute Created:
+        Attributes
+        ----------
+        stellar_flux : `pd.Series`
+            The computed incident stellar flux, stored in the Spangles Data object
+            (``self.data.stellar_flux``).
 
-            stellar_flux = Belongs to Spangles Data object (self.data.stellar_flux)
-
-        Computation:
-
-            - Illuminated Spangles that do not belong to stars are considered
-
-            - Takes into account the Effective Area per Spangle
-
-                asp = Area of Individual Spangle
-                cos_luz = Cosine of the Incident Light angle
-
-            - Follows the Flux Law (Star Luminosity is taken as 1)
-
-                d_luz = Distance to Light Source
-                stellar_flux = 1/(4*pi*d_luz^2)
-
+        Note
+        ---------
+        - Only illuminated spangles not associated with stars are considered in the computation.
+        - The computation follows the Flux Law (:math:`\propto d^{-2}`)
+        
+        .. math::
+            F = \\frac{L}{4 \\pi d^2}
         """
-
         #Considered Spangles
         body_names = [name for name, body in self.bodies.items() if body.kind != 'Star']
 
@@ -939,76 +992,89 @@ class System(PrynglesCommon):
 
 
     def update_DiffuseReflection(self):
-
         """
-        Computation of the Diffuse Reflected Stellar Flux per Spangle
+        Compute the Diffuse Reflected Stellar Flux per Spangle that are both visible and illuminated,
+        taking into account the illuminated side of the spangles and applying Lambert's Cosine Law.
 
-        Attribute Created:
+        Returns
+        ------------
+        reflected_flux : `pd.Series`
+            The computed reflected flux, stored in the Spangles Data object
+            (``self.data.reflected_flux``).
 
-            reflected_flux = Belongs to Spangles Data object (self.data.reflected_flux)
+        Note
+        -------
+        - Only visible and illuminated spangles reflect the incident stellar flux.
+        - Diffuse reflection considers the illuminated side of the spangles, where the condition ``cos_obs * cos_luz > 0`` ensures the observer perceives the illuminated side.
+        - The computation follows Lambert's Cosine Law (Lommel - Selliger Law is also available, see :any:`scatterer.Scatterer` for details).
 
-        Computation:
+        .. math::
+            \\frac{F}{F_0} = \\sum_i \\frac{a_{s_i}\\cos \\Lambda_i}{4 \\pi d_i^2}A_{L_i}(\\Lambda_i)\\cos Z_i
 
-            - Visible and Illuminated Spangles are able to reflect the Incident Stellar Flux
+        where:
 
-            - Diffuse Reflection takes into account the Illuminated Side of the Spangles
-
-                cos_obs = Cosine of the Observer Line of Sight angle  
-                cos_luz = Cosine of the Incident Light angle
-
-                cos_obs*cos_luz > 0  (Observer perceives the Illuminated Side of the Spangles)
-
-            - Follows the Lambert's Cosine Law
-
-                stellar_flux = Incident Stellar Flux
-                albedo_gray_normal = Wavelength-Independent Normal Albedo
-                            
-                reflected_flux = stellar_flux*albedo_gray_normal*cos_obs
-                
+        - :math:`F/F_0` is the reflected flux.
+        - :math:`a_{s_i}` is the area of the spangle.
+        - :math:`\\Lambda_i` is the angle between the incident light and the surface normal.
+        - :math:`d_i` is the distance from the spangle to the light source.
+        - :math:`A_{L_i}(\\Lambda_i)` is the Lambertian albedo of the spangle at angle :math:`\\Lambda_i`.
+        - :math:`Z_i` is the angle between the observer's line of sight and the surface normal.
         """
-
         #Considered Spangles
         cond = self.data.illuminated*self.data.visible*(self.data.cos_obs*self.data.cos_luz > 0)*(~self.data.hidden)
 
         #Creating reflected_flux attribute
         self.data['reflected_flux'] = np.zeros(self.data.shape[0])
 
+        #Compute incident stellar flux
+        self.update_StellarFlux()
+        
+        #Update Lambertian Albedo Values for Integration Step
+        self.update_albedos()
+
         #Computing Diffuse Reflected Light
-        self.data.reflected_flux[cond] = self.data.stellar_flux[cond]*self.data.albedo_gray_normal[cond]*self.data.cos_obs[cond]
+        self.data.reflected_flux[cond] = self.data.stellar_flux[cond]*self.data.lambertian_albedo[cond]*self.data.cos_obs[cond]
 
 
     def update_Transit(self):
+        """
+        This method calculates the stellar flux drop caused by transiting spangles over star-kind
+        bodies, accounting for limb-darkening effects and the spangle's optical properties.
+
+        Returns
+        ----------
+        transit_flux : `pd.Series`
+            The computed stellar flux drop, stored in the Spangles Data object
+            (``self.data.transit_flux``).
+
+        See Also
+        ------------
+        - The computation follows limb-darkening laws, as described in:
+        `<https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html>`_.
+        - Limb-darkening coefficients are sourced from:
+        `<https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt>`_.
+
+        Note
+        ----------
+        - Only spangles transiting over star-kind bodies are considered.
+        - The flux drop is calculated as:
+
+        .. math::
+            \\frac{F}{F_0}= \\sum_i a_{s_i} \\cos Z_i \\beta_i(Z_i) \\frac{I(\\mu)}{I_0}
+
+        where:
+
+        - :math:`F/F_0` is the normalized stellar flux drop.
+        - :math:`a_{s_i}` is the area of the spangle.
+        - :math:`Z_i` is the angle between the observer's line of sight and the surface normal.
+        - :math:`\\beta_i(Z_i)` is the attenuation factor for the spangle at angle :math:`Z_i` **[1]**
+        .. math::
+            \\beta_i(Z_i) = 1 - \\frac{\\tau}{2\\cos Z_i}e^{-\\frac{\\tau}{\\cos Z_i}}
+        - :math:`I(\\mu)/I_0` is the intensity of the light at projected distance over stellar disk (see :any:`science.Science.limb_darkening` for details).
+        
+        **[1]**  French, R.G., Nicholson, P.D., 2000. Icarus 145, 502–523. doi:10. 1006/icar.2000.6357. 
 
         """
-        Computation of the Stellar Flux Drop for Transiting Spangles
-
-        Attribute Created:
-
-            transit_flux = Belongs to Spangles Data object (self.data.transit_flux)
-
-        Computation:
-
-            - Only Transiting Spangles over Star-Kind Bodies are taking into account
-
-            asp = Area of Individual Spangle
-            tau_gray_optical = Total Optical Depth for Spangle
-            beta_values = Attenuation Factor
-            limb_coeff = Limb-Darkening Coefficient
-            norm_limb_coeff = Normalization of Limb-Darkening Coefficient
-            rhos = Projected Distance between Spangle and the Star's Center
-            cos_obs = Cosine of the Observer Line of Sight angle over the Spangle
-
-            - Follows the Limb-Darkening Laws:
-
-            Models in: https://pages.jh.edu/~dsing3/David_Sing/Limb_Darkening.html
-            Coefficients available at: https://pages.jh.edu/~dsing3/LDfiles/LDCs.CoRot.Table1.txt
-
-            - According to Zuluaga et. al. (2022)
-
-            transit_flux = beta_values*asp*cos_obs*limb_darkening
-
-        """
-
         #Creating transit_flux attribute
         self.data['transit_flux'] = np.zeros(self.data.shape[0])
 
@@ -1024,13 +1090,14 @@ class System(PrynglesCommon):
                 rhos = self.data.transit_over_obs[cond].str.extract(r':([^:]*)&', expand = False).astype(float)
 
                 #Optical Parameters
-                limb_coeff = self.bodies[star].limb_coeffs
+                limb_coeffs = self.bodies[star].limb_coeffs
                 norm_limb_coeff = self.bodies[star].norm_limb_darkening
 
                 beta_values = 1 - np.exp(-self.data.tau_gray_optical[cond]/abs(self.data.cos_obs[cond]))
 
                 star_scale = self.bodies[star].radius
-                limb_darkening = Util.limbDarkening(rhos, 1, limb_coeff, norm_limb_coeff)
+                # limb_darkening = Util.limbDarkening(rhos, 1, limb_coeff, norm_limb_coeff)
+                limb_darkening = Science.limb_darkening(rhos, cs = limb_coeffs , N = norm_limb_coeff)
 
                 #Computing Stellar Flux Drop
                 self.data.transit_flux[cond] += beta_values*abs(self.data.cos_obs[cond])*limb_darkening*(self.data.asp_obs[cond]/star_scale**2)
