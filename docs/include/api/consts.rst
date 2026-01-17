@@ -273,6 +273,10 @@ In order to characterize the radiation-matter interaction on each discrete unit 
    "transmit","bool","The spangle is illuminated but transmitting light","True/False"
    "transit","bool","The spangle is transiting","True/False"
    "occult","bool","The spangle is occulted by a light source","True/False"
+   "stellar_flux","float","Incident Stellar Flux at the location of the spangle","Normalized Flux units"
+   "reflected_flux","float","Reflected Flux from the spangle towards the observer","Normalized Flux units"
+   "transit_flux","float","Flux blocked from the star during transit","Normalized Flux units"
+   "thermal_flux","float","Thermal Emission Flux from the spangle towards the observer","Normalized Flux units"
 
 Body Constants
 ^^^^^^^^^^^^^^^^^^^^

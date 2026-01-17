@@ -104,13 +104,13 @@ class Science(PrynglesCommon):
         
         Parameters
         ----------
-        xyz : `np.array(N = 3)`
+        xyz : `np.array`
             Array with components of Cartesian Coordinates 
                 
         Returns
         ------------
         :
-            rhoazcf : `np.array(N = 3)`
+            rhoazcf : `np.array`
                 Cylindrical coordinates expresed as :math:`\\rho, \phi` (azimutal angle) and :math:`\cos\\theta` (cosine
                 of polar angle). 
 
@@ -122,12 +122,26 @@ class Science(PrynglesCommon):
         >>> pr.Science.pcylindricak(xyz)
         array([1.41421356, 0.78539816, 0.57735027]) 
         """
-        rho=(xyz[0]**2+xyz[1]**2)**0.5
-        r=(xyz[2]**2+rho**2)**0.5
-        phi=mh.atan2(xyz[1],xyz[0])
-        phi=phi if phi>0 else 2*np.pi+phi
-        cost=xyz[2]/r if not mh.isclose(r,0) else mh.copysign(1,xyz[2])
-        return np.array([rho,phi,cost])
+        xyz = np.asarray(xyz)
+
+        # Check if single input or multiple inputs
+        single_input = xyz.ndim == 1
+        if single_input:
+            xyz = xyz[np.newaxis, :]  # convertir a (1, 3)
+
+        # Cartesian components
+        x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
+
+        rho = np.sqrt(x**2 + y**2)
+        r = np.sqrt(rho**2 + z**2)
+        phi = np.arctan2(y, x)
+        phi = np.where(phi >= 0, phi, 2 * np.pi + phi)
+        cost = np.where(np.isclose(r, 0), np.copysign(1, z), z / r)
+
+        result = np.column_stack((rho, phi, cost))
+
+        return result[0] if single_input else result
+
     
     def cartesian(rqf):
         """
@@ -353,6 +367,120 @@ class Science(PrynglesCommon):
             raise ValueError(f"Limb darkening not implemented for order {order}")
         return I/N
     
+    def blackbody_intensity(wavelength, temperature):
+        """
+        Planck's Blackbody distribution function for Intensity :math:`B_λ`
+        
+        :math:`B_λ(λ, T) = (2hc²/λ⁵) * 1/(e^(hc/λk_BT) - 1)`
+        
+        Parameters
+        ----------
+        wavelength : float or ndarray
+            Longitud de onda [m]
+        temperature : float or ndarray
+            Temperatura [K]
+            
+        Returns
+        -------
+        B_lambda : float or ndarray
+            Specific Intensity for Blackbody Radiation [W·sr⁻¹·m⁻³]
+        """
+        
+        # Constantes físicas (SI)
+        h = 6.62607015e-34      # Constante de Planck [J·s]
+        c = 299792458           # Velocidad de la luz [m/s]
+        k_B = 1.380649e-23      # Constante de Boltzmann [J/K]
+
+        # Exponente
+        exp_factor = np.exp((h * c) / (wavelength * k_B * temperature)) - 1.0
+        
+        # Función de Planck
+        B_lambda = (2.0 * h * c**2) / (wavelength**5) * (1.0 / exp_factor)
+        
+        return B_lambda
+
+    def blackbody_photons(wavelength, temperature):
+        """
+        Planck's Blackbody distribution function for Photon Flux :math:`J_λ`
+
+        :math:`J_λ(λ, T) = πB_λ(λ, T) / (hc/λ)`
+
+        Parameters
+        ----------
+        wavelength : float or ndarray
+            Wavelenght [m]
+        temperature : float or ndarray
+            Temperature [K]
+
+        Returns
+        -------
+        J_lambda : float or ndarray
+            Specific Photon Flux for Blackbody Radiation [photons·sr⁻¹·m⁻²·s⁻¹·m⁻¹]
+        """
+
+        # Constantes físicas (SI)
+        h = 6.62607015e-34      # Constante de Planck [J·s]
+        c = 299792458           # Velocidad de la luz [m/s]
+        k_B = 1.380649e-23      # Constante de Boltzmann [J/K]
+
+        # BlackBody Distribution 
+        B_lambda = Science.blackbody_intensity(wavelength, temperature)
+
+        # BlackBody Photons Distribution
+        J_lambda = mh.pi * B_lambda / (h * c / wavelength)
+        
+        return J_lambda
+
+    def integrate_planck_flux(T, lambda_min, lambda_max):
+        """
+        Integrate Planck's blackbody distribution function over a wavelength range.
+
+        :math:`\int_{\lambda_{min}}^{\lambda_{max}} B_λ(λ, T) dλ`
+        
+        Parameters
+        ----------
+        T : float
+            Temperature of the blackbody [K]
+        lambda_min : float
+            Lower limit of wavelength integration [m]
+        lambda_max : float
+            Upper limit of wavelength integration [m]
+            
+        Returns
+        -------
+        result : float
+            Integrated spectral radiance over the wavelength interval [W·sr⁻¹·m⁻²]
+        """
+        
+        result, error = quad(Science.blackbody_intensity, lambda_min, lambda_max, args = (T,))
+        
+        return result
+    
+    def integrate_planck_photons(T, lambda_min, lambda_max):
+        """
+        Integrate Planck's blackbody photon distribution function over a wavelength range.
+
+        :math:`\int_{\lambda_{min}}^{\lambda_{max}} J_λ(λ, T) dλ`
+
+        Parameters
+        ----------
+        T : float
+            Temperature of the blackbody [K]
+        lambda_min : float
+            Lower limit of wavelength integration [m]
+        lambda_max : float
+            Upper limit of wavelength integration [m]
+
+        Returns
+        -------
+        result : float
+            Integrated photon flux over the wavelength interval [photons·sr⁻¹·m⁻²·s⁻¹]
+        """
+
+        result, error = quad(Science.blackbody_photons, lambda_min, lambda_max, args = (T,))
+
+        return result
+
     def get_convexhull(data):
         if len(data)>0:
             try:
