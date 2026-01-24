@@ -20,7 +20,6 @@
 from pryngles import *
 
 #Aliases
-sci=Science
 
 import pandas as pd
 import random
@@ -161,8 +160,8 @@ class Spangler(PrynglesCommon):
         self.geometry=-1
         
         #Direction of vantages point in spherical coordinates
-        self.rqf_obs=sci.spherical(self.n_obs)
-        self.rqf_luz=sci.spherical(self.n_luz)
+        self.rqf_obs=Science.spherical(self.n_obs)
+        self.rqf_luz=Science.spherical(self.n_luz)
         self.center_luz=None
         self.center_obs=None
         
@@ -204,7 +203,9 @@ class Spangler(PrynglesCommon):
             
             #Update other parameters
             self._defaults.update(
-                dict(w=w,q0=q0)
+                dict(w=w, q0=q0, 
+                     n_equ=n_equ, alpha_equ=alpha_equ,
+                     center_equ=center_equ, center_ecl=center_ecl)
             )
 
             #Create Spangler dataframe
@@ -214,12 +215,7 @@ class Spangler(PrynglesCommon):
                 self.data=pd.DataFrame([list(self._defaults.values())]*self.nspangles,
                                        columns=self._defaults.keys())
 
-                #Update positions
-                self.set_positions(
-                    n_equ=n_equ,alpha_equ=alpha_equ,
-                    center_equ=center_equ,center_ecl=center_ecl,
-                    t=None
-                )
+                self.M_equ2ecl[name], _ = Science.rotation_matrix(n_equ,alpha_equ)
         
             else:        
                 verbose(VERB_SIMPLE,f"Creating a blank Spangler")
@@ -304,11 +300,11 @@ class Spangler(PrynglesCommon):
         """
         self.name=[]
         for spangler in spanglers:
-            if not isinstance(spangler,Spangler):
-                raise AssertionError(f"One of the spangler is not an Spangler instance")
+            # if not isinstance(spangler,Spangler):
+            #     raise AssertionError(f"One of the spangler is not an Spangler instance")
                 
-            if spangler.name in self.name:
-                raise ValueError(f"Hash '{spangler.name}' already included in spangler '{self.name}'")
+            # if spangler.name in self.name:
+            #     raise ValueError(f"Hash '{spangler.name}' already included in spangler '{self.name}'")
                 
             self.name+=[spangler.name]
 
@@ -400,33 +396,12 @@ class Spangler(PrynglesCommon):
         #Update normal vectors
         qupdate=False
 
-        #Update center
-        if len(center_equ)>0:
-            verbose(VERB_VERIFY,f"Updating center in {{equ}} to {center_equ}")
-            self.data["center_equ"]=[center_equ]*self.nspangles
-            
-        if len(center_ecl)>0:
-            verbose(VERB_VERIFY,f"Updating center {{ecl}} to {center_ecl}")
-            self.data["center_ecl"]=[center_ecl]*self.nspangles
-
-        if len(n_equ)>0:
-            verbose(VERB_VERIFY,f"Generating equatorial transformation matrices from n_equ = {n_equ}")
-
-            #Unitary equatorial vector
-            n_equ,one=spy.unorm(n_equ)
-            self.data["n_equ"]=[n_equ]*self.nspangles
-
-            #Transformation matrices
-            self.M_equ2ecl[self.name],M_ecl2equ=sci.rotation_matrix(n_equ,alpha_equ)
-
-            qupdate=True
-
         #Update equatorial coordinates by rotation
         if t is not None:
             verbose(VERB_VERIFY,f"Updating rotations at t = {t}")
 
             self.data["q_equ"]=[q+q0+w*t for q,w,q0 in zip(self.data.q_equ,self.data.w,self.data.q0)]
-            self.data[["x_equ","y_equ","z_equ"]]=                [sci.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
+            self.data[["x_equ","y_equ","z_equ"]]=                [Science.cartesian(r) for r in np.array(self.data[["r_equ","q_equ","f_equ"]])]
 
             qupdate=True
 
@@ -446,34 +421,60 @@ class Spangler(PrynglesCommon):
 
         #Convert from equatorial to ecliptic
         verbose(VERB_VERIFY,f"Converting to equatorial")
-        self.data[["x_ecl","y_ecl","z_ecl"]]=            [np.matmul(self.M_equ2ecl[sph],r+cequ)+cecl             for sph,r,cequ,cecl in zip(self.data.name,
-                                        np.array(self.data[["x_equ","y_equ","z_equ"]]),
-                                        self.data.center_equ,self.data.center_ecl)]
-        
-        #Update orientation of the spangle
-        self.data["ns_ecl"]=[np.matmul(self.M_equ2ecl[sph],n) for sph,n in zip(self.data.name,
-                                                                               self.data.ns_equ)]
-        
+        groups = self.data.groupby('name', sort=False)
+        for name, group in groups:
+
+            M_equ2ecl = self.M_equ2ecl[name]
+            g_indices = group.index
+            
+            # Transform positions: batch M @ (r + c_equ) + c_ecl
+            r_equ = np.array(group[['x_equ', 'y_equ', 'z_equ']])  # (G, 3)
+            c_equ = np.stack(group['center_equ'].values)  # (G, 3)
+            c_ecl = np.stack(group['center_ecl'].values)  # (G, 3)
+            self.data.loc[g_indices, ['x_ecl', 'y_ecl', 'z_ecl']] = (M_equ2ecl @ (r_equ + c_equ).T).T + c_ecl
+
+            # #Update orientation of the spangle
+            ns_equ = np.stack(group['ns_equ'].values)  # (G, 3)
+            self.data.loc[g_indices, 'ns_ecl'] = pd.Series(((M_equ2ecl @ ns_equ.T).T).tolist(), index=g_indices, dtype=object)
+
+
         #Update matrix of the transformation from ecliptic to local (horizontal) reference frame of the spangle
 
         #Search all spangles pointing towards ez or -ez
-        cond=pd.Series([abs(spy.vdot(ns,[0,0,1]))!=1 for ns in self.data.ns_ecl])
-        if sum(cond)>0:
+        ns_ecl = np.stack(self.data.ns_ecl.values)  # Shape: (N, 3)
+        cond = pd.Series(np.abs(np.dot(ns_ecl, [0, 0, 1])) != 1.0, index = self.data.index)
+        if cond.any():
             verbose(VERB_VERIFY,f"Setting local vectors based on ns: {sum(cond)}")
+            
             #wy = ez x ns because with this definition seen from above the system is oriented as usual
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss([0,0,1],ns))[0]                                                     for ns in self.data[cond].ns_ecl],dtype=object).values
-            self.data.loc[cond,"wx_ecl"]=pd.Series([spy.vcrss(wy,ns)                                                     for ns,wy in zip(self.data[cond].ns_ecl,self.data[cond].wy_ecl)],
-                                                   dtype=object).values
+            index = self.data.index[cond]
+            ns_ecl_masked = ns_ecl[cond.values]
+            
+            # wy_ecl: unorm(cross(ez, ns))[0] (vectorized)
+            cross_ez_ns = np.cross([0,0,1], ns_ecl_masked)
+            wy = np.divide(cross_ez_ns, np.linalg.norm(cross_ez_ns, axis=1)[:, np.newaxis])
+            self.data.loc[index, "wy_ecl"] = pd.Series(wy.tolist(), index=index)
+            
+            # wx_ecl: cross([wy, 0, 0], ns)  (vectorized)
+            wx = np.cross(wy, ns_ecl_masked)
+            self.data.loc[index, "wx_ecl"] = pd.Series(wx.tolist(), index=index, dtype=object)
+
             cond=~cond
+
         else:
-            cond=[True]*self.nspangles
+            cond = pd.Series([True]*self.nspangles)
 
         #Spangles pointing towards ez or -ez
-        if sum(cond)>0:
+        if cond.any():
             verbose(VERB_VERIFY,f"Setting local matrix based on ex: {sum(cond)}")
-            self.data.loc[cond,"wx_ecl"]=pd.Series([[1,0,0]]*sum(cond),dtype=object).values
-            self.data.loc[cond,"wy_ecl"]=pd.Series([spy.unorm(spy.vcrss(ns,wx))[0]                                                     for ns,wx in zip(self.data[cond].ns_ecl,self.data[cond].wx_ecl)],
-                                                   dtype=object).values
+            
+            indices_cond = self.data[cond].index
+            self.data.loc[indices_cond, 'wx_ecl'] = pd.Series([[1.0, 0.0, 0.0]]*len(indices_cond), index=indices_cond, dtype=object)
+
+            # wy_ecl: unorm(cross(ns_ecl, wx))[0] — vectorized
+            crosses = np.cross(np.stack(self.data.loc[indices_cond, 'ns_ecl'].values), [1.0, 0.0, 0.0])  # (M, 3)
+            wy = np.divide(crosses, np.linalg.norm(crosses, axis=1)[:, np.newaxis])
+            self.data.loc[indices_cond, 'wy_ecl'] = pd.Series(wy.tolist(), index=indices_cond)
             
         #Update velocities
         #Not implemented yet
@@ -604,7 +605,7 @@ class Spangler(PrynglesCommon):
             self.data.loc[self.nspangles-self.nhidden:self.nspangles,"hidden"]=True
             
         #Update positions
-        self.set_positions()
+        # self.set_positions()
         
     def _update_column_order(self):
         """
@@ -821,7 +822,7 @@ class Spangler(PrynglesCommon):
                     r"$n_{obs}$",color='c',alpha=0.7,fontsize=8,ha='right',va='top')
             ax.view_init(30,60)
         else:
-            r_obs,t_obs,f_obs=sci.spherical(self.n_obs)
+            r_obs,t_obs,f_obs=Science.spherical(self.n_obs)
             ax.view_init(f_obs*Consts.rad,t_obs*Consts.rad)
             
         #Show vectors
@@ -918,7 +919,7 @@ class Spangler(PrynglesCommon):
         alpha_int=alpha
         
         #Store n_int and d_int for update state purposes
-        self.rqf_int=sci.spherical(n_int)
+        self.rqf_int=Science.spherical(n_int)
         self.n_int=n_int
         
         #Distance to center of intersection
@@ -937,31 +938,38 @@ class Spangler(PrynglesCommon):
         self.M_int2ecl=M_int2ecl
         
         #Depending on body
-        cond=[True]*self.nspangles
+        cond = np.full(self.nspangles, True)
         if name:
-            cond=(self.data.name==name)
+            cond = (self.data.name==name)
     
         #If no point is of type name
-        if sum(cond)==0:
+        if not cond.any():
             return
             
         #Update positions in the intersection reference frame
-        self.data.loc[cond,["x_int","y_int","z_int"]]= [np.matmul(self.M_ecl2int,r-center) for r in np.array(self.data[cond][["x_ecl","y_ecl","z_ecl"]])]
+        r_ecl = self.data.loc[cond, ["x_ecl", "y_ecl", "z_ecl"]].to_numpy()
+        self.data.loc[cond, ["x_int", "y_int", "z_int"]] = (self.M_ecl2int @ (r_ecl - center).T).T
         
         #Center of the object in the observer reference system
-        center_int=[np.matmul(self.M_ecl2int,c_ecl+np.matmul(self.M_equ2ecl[sp],c_equ)-center) for sp,c_ecl,c_equ in zip(self.data[cond].name,
-                                             np.array(self.data[cond].center_ecl),
-                                             np.array(self.data[cond].center_equ))]
-        self.data.loc[cond,"center_int"]=pd.Series(center_int).values
+        groups = self.data[cond].groupby('name')
+
+        for group_name, group in groups:
+            M_equ2ecl = self.M_equ2ecl[group_name]
+            c_ecl = np.array(group['center_ecl'].iloc[0])
+            c_equ = np.array(group['center_equ'].iloc[0])
+            c_int = np.matmul(self.M_ecl2int, c_ecl + np.matmul(M_equ2ecl, c_equ) - center)
+            self.data.loc[group.index, "center_int"] = pd.Series([c_int] * len(group), dtype=object, index=group.index)
+
+            # #Pseudo-cylindrical coordinates in the observer system
+            r_int = (self.data.loc[group.index, ["x_int","y_int","z_int"]]).to_numpy()
+            self.data.loc[group.index, ["rho_int","az_int","cosf_int"]] = Science.pcylindrical(r_int - c_int)
         
         #According to distance to intersetcion point generate z_cen_int
         if self.infinite:
             self.data.loc[cond,"z_cen_int"]=-np.inf
         else:
-            self.data.loc[cond,"z_cen_int"]=np.array(center_int)[:,2]
-    
-        #Pseudo-cylindrical coordinates in the observer system
-        self.data.loc[cond,["rho_int","az_int","cosf_int"]]=[sci.pcylindrical(r) for r in np.array(self.data[cond][["x_int","y_int","z_int"]])-np.vstack(self.data[cond].center_int)]
+            z_cen_int = np.stack(self.data.loc[cond, "center_int"])[:, 2]
+            self.data.loc[cond,"z_cen_int"] = z_cen_int
     
         #Compute distance to intersection of each spangle and the 
         if self.infinite:
@@ -971,31 +979,40 @@ class Spangler(PrynglesCommon):
             self.data.loc[cond,"n_int_ecl"]=pd.Series([list(n_int)]*sum(cond),dtype=object)
         else:
             #Distance to origin of coordinates in the int system where the center is located
-            lista=[spy.unorm(list(-r)) for r in np.array(self.data[cond][["x_int","y_int","z_int"]])]
-            self.data.loc[cond,["n_int","d_int"]]=pd.DataFrame(lista,columns=["n_int","d_int"],
-                                                               index=self.data[cond].index)
-            n_int_ecl=[spy.mxv(M_int2ecl,n_int) for n_int in self.data.n_int[cond]]
-            self.data.loc[cond,"n_int_ecl"]=pd.Series(n_int_ecl,dtype=object)
-            
+            r_int = self.data.loc[cond, ["x_int", "y_int", "z_int"]].to_numpy()
+            d_int_arr = np.linalg.norm(-r_int, axis=1)
+            n_int_arr = -r_int/d_int_arr[:, None]
+            self.data.loc[cond, "n_int"] = pd.Series(n_int_arr.tolist(), dtype=object, index=self.data[cond].index)
+            self.data.loc[cond, "d_int"] = d_int_arr
+            n_int_ecl = (M_int2ecl @ n_int_arr.T).T
+            self.data.loc[cond, "n_int_ecl"] = pd.Series(n_int_ecl.tolist(), dtype=object, index=self.data[cond].index)
+   
         #Azimuth of the direction of the intersection vector in the tangent plane of the spangle
-        self.data.loc[cond,"azim_int"]=[np.arctan2(spy.vdot(wy,n_int),
-                                                   spy.vdot(wx,n_int)) \
-                                        for wy,wx,n_int in zip(self.data.wy_ecl[cond],
-                                                               self.data.wx_ecl[cond],
-                                                               self.data.n_int_ecl[cond])]
-        
+        wy_ecl = np.stack(self.data.loc[cond, "wy_ecl"])
+        wx_ecl = np.stack(self.data.loc[cond, "wx_ecl"])
+        n_int_ecl = np.stack(self.data.loc[cond, "n_int_ecl"])
+        dot_wy_n = np.sum(wy_ecl * n_int_ecl, axis=1)
+        dot_wx_n = np.sum(wx_ecl * n_int_ecl, axis=1)
+        self.data.loc[cond, "azim_int"] = np.arctan2(dot_wy_n, dot_wx_n)
+
         #Update spangles orientations
-        lista=[np.matmul(self.M_ecl2int,n_ecl) for n_ecl in self.data[cond].ns_ecl]
-        self.data.loc[cond,"ns_int"]=pd.Series(lista,dtype=object).values
+        ns_ecl = np.stack(self.data.loc[cond, "ns_ecl"])
+        ns_int = (self.M_ecl2int @ ns_ecl.T).T
+        self.data.loc[cond, "ns_int"] = pd.Series(ns_int.tolist(), dtype=object, index=self.data[cond].index)
         
+
         #Cosine of the direction of the intersection vector and the normal to the spangle
         if self.infinite:
             #In this case n_int is a global variable
-            self.data.loc[cond,"cos_int"]=[spy.vdot(n_ecl,n_int) for n_ecl in self.data.ns_ecl[cond]]
+            cos_int = np.sum(ns_ecl * n_int, axis=1)
+            self.data.loc[cond, "cos_int"] = cos_int
         else:
             #In this case n_int is a per-spangle variable
-            self.data.loc[cond,"cos_int"]=[np.vdot(ns,n_int) for ns,n_int in zip(self.data.ns_int[cond],self.data.n_int[cond])]
-            
+            n_int_cond = np.stack(self.data.loc[cond, "n_int"])
+            cos_int = np.sum(ns_int * n_int_cond, axis=1)
+            self.data.loc[cond, "cos_int"] = cos_int
+
+
         #Set areas
         self.data.loc[cond,"asp_int"]=self.data.loc[cond,"asp"]
         
@@ -1179,7 +1196,7 @@ class Spangler(PrynglesCommon):
         
         #Set properties
         self.alpha_obs=alpha
-        self.rqf_obs=sci.spherical(self.n_obs)
+        self.rqf_obs=Science.spherical(self.n_obs)
         self.center_obs=center.copy() if center else center
         
         self.data.loc[cond,"visible"]=False
@@ -1247,7 +1264,7 @@ class Spangler(PrynglesCommon):
             cond=(self.data.name==name)
         
         #Set the light source direction in spherical coordinates
-        self.rqf_luz=sci.spherical(self.n_luz)
+        self.rqf_luz=Science.spherical(self.n_luz)
         
         #Set the default value of the states to change in False
         self.data.loc[cond,"illuminated"]=False
@@ -1304,7 +1321,8 @@ class Spangler(PrynglesCommon):
                 show_azim=False,
                 highlight=None,
                 maxval=None,
-                bgdark = True
+                bgdark = True,
+                # temperature = False,
                 ):
         """
         Visualizes the spangles in a 2D plot.
@@ -1708,7 +1726,7 @@ class Spangler(PrynglesCommon):
                 verbose(VERB_SIMPLE,f"Hull {i+1} for '{name}' of type '{htype}'")
     
                 #Evaluate conditions
-                inhull=sci.points_in_hull(self.data[["x_int","y_int"]],qhull)&(~cond)&(cond_included)
+                inhull=Science.points_in_hull(self.data[["x_int","y_int"]],qhull)&(~cond)&(cond_included)
                 below=np.array([False]*self.nspangles)
                 above=np.array([False]*self.nspangles)
                 
@@ -1763,7 +1781,7 @@ class Spangler(PrynglesCommon):
                 hull["below"]=sum(below)
                 
             #Correct areas
-        self._normalize_areas()
+        # self._normalize_areas()
             # if geometry != SAMPLER_GEOMETRY_CIRCLE:
             #     cond=(self.data.name==name)&(self.data.cos_int>=0)&(~self.data.hidden)
                 

@@ -20,9 +20,11 @@
 from pryngles import *
 
 import spiceypy as spy
+import math
 import numpy as np
 from copy import deepcopy
 from anytree import NodeMixin,RenderTree
+from scipy.interpolate import interp1d
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -236,6 +238,8 @@ class Body(Orbody):
             alpha_equ=self.alpha,
             w=self.wrot,
             q0=self.q0,
+            center_equ = self.center_equ,
+            center_ecl = self.center_ecl,
         )
         
         #Populate spangler
@@ -247,6 +251,8 @@ class Body(Orbody):
             preset=self.preset,
             **self.geometry_args,
         )
+
+        self.sg.set_positions()
         
         #Additional properties in the Spangler DataFrame
         if self.kind=="Star":
@@ -400,6 +406,160 @@ class Planet(Body):
         Body.update_body(self,**pars)
         self._update_planet_properties()
 
+    def set_temperature_model(self, model: dict):
+        """
+        Set the temperature model for the planet. It defines how the temperature is distributed over the planet's surface.
+
+        Parameters
+        ----------
+        model : `dict`
+            A dictionary specifying the temperature model type and its parameters.
+            The dictionary should have the following structure:
+            {
+                "type": "Model Type",
+                "params": {
+                    "param1": value1,
+                    "param2": value2,
+                    ...
+                }
+            }
+
+        Raises
+        ------
+        TypeError
+            If the `model` parameter is not a dictionary.
+        ValueError
+            If the specified model type is unknown or if mandatory parameters are missing.
+
+        Attributes
+        ----------
+        T_model : `dict`
+            The temperature model set for the planet, including its type and parameters.
+
+        Examples
+        --------
+        >>> # Set a Uniform Temperature model with T_planet = 1500 K
+        >>> planet.set_temperature_model({"type": "Uniform Temperature", "params": {"T_planet": 1500}})
+        """
+        
+        if not isinstance(model, dict):
+            raise TypeError("Temperature model must be provided as a dictionary. It includes the model type and its parameters.")
+        
+        if model['type'] not in T_MODEL_DEFAULTS:
+            known_models = ", ".join(T_MODEL_DEFAULTS.keys())
+            raise ValueError(f"Unknown '{model['type']}' Model. Available Temperature Models are: [{known_models}]")
+
+        model_params = model.get("params", {})
+
+        missing_params = [k for k in T_MODEL_DEFAULTS[model['type']].get("required", []) if k not in model_params]
+        if missing_params:
+            raise ValueError(f"Missing mandatory parameters for Temperature Model '{model['type']}': {missing_params}")
+        
+        self.T_model = {"type": model['type'], "params": model_params}
+
+    def update_temperature(self):
+        """
+        
+        """
+
+        if self.sg is None:
+            raise RuntimeError("Spangler not defined. Please spangle the body before applying a temperature model: Planet.spangle_body() or System.spangle_system()")
+
+        if not hasattr(self, 'T_model'):
+            raise RuntimeError("Temperature model not defined. Please set a temperature model before applying it: Planet.set_temperature_model()")
+        
+        model_type = self.T_model['type']
+
+        if model_type == "Uniform Temperature":
+            self._T_uniform_temp()
+        elif model_type == "Two Temperature":
+            self._T_two_temp()
+        elif model_type == "Zhang-Showman":
+            self._T_zhang_showman()        
+
+    def _T_uniform_temp(self):
+
+        T_planet = self.T_model['params']['T_planet']
+
+        self.sg.data.Tem = T_planet
+
+        # return self.sg.data.Tem.values
+
+    def _T_two_temp(self):
+
+        T_day = self.T_model['params']['T_day']
+        T_night = self.T_model['params']['T_night']
+
+        cond_day = (self.sg.data.cos_luz > 0)
+        cond_night = ~cond_day
+
+        self.sg.data.loc[cond_day, 'Tem'] = T_day
+        self.sg.data.loc[cond_night, 'Tem'] = T_night
+
+        # return self.sg.data.Tem.values
+
+    def _T_zhang_showman(self):
+       
+        # Auxiliary
+        PI = math.pi
+        EXP = np.exp
+        COS = np.cos
+
+        # Barycentric Positions
+        center_source = self.root.center_ecl
+        center_body = self.center_ecl
+
+        # Light Source Direction
+        vec_luz = center_source - center_body
+        d_luz, lamda_luz, phi_luz = Science.spherical(vec_luz) 
+
+        # Longitude, Latitude
+        lamda = self.sg.data['q_equ'].values - lamda_luz + PI/2 # Long
+        phi = self.sg.data['f_equ'].values - phi_luz # Lat
+
+        # Adjust ranges for angles
+        lamda = (lamda + np.pi) % (2 * np.pi) - np.pi          # -> [-π, π]
+        phi   = np.clip(phi, -np.pi/2, np.pi/2)                # -> [-π/2, π/2]
+        
+        # Zhang & Showman Model Parameters
+        T_night = self.T_model['params']['T_night']
+        Delta_T = self.T_model['params']['Delta_T']
+        xi_ratio = self.T_model['params']['xi_ratio']
+
+        lamda_s = math.atan(xi_ratio)
+        eta = (xi_ratio / (1 + xi_ratio**2)) * (EXP(PI/(2*xi_ratio)) + EXP(3*PI/(2*xi_ratio))) / (EXP(2*PI/xi_ratio) - 1)
+
+        # -----------------------------------------------------------------------------------
+
+        # Temperature Model
+        Ts = np.zeros_like(lamda)
+
+        # Exponential Approximation for Xi ~ 0
+        if abs(xi_ratio) < 0.01:
+            EXP_1term = np.zeros_like(lamda)
+            EXP_2term = np.zeros_like(lamda)
+            EXP_3term = np.zeros_like(lamda)
+        else:
+            EXP_1term = EXP(-lamda/xi_ratio)
+            EXP_2term = EXP(-(PI + lamda)/xi_ratio)
+            EXP_3term = EXP((PI - lamda)/xi_ratio)
+
+        # Región 1:  -π/2 ≤ λ ≤ π/2
+        mask1 = (lamda >= -PI/2) & (lamda <= PI/2)
+        Ts[mask1] = (T_night + Delta_T*COS(phi[mask1])*COS(lamda_s)*COS(lamda[mask1] - lamda_s)
+                    + eta*Delta_T*COS(phi[mask1])*EXP_1term[mask1])
+
+        # Región 2:  -π ≤ λ < -π/2
+        mask2 = (lamda >= -PI) & (lamda < -PI/2)
+        Ts[mask2] = T_night + eta*Delta_T*COS(phi[mask2])*EXP_2term[mask2]
+
+        # Región 3:  π/2 < λ ≤ π
+        mask3 = (lamda > PI/2) & (lamda <= PI)
+        Ts[mask3] = T_night + eta*Delta_T*COS(phi[mask3])*EXP_3term[mask3]
+
+        self.sg.data['Tem'] = Ts
+
+        # return Ts
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class Ring
@@ -505,3 +665,222 @@ class Observer(Body):
                  **props
                 ):
         Body.__init__(self,"Observer",OBSERVER_DEFAULTS,parent,**props)
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Detector
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+class Detector(PrynglesCommon):
+    """
+    It initializes an Detector object with default properties defined in :any:`consts.DETECTOR_PROPERTIES`.
+
+    Note
+    --------------
+    Tipically, it belongs to a `~ system.System` object
+
+    Important
+    -------------
+    Be sure the units are consistent with SI units when providing the properties
+
+    Attributes
+    -------------------------
+    wavelength_min: `float`
+        Minimum wavelength of the detector's sensitivity range in nanometers. Defaults to 500 nm.
+    wavelength_max: `float`
+        Maximum wavelength of the detector's sensitivity range in nanometers. Defaults to 700 nm.
+    apperture: `float`
+        Aperture size of the detector in meters. Defaults to 0.5 m.
+    quantum_eff: `float`
+        Quantum efficiency of the detector, which defines the ratio of detected photons to incident photons. Defaults to 1.
+    t_cad: `float`
+        Time of Cadence of the detector in seconds. Defaults to 10 minutes (600 s).
+    distance: `float`
+        Distance from the observer to the system being observed in meters [m]. Defaults to 1 kilop
+    """
+
+    def __init__(self, **props):
+
+        # Initialize with defaults
+        self.__dict__.update(DETECTOR_PROPERTIES)
+        
+        # Update with provided properties
+        for prop in props:
+            if prop in DETECTOR_PROPERTIES:
+                self.__dict__[prop] = props[prop]
+            else:
+                raise AssertionError(f"Invalid parameters. Valid parameters are: {', '.join(list(DETECTOR_PROPERTIES.keys()))}")
+
+    def _gaussianQuadrature(self,func,a,b):
+        """  
+        Compute a Gaussian quadrature integral over a given interval.
+
+        Parameters
+        ----------
+        func : callable
+            The function to integrate. It should take a single argument.
+        a : float
+            The lower limit of integration.
+        b : float
+            The upper limit of integration.
+
+        Returns
+        -------
+        float
+            The approximate value of the integral of `func` from `a` to `b`.
+        """
+    
+        x1=0
+        x2=+(3./5)**0.5
+        x3=-x2
+        w1=8./9
+        w2=w3=5./9
+        bam2=(b-a)/2
+        bap2=(b+a)/2
+        
+        try:
+            integral=bam2*(w1*func(bam2*x1+bap2)+
+                        w2*func(bam2*x2+bap2)+
+                        w3*func(bam2*x3+bap2))
+        except:
+            integral=bam2*(w1*func(bam2*x1+bap2)+
+                        w2*func(bam2*x2+bap2)+
+                        w3*func(bam2*x3+bap2))
+        
+        return integral
+
+    def set_source(self, source: Star):
+        """
+        Set the source star to observe for the detector and compute the typical flux.
+
+        Parameters
+        ----------
+        source : :data:`~ body.Star`
+            The source star object.
+
+        Raises
+        ------
+        ValueError
+            If the provided source is not a :data:`~ body.Star` object.
+
+        Attributes
+        ----------
+        normal_flux : `float`
+            The normal flux received from the source star by the detector [photons/s].
+
+        Notes
+        -----
+        Be sure the units are consistent with SI units when providing the source star
+        """
+
+        if source.kind != "Star":
+            raise ValueError(f"Source must be a Star object. You provided a {source.kind} object.")
+
+        # Compute the Source Flux
+        L_star = Science.integrate_planck_photons(source.T_eff, self.wavelength_min, self.wavelength_max)
+
+        # Compute the observed Flux
+        self.normal_flux = self.quantum_eff*L_star* (source.radius*source.ul/self.distance)**2 * (np.pi*(self.apperture/2)**2)
+
+    def generate_signal(self, times, fluxes):
+        """  
+        Generate a simulated signal from the detector.
+
+        Parameters
+        ----------
+        times : array-like
+            Array of time [s] points at which the fluxes are provided. 
+        fluxes : array-like
+            Array of flux values corresponding to the time points.
+
+        Returns
+        -------
+        signal_lc : `numpy.ndarray`
+            Simulated signal light curve [normalized flux].
+        signal_error : `numpy.ndarray`
+            Simulated signal error [normalized flux].
+
+        Attributes
+        ----------
+        times : `numpy.ndarray`
+            Times of the simulated observations [s].
+        signal_flux : `numpy.ndarray`
+            Simulated signal flux [normalized flux].
+        signal_error : `numpy.ndarray`
+            Simulated signal error [normalized flux].
+
+        Notes
+        -----
+        The method simulates the detection of photons by the detector over specified time intervals, in seconds [s],
+        taking into account the cadence of the detector and the Poisson nature of photon detection.
+        The output signal is normalized by the normal flux received from the source star.
+
+        Examples
+        --------
+        >>> # Assuming  `times` and `fluxes` are defined
+        >>>
+        >>> detector = pr.Detector(t_cadence=600, quantum_eff=1, apperture=0.5, distance=1e3*pr.Consts.pc)
+        >>> 
+        >>> # Set the source star
+        >>> star = pr.Star(T_eff = 5778, radius = 1*pr.Consts.R_sun)
+        >>> detector.set_source(star)
+        >>>
+        >>> # Generate the signal
+        >>> signal_lc, signal_error = detector.generate_signal(times, fluxes)
+
+        .. image:: images/detector_signal_example.png
+            :align: center
+        """
+
+        #########################################
+        # LIGHTCURVE DATA
+        #########################################
+        signalFunc = interp1d(times, fluxes*self.normal_flux, kind='linear', fill_value="extrapolate")
+
+        #########################################
+        # OBSERVATIONS
+        #########################################
+        tmin = times[0]
+        tmax = times[-1]
+        t_cad = self.t_cadence # Time of Cadence
+        N_folds = 5 # Number of Folds
+        N_obs = int(math.ceil((tmax - tmin)/t_cad)) # Number of Observations
+
+        #########################################
+        # SIGNAL LIGHTCURVE
+        #########################################
+        signal_lc = np.zeros(N_obs*N_folds)
+        signal_error = np.zeros(N_folds*N_obs)
+        signal_times = np.zeros(N_folds*N_obs)
+
+        for Nf in range(N_folds):
+
+            t_start = tmin - t_cad*np.random.rand()
+            times = np.arange(t_start, t_start + t_cad*N_obs, t_cad)
+
+            for i, t in enumerate(times):
+
+                # PHOTONS DETECTED IN OBSERVATION TIME
+                Flux_obs = self._gaussianQuadrature(signalFunc, t, t + t_cad)
+
+                # POISSON PHOTON STOCASTIC DETECTION
+                Flux_obs = np.random.poisson(Flux_obs)
+                delta_Flux = math.sqrt(Flux_obs)
+
+                signal_times[Nf*N_obs + i] = t + t_cad/2
+                signal_lc[Nf*N_obs + i] = Flux_obs/(self.normal_flux*self.t_cadence)
+                signal_error[Nf*N_obs + i] = delta_Flux/(self.normal_flux*self.t_cadence)
+
+        sort_mask = np.argsort(signal_times)
+
+        signal_times = signal_times[sort_mask] 
+        signal_lc = signal_lc[sort_mask]
+        signal_error = signal_error[sort_mask]
+
+        self.times = signal_times
+        self.signal_flux = signal_lc
+        self.signal_error = signal_error
+
+        return signal_lc, signal_error
+
+
+        

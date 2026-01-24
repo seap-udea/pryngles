@@ -7,6 +7,17 @@ list of the features introduced in each version family of the package.
 
 ## What's new
 
+- **0.9.1x versions**:
+
+  - `System` interface is now capable to flux modelling for arbitrary configurations and parameters
+  - Methods `System.update_DiffuseReflection` and `System.update_Transit` are adapted from `RingedPlanet` 
+    interface to compute Diffuse Reflection and Transit effects.
+  - `System.update_ThermalEmission` introduced as a new feature to calculate the emmited flux
+    from a planetary surface based on temperature distribution models on tidally locked exoplanets based on [`SPIDERMAN` code](https://spiderman.readthedocs.io/)
+  - `System.compute_lightcurve` is now included to facilitate the user's workflow for simulations
+  - Synthetic signal generation is now possible based on Poisson stocastic photon count
+  - Spangle computation is nearly 50% percent faster. Optimization was achieved by vectorized some calculus
+
 - **0.9.x versions**:
 
   - Pryngles data repository included.

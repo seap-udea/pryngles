@@ -19,6 +19,7 @@
 
 from pryngles import *
 
+import numpy as np
 import rebound as rb
 from tqdm import tqdm
 
@@ -333,7 +334,7 @@ class System(PrynglesCommon):
     # Tested methods from module file scatterer
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    def update_scatterers(self):
+    def _update_scatterers(self):
         """
         Instantiate scatterer objects for all spangles lacking one.
 
@@ -346,24 +347,20 @@ class System(PrynglesCommon):
             raise AssertionError("You need to spangle the system before updating the scatterers.")
         
         #Update scatterer only for the non-assigned one
-        cond=(self.data.scatterer=="")
-        
-        for index in self.data[cond].index:
-            #Get spangle
-            spangle=self.data.loc[index]
-            #Get spangle sype
-            spangle_type=spangle["spangle_type"]
-            #Get scatterer class and options description
-            spangle_scatterer,spangle_options=self.spangle_scatterers[spangle_type]
-            #Build options of scatterers from options description
-            scatterer_options={**dict(zip(spangle_options.keys(),spangle[list(spangle_options.values())]))}
-            #Instantiate object of scatterer and save hash into DataFrame
-            self.data.loc[index,"scatterer"] = spangle_scatterer(**scatterer_options) #.hash To not save hash but the Scatterer object
-    
-    def update_albedos(self):
+        cond = (self.data.scatterer == "")
+        mask = self.data.loc[cond]
+        for spangle_type, group in mask.groupby('spangle_type'):
+            # Get scatterer class and options description
+            spangle_scatterer, spangle_options = self.spangle_scatterers[spangle_type]
+            # Build options of scatterers from options description
+            options = {key: group[value].iloc[0] for key, value in spangle_options.items()}
+            # Instantiate object of scatterer and save hash into DataFrame data object
+            self.data.loc[group.index, 'scatterer'] = pd.Series([spangle_scatterer(**options)]*len(group), dtype=object, index=group.index)
+
+    def _update_albedos(self):
         """ 
         Compute directional-dependent Lambertian albedo per spangle. 
-        It implements :data:`~ scatterer.Scatterer.get_albedo()` method. See our :doc:`scatterer` for the theory behind our models
+        It implements :data:`~ scatterer.Scatterer.get_albedo()` method. See our :doc:`scatterer` for the theory behind it.
 
         Note
         ------
@@ -379,7 +376,17 @@ class System(PrynglesCommon):
         # Initialize Lambertian Albedo columns into de DataFrame
         self.data.loc[cond, "lambertian_albedo"] = self.data.loc[cond].apply(
             lambda sp: sp["scatterer"].get_albedo(
-                eta = sp["cos_obs"], zeta = 0, delta = 0, lamb = 0.55), axis = 1)
+                eta = sp["cos_luz"], zeta = 0, delta = 0, lamb = 0.55), axis = 1)
+        
+    def _update_optical_depth(self):
+        """  
+        Update the optical depth of all bodies in the system by the user input.
+        """
+
+        for name, body in self.bodies.items():
+
+            cond_body = (self.data['name'] == name)
+            self.data.loc[cond_body, 'tau_gray_optical'] = body.tau_gray_optical
 
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Tested methods from module file system
@@ -456,6 +463,12 @@ class System(PrynglesCommon):
         
         #Create the shined body tree
         self.__body.shined=[]
+
+        # Set units
+        self.__body.units = self.units
+        self.__body.ul = self.ul
+        self.__body.um = self.um
+        self.__body.ut = self.ut
     
         #Update system
         self._update_system()
@@ -482,9 +495,6 @@ class System(PrynglesCommon):
         self.__body.source.shined+=[self.__body.name]
         
         verbose(VERB_SIMPLE,f"Object '{kind}' with name '{self.__body.name}' has been added.")
-
-        # if kind == 'Ring':
-        #     self.__body.m = -1
 
         return self.__body
     
@@ -622,25 +632,24 @@ class System(PrynglesCommon):
         """
         if not self._simulated:
             raise AssertionError("Before spangling the system you must initialize the simulation: System.initialize_simulation().")
-        
+
         self._spanglers=dict()
         
         #Add spangles
-        for name,body in self.bodies.items():
+        for name,body in self.bodies.items() :
             
-            verbose(VERB_SIMPLE,f"Spangling body '{name}' (kind '{body.kind}')")
-            body.spangle_body()
-    
             #Center object around its position according to rebound
             body.center_ecl=np.array(self.sim.particles[body.rbhash].xyz)
-            body.sg.set_positions(center_ecl=body.center_ecl)
-            self._spanglers[name]=body.sg
-            
-        #Set the center of the source of light for each body
-        for name,body in self.bodies.items():
+
+            verbose(VERB_SIMPLE,f"Spangling body '{name}' (kind '{body.kind}')")
+
             body.center_source=body.source.center_ecl
             if body==self.root:
                 self.center_root=body.source.center_ecl
+
+            body.spangle_body()
+
+            self._spanglers[name]=body.sg
                 
         #Join spanglers
         self.sg=Spangler(spanglers=list(self._spanglers.values()))
@@ -659,7 +668,10 @@ class System(PrynglesCommon):
         self._spangled=True
 
         #Update Scatterers for Albedo Computing
-        self.update_scatterers()
+        self._update_scatterers()
+
+        #Update Optical Depths
+        self._update_optical_depth()
     
     def _set_observer(self,nvec=[0,0,1],alpha=0,center=None):
         """Set the position of the observer
@@ -779,9 +791,12 @@ class System(PrynglesCommon):
         self._set_observer(nvec=self.n_obs,alpha=self.alpha_obs,center=center_obs)
         self._set_luz()
 
-        #Set Photomety Values
-        # self.update_StellarFlux()
-        # self.update_DiffuseReflection()
+        # Update data of each Body instance
+        for name, body in self.bodies.items():
+
+            cond = (self.data.name == name)
+
+            body.sg.data.iloc[:,:] = self.data.loc[cond, body.sg.data.columns].to_numpy(copy = True)
         
     
     def update_body(self,body,**props):
@@ -867,7 +882,7 @@ class System(PrynglesCommon):
                 cond=self.sg.data.name==name
                 self.sg.data.loc[cond,"center_ecl"]=pd.Series([list(body.center_ecl)]*sum(cond),dtype=object).values
     
-            #Update positions
+            #Update positions (t = t) for rotation
             self.sg.set_positions()
             
         else:
@@ -898,7 +913,7 @@ class System(PrynglesCommon):
         self.integrate(t)
 
         #Updating Spangles Perspective
-        self.update_perspective(n_obs = None, alpha_obs = 0, center_obs = None)
+        self.update_perspective(n_obs = n_obs, alpha_obs = alpha_obs, center_obs = center_obs)
     
     def ensamble_system(self,lamb=0,beta=0,**physics):
         """
@@ -996,7 +1011,7 @@ class System(PrynglesCommon):
         Compute the Diffuse Reflected Stellar Flux per Spangle that are both visible and illuminated,
         taking into account the illuminated side of the spangles and applying Lambert's Cosine Law.
 
-        Returns
+        Attributes
         ------------
         reflected_flux : `pd.Series`
             The computed reflected flux, stored in the Spangles Data object
@@ -1030,7 +1045,7 @@ class System(PrynglesCommon):
         self.update_StellarFlux()
         
         #Update Lambertian Albedo Values for Integration Step
-        self.update_albedos()
+        self._update_albedos()
 
         #Computing Diffuse Reflected Light
         self.data.reflected_flux[cond] = self.data.stellar_flux[cond]*self.data.lambertian_albedo[cond]*self.data.cos_obs[cond]
@@ -1041,7 +1056,7 @@ class System(PrynglesCommon):
         This method calculates the stellar flux drop caused by transiting spangles over star-kind
         bodies, accounting for limb-darkening effects and the spangle's optical properties.
 
-        Returns
+        Attributes
         ----------
         transit_flux : `pd.Series`
             The computed stellar flux drop, stored in the Spangles Data object
@@ -1095,9 +1110,231 @@ class System(PrynglesCommon):
 
                 beta_values = 1 - np.exp(-self.data.tau_gray_optical[cond]/abs(self.data.cos_obs[cond]))
 
+                asp = self.data.loc[cond, 'asp_obs']
+                cos_obs = abs(self.data.loc[cond, 'cos_obs'])
                 star_scale = self.bodies[star].radius
+
                 # limb_darkening = Util.limbDarkening(rhos, 1, limb_coeff, norm_limb_coeff)
                 limb_darkening = Science.limb_darkening(rhos, cs = limb_coeffs , N = norm_limb_coeff)
 
                 #Computing Stellar Flux Drop
-                self.data.transit_flux[cond] += beta_values*abs(self.data.cos_obs[cond])*limb_darkening*(self.data.asp_obs[cond]/star_scale**2)
+                self.data.transit_flux[cond] += beta_values*cos_obs*limb_darkening*(asp/star_scale**2)
+
+
+    def update_ThermalEmission(self, bandwidth = (1.1e-6, 1.7e-6)):
+        """
+        Compute the Thermal Emission Flux per Spangle that are both visible and illuminated,
+        taking into account the temperature of each spangle based on its temperature model.
+
+        Parameters
+        ----------
+        bandwidth : `tuple`
+            Wavelength range (in meters) over which to integrate the Planck function for thermal emission
+
+        Raises
+        ------
+        AttributeError
+            If a body lacks a temperature model ('T_model'). Define one using the Planet.set_temperature_model() method.
+
+        Attributes
+        ------------
+        thermal_flux : `pd.Series`
+            The computed thermal emission flux, stored in the Spangles Data object
+            (``self.data.thermal_flux``).  
+
+        Note
+        -------
+        - Only visible spangles not associated with stars are considered in the computation.
+        - The thermal emission is calculated by integrating the Planck function over the specified bandwidth
+
+        [1]
+
+        .. math::
+            \\frac{F}{F_0} = \\sum_i \\epsilon_i A_{s_i} \\cos Z_i \\frac{\\int_{\\lambda_{min}}^{\\lambda_{max}} B(\\lambda, T_i) d\\lambda}{F_{star}}
+
+        where:
+        - :math:`F/F_0` is the thermal emission flux.
+        - :math:`\\epsilon_i` is the emissivity of the spangle.
+        - :math:`A_{s_i}` is the area of the spangle.
+        - :math:`Z_i` is the angle between the observer's line of sight and the surface normal.
+        - :math:`B(\\lambda, T_i)` is the Planck function at wavelength :math:`\\lambda` and temperature :math:`T_i`.
+        - :math:`F_{star}` is the total flux emitted by the star over the same bandwidth for normalization.
+
+        References
+        -------------
+        Temperature Models are taken and adapted from the SPIDERMAN code for tidally locked exoplanets
+
+        [1] Tom Louden, Laura Kreidberg, SPIDERMAN: an open-source code to model phase curves and secondary eclipses, Monthly Notices of the Royal Astronomical Society, Volume 477, Issue 2, June 2018, Pages 2613–2627, https://doi.org/10.1093/mnras/sty558
+        """
+        #Considered Spangles
+        body_names = [name for name, body in self.bodies.items() if (body.kind != 'Star') and (body.kind != 'Ring')]
+
+        # Updating Temperature Distribution for each body
+        for body in body_names:
+            verbose(VERB_VERIFY,f"Computing Thermal Emission for body {body}")
+
+            if not hasattr(self.bodies[body], 'T_model'):
+                raise AttributeError(f"Body '{body}' lacks a temperature model ('T_model'). Cannot compute thermal emission, please define one by Planet.set_temperature_model() method.")
+
+            self.bodies[body].update_temperature()
+            self.data.loc[self.data.name == body, 'Tem'] = self.bodies[body].sg.data['Tem'].values
+
+        cond = self.data.name.isin(body_names)*self.data.visible*(~self.data.hidden)
+
+        #Creating thermal_flux attribute
+        self.data['thermal_flux'] = np.zeros(self.data.shape[0])
+
+        # Star Parameters
+        T_star = self.bodies[self.root.name].T_eff
+        R_star = self.bodies[self.root.name].radius
+
+        # Spangle Parameters
+        asp = self.data.loc[cond, 'asp_obs'].values
+        cos_obs = self.data.loc[cond, 'cos_obs'].values
+
+        # Spangle Emissivity
+        epsilon = self.data.loc[cond, 'emmisivity'].values
+
+        #  Spangle Blackbody Temperature of Emission
+        T_emission = self.data.loc[cond, 'Tem'].values
+
+        # Star Flux for Normalization
+        lambda_min, lambda_max = bandwidth
+        flux_star = Science.integrate_planck_flux(T_star, lambda_min, lambda_max)*np.pi*R_star**2
+
+        # Computing Thermal Emission Flux per Spangle
+        flux_thermal = np.zeros_like(T_emission)
+
+        for i, T in enumerate(T_emission):
+
+            flux_thermal[i] = Science.integrate_planck_flux(T, lambda_min, lambda_max)
+
+        self.data.loc[cond, 'thermal_flux'] = epsilon*asp*cos_obs*flux_thermal/flux_star
+
+
+    def compute_lightcurve(self, times,
+                           bodies = None,
+                           bandwidth = (500e-9, 600e-9),
+                           effects = ['transit'], 
+                           observer = None,
+                           signal = None, 
+                           ):
+        """
+        Compute the lightcurve of the system. It integrates the contributions from specified effects
+        (reflection, transit, emission) over given times, considering the observer's perspective.
+
+        Parameters
+        ----------
+        times : `np.ndarray`
+            Array of times at which to compute the lightcurve.
+        bodies : `list` or None
+            List of body names to include in the lightcurve computation. If None, all bodies except the root (:data:`~ body.Star`) are included.
+        bandwidth : `tuple`
+            Wavelength range (in meters) over which to integrate the Planck function for thermal emission.
+        effects : `list`
+            List of effects to include in the lightcurve computation. Options are 'reflection', 'transit', and 'emission'.
+        observer : `tuple` or None
+            Observer direction in ecliptic coordinates (lambda_ecl, beta_ecl) in radians. If None, the current observer direction is used.
+        signal : `dict` or None
+            Dictionary of detector parameters to simulate observational signal. If None, no signal simulation is performed.
+
+        Attributes
+        ------------
+        lightcurve : `dict`
+            The computed lightcurve data, including times, flux, model details, effects, bodies, observer information, bandwidth, and simulated signal (if applicable).
+        detector : :data:`~body.Detector`
+            The detector instance used for simulating the observational signal, if applicable.
+
+        
+        """
+
+        if not self._spangled:
+            raise AssertionError("You must Spangle the system before calling compute_lightcurve(). Please call System.spangle_system() first.")
+
+
+        times = np.asarray(times, dtype=float)
+        if times.ndim != 1:
+            raise ValueError(f"Array Dimension {times.ndim}. Times must be a 1D array.")
+        
+        effects = tuple(effects)
+        allowed_effects = {"reflection", "transit", "emission"}
+        unknown_effects = set(effects) - allowed_effects
+        if unknown_effects:
+            raise ValueError(f"Unrecognized effects: {unknown_effects}.\nAllowed effects: {sorted(allowed_effects)}")
+        
+
+        if bodies is None:
+            bodies = list(self.bodies.keys())
+            bodies.remove(self.root.name)
+        else:
+            bodies = list(bodies)
+
+        if observer is not None:
+            lambda_ecl, beta_ecl = observer
+            n_obs = Science.direction(lambda_ecl, beta_ecl)
+            self.update_perspective(n_obs = n_obs)
+
+        effects_registry = {
+            "reflection": (lambda: self.update_DiffuseReflection(), "reflected_flux", +1.0),
+            "transit": (lambda: self.update_Transit(),           "transit_flux",   -1.0),
+            "emission": (lambda: self.update_ThermalEmission(bandwidth), "thermal_flux", +1.0),
+        }
+
+        # ----------------------------
+        # Output DataFrame MultiIndex
+        # ----------------------------
+        columns = pd.MultiIndex.from_product([bodies, list(effects_registry.keys())],
+                                          names=["body", "effect"])
+
+        df_output = pd.DataFrame(index=pd.Index(times, name="time"), 
+                                 columns=columns, 
+                                 dtype=float)
+
+        iterator = tqdm(enumerate(times), total = len(times), desc = 'Computing Lightcurve ')
+        for i, t in iterator:
+
+            self.integrate_perspective(t)
+
+            for effect in effects:
+                func_effect, data_column, sgn = effects_registry[effect]
+                func_effect()
+
+                for body in bodies:
+
+                    cond_body = (self.data.name == body)
+                    flux_val = float(np.nansum(self.data.loc[cond_body, data_column].values))
+                    df_output.at[t, (body, effect)] = sgn * flux_val
+
+        total_flux = df_output.sum(axis=1).values + 1.0  # Normalized Flux
+
+        lightcurve = {"times": times,
+                      "flux": total_flux,
+                      "model": df_output,
+                      "effects": effects,
+                      "bodies": bodies,
+                      "observer": {"n_obs": self.n_obs,
+                                   "direction": np.rad2deg(self.rqf_obs[1:])
+                                 },
+                      "bandwidth": bandwidth,
+                     }
+        
+        self.lightcurve = lightcurve
+
+        if signal is not None:
+
+            if type(signal) is not dict:
+                raise ValueError("Signal parameter must be a dictionary of Detector parameters.")
+
+            detector = Detector(**signal)
+            detector.set_source(self.root)
+
+            signal_flux, signal_error = detector.generate_signal(times*self.ut, total_flux)
+
+            self.detector = detector
+
+            lightcurve["signal"] = {"signal_flux": signal_flux,
+                                    "signal_error": signal_error}
+
+        return lightcurve
+
+

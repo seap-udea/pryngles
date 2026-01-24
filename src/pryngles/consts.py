@@ -377,7 +377,7 @@ SPANGLER_COLUMNS=odict({
     "scatterer":"",#Hash (identifier) of the scatterer used for this spangle
     "albedo_gray_normal":1.0,#Wavelength-independent normal albedo
     "albedo_gray_spherical":1.0,#Wavelength-independent spherical albedo
-    "tau_gray_optical":0.0,#Wavelength-independent optical depth
+    "tau_gray_optical":np.inf,#Wavelength-independent optical depth
     
     #Polarization parameters
     "F":0,"Q":0,"U":0,"V":0,"P":0, #Stokes vector components
@@ -410,6 +410,14 @@ SPANGLER_SOURCE_STATES=odict({
     "occult":False, #The spangle is occulted by a light source
 })
 SPANGLER_COLUMNS.update(SPANGLER_SOURCE_STATES)
+
+SPANGLER_FLUX = odict({
+    'stellar_flux':0.0, # Incident Stellar Flux at the location of the spangle
+    'reflected_flux':0.0, # Reflected Flux from the spangle towards the observer
+    'transit_flux':0.0, # Flux blocked from the star during transit
+    'thermal_flux':0.0, # Thermal Emission Flux from the spangle towards the observer
+})
+SPANGLER_COLUMNS.update(SPANGLER_FLUX)
 
 SPANGLER_KEY_ORDERING=[
     
@@ -654,6 +662,13 @@ SPANGLER_SOURCE_STATES=odict({
     "occult":False, #The spangle is occulted by a light source
 })
 SPANGLER_COLUMNS.update(SPANGLER_SOURCE_STATES)
+SPANGLER_FLUX = odict({
+    'stellar_flux':0.0, # Incident Stellar Flux at the location of the spangle
+    'reflected_flux':0.0, # Reflected Flux from the spangle towards the observer
+    'transit_flux':0.0, # Flux blocked from the star during transit
+    'thermal_flux':0.0, # Thermal Emission Flux from the spangle towards the observer
+})
+SPANGLER_COLUMNS.update(SPANGLER_FLUX)
 """
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -709,6 +724,8 @@ BODY_DEFAULTS.update(odict(
     
     #Orbit
     m=1,
+    center_ecl = [0,0,0], #Center of the body with respect to barycenter
+    center_equ = [0,0,0], #Center of the body
 
     #Physics
     radius=1,
@@ -728,7 +745,7 @@ BODY_DEFAULTS.update(odict(
     
     albedo_gray_spherical=1,
     albedo_gray_normal=1,
-    tau_gray_optical=0,
+    tau_gray_optical=np.inf, # Fixed from 0 to inf
     
     #Legacy
     primary=None,
@@ -741,7 +758,7 @@ BODY_KINDS=[]
 
 STAR_DEFAULTS=deepcopy(BODY_DEFAULTS)
 """
-`dict` : Defines the default attributes for bodies of the kind 'Star'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`
+`dict` : Defines the default attributes for bodies of the kind :data:`~ body.Star`. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`
 
 - **radius** (float) — Radius of the star. Defaults to 0.1.
 - **limb_coeffs** (list of floats) — List of limb darkening coefficients [2]. Its lenght defines the model to implement [1]. **Defaults = `[]`**.
@@ -761,6 +778,7 @@ STAR_DEFAULTS.update(odict(
 
     #Physics: update
     #Same as Body
+    T_eff = 5772, #Effective temperature [k]
 
     #Optical properties: update
     limb_coeffs=[],
@@ -771,7 +789,7 @@ BODY_KINDS+=["Star"]
 
 PLANET_DEFAULTS=deepcopy(BODY_DEFAULTS)
 """
-`dict` : Defines the default attributes for bodies of the kind 'Planet'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`
+`dict` : Defines the default attributes for bodies of the kind :data:`~ body.Planet`. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`. You can also define extra Orbital Parameters included in :data:`~ consts.REBOUND_ORBITAL_PROPERTIES`
 
 - **a** (float) — Semi-major axis of the planet's orbit. Defaults to 1.
 - **e** (float) — Eccentricity of the planet's orbit. Defaults to 0.
@@ -794,9 +812,34 @@ PLANET_DEFAULTS.update(odict(
 ))
 BODY_KINDS+=["Planet"]
 
+"""
+`dict` : Defines the default parameters for various temperature models [1] for bodies of the kind :data:`~ body.Planet`. 
+
+References
+---------------
+Temperature Models are taken and adapted from the SPIDERMAN code
+
+[1] Tom Louden, Laura Kreidberg, SPIDERMAN: an open-source code to model phase curves and secondary eclipses, Monthly Notices of the Royal Astronomical Society, Volume 477, Issue 2, June 2018, Pages 2613–2627, https://doi.org/10.1093/mnras/sty558
+"""
+T_MODEL_DEFAULTS = {
+    "Uniform Temperature": {
+        "required": ["T_planet"],
+        "defaults": {"T_planet": None},
+    },
+    "Two Temperature": {
+        "required": ["T_day", "T_night"],
+        "defaults": {"T_day": None, "T_night": None},
+    },
+    "Zhang-Showman": {
+        "required": ["xi_ratio", "T_night", "Delta_T"],
+        "defaults": {"xi_ratio": None, "T_night": None, "Delta_T": None},
+    },
+}
+
+
 RING_DEFAULTS=deepcopy(BODY_DEFAULTS)
 """
-`dict` : Defines the default attributes for bodies of the kind 'Ring'. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`.
+`dict` : Defines the default attributes for bodies of the kind :data:`~ body.Ring`. Inherits and updates defaults from :data:`~ consts.BODY_DEFAULTS`.
 
 - **fi** (float) — Inner radius of the ring. Defaults to 1.5.
 - **fe** (float) — Outer radius of the ring. Defaults to 2.0.
@@ -871,6 +914,31 @@ LEGACY_PHYSICAL_PROPERTIES=dict(
     - **smax** (float) — Maximum particle size in meters. Defaults to 1e2.
     - **Qsc** (float) — Scattering efficiency. Defaults to 1.
     - **Qext** (float) — Extinction efficiency. Defaults to 2.
+"""
+
+
+DETECTOR_PROPERTIES = dict(
+    # Waveband
+    wavelength_min = 500e-9, # [m]
+    wavelength_max = 700e-9, # [m] 
+    # Apperture
+    apperture = 0.5, # [m]
+    # Quantum Efficiency
+    quantum_eff = 1,
+    # Time of Cadence    
+    t_cadence = 10*60, # Minutes [s]
+    # Observer Distance
+    distance = 1*1e3*Consts.pc # Kilo Parsec [m]
+)
+"""
+`dict` : Defines the properties for the detector used in :data:`~ system.System`.
+
+- **wavelength_min** (float) — Minimum wavelength of the detector's sensitivity range in meters [m]. Defaults to 500 nm.
+- **wavelength_max** (float) — Maximum wavelength of the detector's sensitivity range in meters [m]. Defaults to 700 nm.
+- **apperture** (float) — Aperture size of the detector in meters [m]. Defaults to 0.5 m.
+- **quantum_eff** (float) — Quantum efficiency of the detector. Defines the ratio of detected photons to incident photons. Defaults to 1.
+- **t_cadence** (float) — Time of cadence for observations in seconds [s]. Defaults to 10 minutes.
+- **distance** (float) — Distance from the observer to the system being observed in meters [m]. Defaults to 1 kiloparsec.
 """
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
