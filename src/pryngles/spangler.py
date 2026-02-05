@@ -1205,9 +1205,38 @@ class Spangler(PrynglesCommon):
         self.data.loc[cond,SPANGLER_COL_OBS]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
                                                           columns=SPANGLER_COL_OBS,
                                                           index=self.data[cond].index)
-        #"""
-        #self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT]
         
+
+        # Beta angle computation (Reference Plane rotation angle)
+        # Appendix D arXiv:2404.16606v1
+        groups = self.data[cond].groupby('name')
+
+        for group_name, group in groups:
+
+            # Normal vector of each spangle
+            ns_obs = np.stack(group['ns_obs'].values)
+
+            if group['spangle_type'].iloc[0] == 4: # Ring Spangle
+                
+                # Cosine of the angle between normal vector and observer vector
+                cos_obs = group['cos_obs'].iloc[0]
+
+                # X-Z angle
+                sigma = np.arctan2(ns_obs[0,2], ns_obs[0,0])
+
+                # Beta angle
+                cos_beta =  np.cos(sigma)/np.sin(np.arccos(cos_obs))
+                betas = np.full_like(ns_obs[:,0], fill_value = np.arccos(cos_beta))
+
+                # Check Rotation Direction
+                if ns_obs[0,1] < 0:
+                    betas = np.pi - betas
+
+            else: # Planetary or Stellar Spangle
+                betas = np.arctan(ns_obs[:,1]/ns_obs[:,0])
+                betas[ns_obs[:,0]*ns_obs[:,1] < 0] += np.pi
+
+            self.data.loc[group.index, "beta_loc"] = pd.Series(betas.tolist(), dtype=object, index=group.index)
         
         #Update states
         self.data.unset=False
@@ -1276,9 +1305,11 @@ class Spangler(PrynglesCommon):
                                                           columns=SPANGLER_COL_LUZ,
                                                           index=self.data[cond].index)
         
-        #Set relative azimuth
-        self.data.loc[cond,"azim_obs_luz"]=self.data.loc[cond,"azim_obs"]-self.data.loc[cond,"azim_luz"]
-        
+        #Set relative azimuth [-pi,pi]
+        azim_obs_luz = (self.data.loc[cond,"azim_obs"]-self.data.loc[cond,"azim_luz"]).to_numpy(dtype=float)
+        # pi Shift and domain in [-pi,pi]
+        self.data.loc[cond,"azim_obs_luz"] = np.arctan2(np.sin(azim_obs_luz + np.pi), np.cos(azim_obs_luz + np.pi))
+
         #Update states
         self.data.loc[cond,"unset"]=False
         
@@ -1772,10 +1803,12 @@ class Spangler(PrynglesCommon):
                 #Set visibility
                 self.data.loc[below,"intersect"]=False
                 self.data.loc[below,"hidden_by_int"]=self.data.loc[below,"hidden_by_int"]+f"{name}:{zord:.3e}&"
+                self.data.loc[below,"occult"] = True
                     
                 #Compute distance to center for transiting spangles
                 self.data.loc[above,"string_int"]=[f"{name}:{zord:.3e}:{((r[0]-xcen)**2+(r[1]-ycen)**2)**0.5/scale:.3e}&"                                                for r in self.data[above][["x_int","y_int"]].values]
                 self.data.loc[above,"transit_over_int"]=self.data.loc[above,"transit_over_int"]+self.data.loc[above,"string_int"]
+                self.data.loc[above,"transit"] = True
                 
                 hull["inhull"]=sum(inhull)
                 hull["below"]=sum(below)
@@ -1870,4 +1903,3 @@ class Spangler(PrynglesCommon):
         
         #In stellar spangles cos_luz = cos_obs for not having strange visual representations
         self.data.loc[cond,"cos_luz"]=self.data.loc[cond,"cos_obs"]
-    

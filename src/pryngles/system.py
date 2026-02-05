@@ -19,6 +19,7 @@
 
 from pryngles import *
 
+import spiceypy as spy
 import numpy as np
 import rebound as rb
 from tqdm import tqdm
@@ -108,6 +109,9 @@ class System(PrynglesCommon):
         self._simulated=False
         
         #Attributes by default
+
+        # For Polarization purposes
+        self.extension = 'cpixx'
         
         #List of bodies in the system
         self.bodies=odict()
@@ -314,6 +318,20 @@ class System(PrynglesCommon):
             #Load rebound
             verbose(VERB_SIMPLE,"Loading rebound simulation")
             self.sim=rb.Simulation(rb_filename)
+
+    def _read_Fourier_data(self):
+
+        if self.extension not in ['pixx','cpixx']:
+            raise ValueError(f"The extension '{self.extension}' is not recognized (available 'pixx', 'cpixx')")
+
+        fname_planet = Misc.get_data("fou_gasplanet_optical_50.dat"),
+        fname_ring = Misc.get_data("fou_ring_0_4_0_8.dat"),
+
+        self.SCp = StokesScatterer(fname_planet)
+        self.nmatp = self.SCp.nmat
+
+        self.SCr = StokesScatterer(fname_ring)
+        self.nmatr = self.SCr.nmat
         
     def status(self):
         """
@@ -745,6 +763,10 @@ class System(PrynglesCommon):
                 #Get source and center
                 verbose(verbosity,f"Calculating illumination for '{name}' coming from '{body.source.name}' @ {body.center_source}")            
                 nluz=body.center_source-center
+                body.n_luz,_ = spy.unorm(nluz)
+
+                # Calculates Body's Phase Angle (Source, Observer)
+                # body.alpha_angle = np.inner(body.n_luz, self.n_obs)
                         
                 if body.kind == "Ring" and body.parent.kind == "Star":
                     verbose(verbosity,f"Parent body of ring, {body.parent.name} is a star. All spangles will be illuminated")
@@ -1211,6 +1233,220 @@ class System(PrynglesCommon):
 
         self.data.loc[cond, 'thermal_flux'] = epsilon*asp*cos_obs*flux_thermal/flux_star
 
+    
+    def update_Polarization(self):
+
+        """  
+        Compute the polarized scattered light of the system using Stokes parameters.
+
+        This method computes the total polarized flux produced by planetary bodies and rings
+        in the system by evaluating the Stokes parameters (F, Q, U, V) per-spangle.
+        The resulting Stokes quantities and the degree of polarization are stored 
+        in the Spangles DataFrame and can be used for polarized lightcurve calculations.
+
+        The Stokes parameters are computed using a preloaded Stokes scattering model associated
+        with each body, and are normalized relative to the stellar radius and the projected
+        planetary or ring area.
+
+        Attributes
+        ----------
+        stokes_F : `pd.Series`
+            Total scattered flux per spangle (Stokes I).
+        stokes_Q : `pd.Series`
+            Linear polarization component Q per spangle.
+        stokes_U : `pd.Series`
+            Linear polarization component U per spangle.
+        stokes_V : `pd.Series`
+            Circular polarization component V per spangle.
+        stokes_P : `pd.Series`
+            Degree of polarization per spangle.
+
+        All attributes are stored as columns in the system-wide Spangles Data object
+        (`System.data`) and in each individual body Spangler DataFrame.
+
+        Notes
+        -----
+        - Only bodies of kind ``Planet`` and ``Ring`` are included in the polarization computation.
+        - For planets with rings, attenuation factors are applied depending on whether the
+        planet is shadowed, hidden by the ring, or indirectly illuminated.
+        - Ring polarization accounts for whether the illuminated and visible sides correspond
+        to forward or backward scattering.
+        - The final degree of polarization is computed from the integrated Stokes parameters as:
+
+            P = sqrt(Q**2 + U**2) / F
+
+        - This method does not return a value; it updates internal data structures in place.
+
+        See Also
+        --------
+        compute_lightcurve :
+            Uses this method when the ``polarization`` effect is requested to generate polarized
+            lightcurves.
+        StokesScatterer.calculate_stokes :
+            Low-level routine used to compute Stokes parameters for individual spangles.
+        """
+
+        # Set Stokes Parameters
+        stokes_cols = ['stokes_F','stokes_Q','stokes_U','stokes_V','stokes_P']
+        self.data[stokes_cols] = np.zeros((self.data.shape[0],5))
+
+        # Star radius
+        R_star = self.root.radius
+
+        # Over each body
+        for name, body in self.bodies.items():
+            
+            # For storing attributes
+            cond_name = self.data.name == name
+            
+            # Pass for Star
+            if body.kind not in ['Planet','Ring']:
+                continue
+
+            elif body.kind == 'Planet':
+
+                # Radius for Normalization
+                R_planet = body.radius
+                
+                # Ring object (Childs could be also Moons)
+                ring_name = [child_name for child_name in list(body.childs.keys()) if self.bodies[child_name].kind == 'Ring'][0]
+                ring_body = self.bodies[ring_name]
+                
+                # Optical Depth of Ring and Attenuation factors
+                tau_r = self.bodies[ring_name].taur
+                cos_obs_ring = ring_body.sg.data.cos_obs.mean()
+                cos_luz_ring = ring_body.sg.data.cos_luz.mean()
+                A_luz = np.exp(-tau_r / np.abs(cos_luz_ring))
+                A_obs = np.exp(-tau_r / np.abs(cos_obs_ring))
+
+                # Reflection
+                qreflection = 1
+
+                #----------------------------------------------------
+                # CONDITIONS
+                #----------------------------------------------------
+
+                # Visible and Illuminated
+                cond_active = body.sg.data.visible & body.sg.data.illuminated
+
+                # Hidden by Ring
+                cond_hidden = body.sg.data.hidden_by_obs.str.fullmatch(rf'^{ring_name}[^&]*&$')
+
+                # Visible but Indirectly Illuminated (in Shadow)
+                cond_indirect = body.sg.data.visible & body.sg.data.shadow
+                
+                # Illuminated but Hidden by Rings
+                cond_unseen = cond_hidden & body.sg.data.illuminated
+
+                # Hidden and in Indirectly Illuminated (in Shadow)
+                cond_both = cond_hidden & body.sg.data.shadow
+
+                # (Visible or Hidden)&(Illuminated or Shadowed)
+                cond_full = cond_active | cond_indirect | cond_unseen | cond_both
+
+                # Check if the rings are seen edge-on and illuminated edge-on
+                angle_eps = 1e-3 # Cutoff angle in deg for shadowing
+
+                # Ring is Visible
+                vcheck = abs(np.arccos(cos_obs_ring)*180/np.pi - 90.0) > angle_eps
+                # Ring is Illuminated
+                icheck = abs(np.arccos(cos_luz_ring)*180/np.pi - 90.0) > angle_eps
+
+                # Apply attenuation due to ring's optical depth
+                attenuation = np.ones(len(cond_full))
+
+                # Hidden and in Indirectly Illuminated (in Shadow)
+                if vcheck and icheck and cond_both.any():
+                    attenuation[cond_both] *= A_luz * A_obs
+
+
+                if vcheck and icheck and cond_unseen.any() and cond_indirect.any():
+                    attenuation[cond_unseen] *= A_obs
+                    attenuation[cond_indirect] *= A_luz
+                
+                # Visible but Indirectly Illuminated (in Shadow)
+                elif icheck and cond_indirect.any():
+                    attenuation[cond_indirect] *= A_luz
+
+                # Illuminated but Hidden by Rings
+                elif vcheck and cond_unseen.any():
+                    attenuation[cond_unseen] *= A_obs
+
+            elif body.kind == 'Ring': 
+
+                # Radius for Normalization
+                R_planet = body.parent.radius
+
+                # Visible and Illuminated (not Shadowed)
+                cond_full = body.sg.data.visible & body.sg.data.illuminated
+
+                # Ring Parameters
+                cos_obs_ring = body.sg.data.cos_obs.mean()
+                cos_luz_ring = body.sg.data.cos_luz.mean()
+
+                # Non Attenuation
+                attenuation = np.ones(len(cond_full))
+
+                # If using bilinear interpolation there is a risk of singularities at small angles
+                if body.physics["interp_method"] == "bilinear":
+
+                    # Reject cases with small angles
+                    angle_eps2 = 5e-2 # Cutoff angle in deg for bilinear
+                    # Visible
+                    vcheck = abs(np.arccos(cos_obs_ring)*180/np.pi - 90.0) < angle_eps2
+                    # Illuminated
+                    icheck = abs(np.arccos(cos_luz_ring)*180/np.pi - 90.0) < angle_eps2
+
+                    if vcheck or icheck:
+                        cond_full[:] = False
+                             
+                # Check if the back or front of the ring is visible
+                qreflection = 1
+                if (cos_luz_ring < 0) ^ (cos_obs_ring < 0):                    
+                    qreflection = 0  # Scattering
+
+            #----------------------------------------------------
+            # Geometrical Parameters
+            #----------------------------------------------------
+            azim_diff = body.sg.data.loc[cond_full, 'azim_obs_luz'].to_numpy(dtype = np.float64)
+            betas_angle = body.sg.data.loc[cond_full, 'beta_loc'].to_numpy(dtype = np.float64)
+            cos_obs_abs = abs(body.sg.data.loc[cond_full, 'cos_obs'].to_numpy(dtype = np.float64))
+            cos_luz_abs = abs(body.sg.data.loc[cond_full, 'cos_luz'].to_numpy(dtype = np.float64))
+            area_sp = body.sg.data.loc[cond_full, 'asp'].to_numpy(dtype = np.float64)/R_star**2
+
+            # Numerical Sensivity of Stokes Method
+            if cos_obs_abs.std() < 0.005:
+                cos_obs_abs = np.full_like(cos_obs_abs, cos_obs_abs.mean())
+
+            if cos_luz_abs.std() < 0.005:
+                cos_luz_abs = np.full_like(cos_luz_abs, cos_luz_abs.mean())
+
+            # ----------------------------------------------------
+            # Compute Stokes Parameters
+            #----------------------------------------------------
+            Stokes = np.zeros((len(cond_full), 4))
+            Stokes[cond_full] = body.Stokes.calculate_stokes(azim_diff, betas_angle, cos_luz_abs, cos_obs_abs, area_sp, qreflection) * attenuation[cond_full, None] * R_star**2/(np.pi*R_planet**2)
+
+            stokes_total = np.sum(Stokes, axis=0) 
+
+            # Calculate degree of polarization
+            stokes_P = 0
+            if abs(stokes_total[0]) < 1e-6:
+                stokes_P = 0.0
+            elif abs(stokes_total[2]) < 1e-6:
+                stokes_P = -stokes_total[1]/stokes_total[0]
+            else:
+                stokes_P = np.sqrt(stokes_total[1]**2 + stokes_total[2]**2)/stokes_total[0]
+
+            # Append Degree of Polarization to Stokes flux array
+            Stokes = np.column_stack((Stokes/Consts.ppm, np.full(Stokes.shape[0], stokes_P/cond_full.sum())))
+
+            # Update Spangle DataFrame
+            body.sg.data.loc[:, stokes_cols] = 0
+            body.sg.data.loc[cond_full, stokes_cols] = Stokes[cond_full]
+
+            self.data.loc[self.data.index[cond_name][cond_full.values], stokes_cols] = Stokes[cond_full]
+
 
     def compute_lightcurve(self, times,
                            bodies = None,
@@ -1257,7 +1493,7 @@ class System(PrynglesCommon):
             raise ValueError(f"Array Dimension {times.ndim}. Times must be a 1D array.")
         
         effects = tuple(effects)
-        allowed_effects = {"reflection", "transit", "emission"}
+        allowed_effects = {"reflection", "transit", "emission", "polarization"}
         unknown_effects = set(effects) - allowed_effects
         if unknown_effects:
             raise ValueError(f"Unrecognized effects: {unknown_effects}.\nAllowed effects: {sorted(allowed_effects)}")
@@ -1276,14 +1512,16 @@ class System(PrynglesCommon):
 
         effects_registry = {
             "reflection": (lambda: self.update_DiffuseReflection(), "reflected_flux", +1.0),
-            "transit": (lambda: self.update_Transit(),           "transit_flux",   -1.0),
+            "transit": (lambda: self.update_Transit(), "transit_flux", -1.0),
             "emission": (lambda: self.update_ThermalEmission(bandwidth), "thermal_flux", +1.0),
+            "polarization": (lambda: self.update_Polarization(), ['stokes_F', 'stokes_P'], +1.0),
         }
 
         # ----------------------------
         # Output DataFrame MultiIndex
         # ----------------------------
-        columns = pd.MultiIndex.from_product([bodies, list(effects_registry.keys())],
+        columns = pd.MultiIndex.from_product([bodies, 
+                                              list(effects_registry.keys())+['scattering']],
                                           names=["body", "effect"])
 
         df_output = pd.DataFrame(index=pd.Index(times, name="time"), 
@@ -1302,14 +1540,22 @@ class System(PrynglesCommon):
                 for body in bodies:
 
                     cond_body = (self.data.name == body)
-                    flux_val = float(np.nansum(self.data.loc[cond_body, data_column].values))
-                    df_output.at[t, (body, effect)] = sgn * flux_val
+                    flux_val = np.sum(self.data.loc[cond_body, data_column].values, axis = 0)
 
-        total_flux = df_output.sum(axis=1).values + 1.0  # Normalized Flux
+                    # Updates Polarized Flux and Degree of Polarization
+                    if effect == 'polarization':
+                        
+                        df_output.loc[t, (body, 'reflection')] = 0
+                        df_output.loc[t, (body, 'scattering')] = sgn * flux_val[0]
+                        df_output.loc[t, (body, effect)] = sgn * flux_val[1]
+
+                    else: 
+                        df_output.loc[t, (body, effect)] = sgn * flux_val
+
+        total_flux = df_output.drop(columns="polarization", level="effect").sum(axis=1).values + 1.0  # Normalized Flux
 
         lightcurve = {"times": times,
-                      "flux": total_flux,
-                      "model": df_output,
+                      "total_flux": total_flux,
                       "effects": effects,
                       "bodies": bodies,
                       "observer": {"n_obs": self.n_obs,
@@ -1317,6 +1563,13 @@ class System(PrynglesCommon):
                                  },
                       "bandwidth": bandwidth,
                      }
+
+        for effect in effects:
+            if effect == 'polarization':
+                lightcurve[effect] = df_output.loc[:, (bodies, effect)]
+                lightcurve['scattering'] = df_output.loc[:, (bodies, 'scattering')]
+            else:
+                lightcurve[effect] = df_output.loc[:, (bodies, effect)]
         
         self.lightcurve = lightcurve
 
@@ -1328,11 +1581,12 @@ class System(PrynglesCommon):
             detector = Detector(**signal)
             detector.set_source(self.root)
 
-            signal_flux, signal_error = detector.generate_signal(times*self.ut, total_flux)
+            signal_times, signal_flux, signal_error = detector.generate_signal(times*self.ut, total_flux)
 
             self.detector = detector
 
-            lightcurve["signal"] = {"signal_flux": signal_flux,
+            lightcurve["signal"] = {"times": signal_times,
+                                    "signal_flux": signal_flux,
                                     "signal_error": signal_error}
 
         return lightcurve
