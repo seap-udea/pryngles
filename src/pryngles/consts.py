@@ -379,6 +379,9 @@ SPANGLER_COLUMNS=odict({
     "albedo_gray_spherical":1.0,#Wavelength-independent spherical albedo
     "tau_gray_optical":np.inf,#Wavelength-independent optical depth
     
+    #Polarization parameters
+    "F":0,"Q":0,"U":0,"V":0,"P":0, #Stokes vector components
+    
     #Thermal characteristics
     "emmitter":"",#Hash (identifier) of the emmitter used for this spangle
     "Teq":273.15,#K, equilibrium temperature

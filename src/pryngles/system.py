@@ -1498,6 +1498,7 @@ class System(PrynglesCommon):
         if unknown_effects:
             raise ValueError(f"Unrecognized effects: {unknown_effects}.\nAllowed effects: {sorted(allowed_effects)}")
         
+
         if bodies is None:
             bodies = list(self.bodies.keys())
             bodies.remove(self.root.name)

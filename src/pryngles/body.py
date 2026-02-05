@@ -886,7 +886,7 @@ class Detector(PrynglesCommon):
         self.signal_flux = signal_lc
         self.signal_error = signal_error
 
-        return signal_times, signal_lc, signal_error
+        return signal_lc, signal_error
 
 
         
