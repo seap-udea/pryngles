@@ -1554,8 +1554,7 @@ class System(PrynglesCommon):
         total_flux = df_output.drop(columns="polarization", level="effect").sum(axis=1).values + 1.0  # Normalized Flux
 
         lightcurve = {"times": times,
-                      "flux": total_flux,
-                      "model": df_output,
+                      "total_flux": total_flux,
                       "effects": effects,
                       "bodies": bodies,
                       "observer": {"n_obs": self.n_obs,
@@ -1563,6 +1562,13 @@ class System(PrynglesCommon):
                                  },
                       "bandwidth": bandwidth,
                      }
+
+        for effect in effects:
+            if effect == 'polarization':
+                lightcurve[effect] = df_output.loc[:, (bodies, effect)]
+                lightcurve['scattering'] = df_output.loc[:, (bodies, 'scattering')]
+            else:
+                lightcurve[effect] = df_output.loc[:, (bodies, effect)]
         
         self.lightcurve = lightcurve
 
@@ -1574,11 +1580,12 @@ class System(PrynglesCommon):
             detector = Detector(**signal)
             detector.set_source(self.root)
 
-            signal_flux, signal_error = detector.generate_signal(times*self.ut, total_flux)
+            signal_times, signal_flux, signal_error = detector.generate_signal(times*self.ut, total_flux)
 
             self.detector = detector
 
-            lightcurve["signal"] = {"signal_flux": signal_flux,
+            lightcurve["signal"] = {"times": signal_times,
+                                    "signal_flux": signal_flux,
                                     "signal_error": signal_error}
 
         return lightcurve
