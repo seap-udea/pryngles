@@ -379,9 +379,6 @@ SPANGLER_COLUMNS=odict({
     "albedo_gray_spherical":1.0,#Wavelength-independent spherical albedo
     "tau_gray_optical":np.inf,#Wavelength-independent optical depth
     
-    #Polarization parameters
-    "F":0,"Q":0,"U":0,"V":0,"P":0, #Stokes vector components
-    
     #Thermal characteristics
     "emmitter":"",#Hash (identifier) of the emmitter used for this spangle
     "Teq":273.15,#K, equilibrium temperature
@@ -416,6 +413,10 @@ SPANGLER_FLUX = odict({
     'reflected_flux':0.0, # Reflected Flux from the spangle towards the observer
     'transit_flux':0.0, # Flux blocked from the star during transit
     'thermal_flux':0.0, # Thermal Emission Flux from the spangle towards the observer
+    #Polarization parameters
+    "stokes_F":0,"stokes_Q":0,"stokes_U":0,"stokes_V":0,"stokes_P":0, #Stokes vector components
+    # "polarized_flux": 0.0, #Polarized flux from the spangle towards the observer
+    # "polarized_degree": 0.0, #Polarization degree of the spangle
 })
 SPANGLER_COLUMNS.update(SPANGLER_FLUX)
 
@@ -809,6 +810,12 @@ PLANET_DEFAULTS.update(odict(
     #Optical: update
     spangle_type=SPANGLE_SOLID_ROCK,
     geometry="sphere",
+
+    #Physics
+        physics = dict(extension = 'cpixx', # Extension to compute Polarization
+                       interp_method = "spline", # Interpolation method for Fourier coefficients
+                       fourier_file = "fou_gasplanet_optical_50.dat", # File with Fourier coefficients
+                       )
 ))
 BODY_KINDS+=["Planet"]
 
@@ -843,7 +850,7 @@ RING_DEFAULTS=deepcopy(BODY_DEFAULTS)
 
 - **fi** (float) — Inner radius of the ring. Defaults to 1.5.
 - **fe** (float) — Outer radius of the ring. Defaults to 2.0.
-- **taur** (float) — Radial optical depth of the ring. Defaults to 0.4.
+- **tau_gray_optical** (float) — Wavelength-independent optical depth of the ring. Defaults to 0.4.
 - **spangle_type** (constant) — Type of spangle used for the ring particles. Defaults to :data:`~ consts.SPANGLE_GRANULAR`.
 - **shape** (str) — The overall shape of the body. Defaults to "ring".
 
@@ -863,6 +870,12 @@ RING_DEFAULTS.update(odict(
     #Optics: update
     spangle_type=SPANGLE_GRANULAR,
     shape="ring",
+
+    #Physics
+    physics = dict(extension = 'cpixx', # Extension to compute Polarization
+                   interp_method = "bilinear", # Interpolation method for Fourier coefficients
+                   fourier_file = "fou_ring_0_4_0_8.dat", # File with Fourier coefficients
+                   )
 ))
 BODY_KINDS+=["Ring"]
 
