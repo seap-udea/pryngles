@@ -18,3 +18,5 @@ pydata-sphinx-theme
 sphinx-mdinclude
 sphinx
 pryngles
+build
+twine

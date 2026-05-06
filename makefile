@@ -15,6 +15,12 @@
 
 .PHONY: release show docs docs-clean
 
+# Prefer local venv python if present
+PYTHON ?= python3
+ifeq ($(wildcard .venv/bin/python),.venv/bin/python)
+PYTHON := .venv/bin/python
+endif
+
 ##################################################################
 #BASIC RULES
 ##################################################################
@@ -107,8 +113,11 @@ requirements:
 # DOCS
 ##################################################################
 docs:
-	@python3 -m pip install -r docs/requirements.txt
-	@$(MAKE) -C docs clean html
+	@$(PYTHON) -m pip install -U pip
+	@$(PYTHON) -m pip install -e .
+	@$(PYTHON) -m pip install -r docs/requirements.txt
+	@rm -rf docs/_build
+	@$(PYTHON) -m sphinx.cmd.build -M html docs docs/_build
 
 docs-clean:
-	@$(MAKE) -C docs clean
+	@rm -rf docs/_build
