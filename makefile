@@ -13,7 +13,7 @@
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 
-.PHONY: release show
+.PHONY: release show docs docs-clean
 
 ##################################################################
 #BASIC RULES
@@ -102,3 +102,13 @@ import:
 requirements:
 	@python3 bin/generate_requirements.py
 	@python3 -m pip install -r requirements.txt
+
+##################################################################
+# DOCS
+##################################################################
+docs:
+	@python3 -m pip install -r docs/requirements.txt
+	@$(MAKE) -C docs clean html
+
+docs-clean:
+	@$(MAKE) -C docs clean
