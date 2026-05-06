@@ -7,7 +7,7 @@ list of the features introduced in each version family of the package.
 
 ## What's new
 
-- **0.9.1x versions**:
+- **1.0.x versions**:
 
   - `System` interface is now capable to flux modelling for arbitrary configurations and parameters
   - Methods `System.update_DiffuseReflection` and `System.update_Transit` are adapted from `RingedPlanet` 
@@ -17,6 +17,9 @@ list of the features introduced in each version family of the package.
   - `System.compute_lightcurve` is now included to facilitate the user's workflow for simulations
   - Synthetic signal generation is now possible based on Poisson stocastic photon count
   - Spangle computation is nearly 50% percent faster. Optimization was achieved by vectorized some calculus
+  - Transit light curves: fixed flux accumulation to ensure non-flat transit depths in recent `pandas` versions.
+  - Reflected-light curves: fixed incident/reflected flux updates to ensure diffuse reflection contributions are applied correctly.
+  - Polarimetric light curves: support for polarized flux and degree of polarization in `System.compute_lightcurve(effects=["polarization"])`.
 
 - **0.9.x versions**:
 

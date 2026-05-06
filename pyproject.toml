@@ -14,7 +14,7 @@
 ##################################################################
 [build-system]
 requires = ['setuptools','rebound','scipy','ipython',
-	    'matplotlib','tqdm','dill',
+	    'matplotlib','tqdm','dill','astropy',
 	    'spiceypy','cmasher','pandas','celluloid',
 	    'sigfig','anytree','ipywidgets','gdown'
 	    ]

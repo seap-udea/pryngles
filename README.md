@@ -11,9 +11,14 @@
 [![license](https://img.shields.io/pypi/l/pryngles)](https://pypi.org/project/pryngles/)
 [![implementation](https://img.shields.io/pypi/implementation/pryngles)](https://pypi.org/project/pryngles/)
 [![pythonver](https://img.shields.io/pypi/pyversions/pryngles)](https://pypi.org/project/pryngles/)
+[![python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
+[![docs](https://readthedocs.org/projects/pryngles/badge/?version=latest)](https://pryngles.readthedocs.io/)
+[![GitHub](https://img.shields.io/badge/GitHub-seap--udea%2Fpryngles-blue?logo=github)](https://github.com/seap-udea/pryngles)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/seap-udea/pryngles/blob/kiss/tutorials/Quickstart.ipynb)
+[![paper2025](https://img.shields.io/badge/paper-2025%20A%26A%20A310-blue)](https://doi.org/10.1051/0004-6361/202347194)
+[![paper2022](https://img.shields.io/badge/paper-2022%20AsCom%20100623-blue)](https://doi.org/10.1016/j.ascom.2022.100623)
 <!--[![codesize](https://img.shields.io/github/languages/repo-size/seap-udea/pryngles-public)](https://pypi.org/project/pryngles/)-->
 <!--[![arXiv](http://img.shields.io/badge/arXiv-2004.14121-orange.svg?style=flat)](http://arxiv.org/abs/2004.14121)-->
-[![arXiv](http://img.shields.io/badge/arXiv-2207.08636-orange.svg?style=flat)](http://arxiv.org/abs/2207.08636)
 [![ascl](https://img.shields.io/badge/ascl-2205.016-blue.svg?colorB=262255)](https://ascl.net/2205.016)  
 
 `Pryngles` is a `Python` package intended to produce useful
@@ -40,16 +45,60 @@ This is an example of what can be done with `Pryngles`:
 
 For the science behind the model please refer to the following papers:
 
+> Zuluaga, J. I., Veenstra, A., Numpaque, S., Alvarado-Montes, J. A., et al. (2025),
+  **A general polarimetric model for transiting and nontransiting ringed exoplanets**,
+  *Astronomy & Astrophysics*, 693, A310, [doi:10.1051/0004-6361/202347194](https://doi.org/10.1051/0004-6361/202347194),
+  [A&A article](https://www.aanda.org/articles/aa/full_html/2025/01/aa47194-23/aa47194-23.html).
+
 > Zuluaga, J.I., Sucerquia, M. & Alvarado-Montes, J.A. (2022), **The
   bright side of the light curve: a general photometric model for
   non-transiting exorings**, [Astronomy and Computing 40 (2022)
   100623](https://www.sciencedirect.com/science/article/pii/S2213133722000476),
+  [doi:10.1016/j.ascom.2022.100623](https://doi.org/10.1016/j.ascom.2022.100623),
   [arXiv:2207.08636](https://arxiv.org/abs/2207.08636).
 
 > Sucerquia, M., Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos,
   M., & Bayo, A. (2020), **Scattered light may reveal the existence of
-  ringed exoplanets**. Monthly Notices of the Royal Astronomical
-  Society: Letters, 496(1), L85-L90.
+  ringed exoplanets**. *Monthly Notices of the Royal Astronomical
+  Society: Letters*, 496(1), L85-L90, [doi:10.1093/mnrasl/slaa080](https://doi.org/10.1093/mnrasl/slaa080),
+  [journal article](https://academic.oup.com/mnrasl/article/496/1/L85/5837097).
+
+## Citation
+
+If you use `pryngles` in your research, please cite the relevant paper(s):
+
+```bibtex
+@article{ZuluagaEtAl2025AA,
+  author  = {Zuluaga, Jorge I. and Veenstra, Allard and Numpaque, Sebastian and Alvarado-Montes, Jaime A. and others},
+  title   = {A general polarimetric model for transiting and nontransiting ringed exoplanets},
+  journal = {Astronomy \\& Astrophysics},
+  year    = {2025},
+  volume  = {693},
+  pages   = {A310},
+  doi     = {10.1051/0004-6361/202347194},
+}
+
+@article{ZuluagaSucerquiaAlvaradoMontes2022AsCom,
+  author  = {Zuluaga, Jorge I. and Sucerquia, Mario and Alvarado-Montes, Jaime A.},
+  title   = {The bright side of the light curve: a general photometric model for non-transiting exorings},
+  journal = {Astronomy and Computing},
+  year    = {2022},
+  volume  = {40},
+  pages   = {100623},
+  doi     = {10.1016/j.ascom.2022.100623},
+}
+
+@article{SucerquiaEtAl2020MNRASL,
+  author  = {Sucerquia, Mario and Alvarado-Montes, Jaime A. and Zuluaga, Jorge I. and Montesinos, Mat{\'i}as and Bayo, Amelia},
+  title   = {Scattered light may reveal the existence of ringed exoplanets},
+  journal = {Monthly Notices of the Royal Astronomical Society: Letters},
+  year    = {2020},
+  volume  = {496},
+  number  = {1},
+  pages   = {L85--L90},
+  doi     = {10.1093/mnrasl/slaa080},
+}
+```
 
 <p align="center"> <img
 src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif"
@@ -362,4 +411,4 @@ new](https://github.com/seap-udea/pryngles-public/blob/master/WHATSNEW.md).
 
 ------------
 
-This package has been designed and written originally by Jorge I. Zuluaga, Allard Veenstra, Sebastian Numpaque, Mario Sucerquia and Jaime A. Alvarado-Montes (C) 2022, 2023, 2024, 2025
+This package has been designed and written originally by Jorge I. Zuluaga, Allard Veenstra, Sebastian Numpaque, Mario Sucerquia and Jaime A. Alvarado-Montes (C) 2022-Present.

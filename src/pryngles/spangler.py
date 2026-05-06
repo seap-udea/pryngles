@@ -393,6 +393,14 @@ class Spangler(PrynglesCommon):
         """
         verbose(VERB_VERIFY,f"Setting positions")
 
+        # Pandas >= 2.2 is strict about assigning floats into int columns.
+        # These coordinates are continuous, so keep them as float dtype.
+        for col in ("x_ecl", "y_ecl", "z_ecl"):
+            if col not in self.data.columns:
+                self.data[col] = np.nan
+            if not pd.api.types.is_float_dtype(self.data[col].dtype):
+                self.data[col] = self.data[col].astype(float)
+
         #Update normal vectors
         qupdate=False
 
@@ -947,6 +955,14 @@ class Spangler(PrynglesCommon):
             return
             
         #Update positions in the intersection reference frame
+        # Pandas >= 2.2 is strict about assigning floats into int columns.
+        # Intersection-frame coordinates are continuous, so keep them as float dtype.
+        for col in ("x_int", "y_int", "z_int"):
+            if col not in self.data.columns:
+                self.data[col] = np.nan
+            if not pd.api.types.is_float_dtype(self.data[col].dtype):
+                self.data[col] = self.data[col].astype(float)
+
         r_ecl = self.data.loc[cond, ["x_ecl", "y_ecl", "z_ecl"]].to_numpy()
         self.data.loc[cond, ["x_int", "y_int", "z_int"]] = (self.M_ecl2int @ (r_ecl - center).T).T
         
@@ -962,6 +978,12 @@ class Spangler(PrynglesCommon):
 
             # #Pseudo-cylindrical coordinates in the observer system
             r_int = (self.data.loc[group.index, ["x_int","y_int","z_int"]]).to_numpy()
+            # Ensure continuous coordinates are float columns for pandas strictness.
+            for col in ("rho_int", "az_int", "cosf_int"):
+                if col not in self.data.columns:
+                    self.data[col] = np.nan
+                if not pd.api.types.is_float_dtype(self.data[col].dtype):
+                    self.data[col] = self.data[col].astype(float)
             self.data.loc[group.index, ["rho_int","az_int","cosf_int"]] = Science.pcylindrical(r_int - c_int)
         
         #According to distance to intersetcion point generate z_cen_int
@@ -993,6 +1015,10 @@ class Spangler(PrynglesCommon):
         n_int_ecl = np.stack(self.data.loc[cond, "n_int_ecl"])
         dot_wy_n = np.sum(wy_ecl * n_int_ecl, axis=1)
         dot_wx_n = np.sum(wx_ecl * n_int_ecl, axis=1)
+        if "azim_int" not in self.data.columns:
+            self.data["azim_int"] = np.nan
+        if not pd.api.types.is_float_dtype(self.data["azim_int"].dtype):
+            self.data["azim_int"] = self.data["azim_int"].astype(float)
         self.data.loc[cond, "azim_int"] = np.arctan2(dot_wy_n, dot_wx_n)
 
         #Update spangles orientations
@@ -1005,6 +1031,10 @@ class Spangler(PrynglesCommon):
         if self.infinite:
             #In this case n_int is a global variable
             cos_int = np.sum(ns_ecl * n_int, axis=1)
+            if "cos_int" not in self.data.columns:
+                self.data["cos_int"] = np.nan
+            if not pd.api.types.is_float_dtype(self.data["cos_int"].dtype):
+                self.data["cos_int"] = self.data["cos_int"].astype(float)
             self.data.loc[cond, "cos_int"] = cos_int
         else:
             #In this case n_int is a per-spangle variable
@@ -1202,6 +1232,15 @@ class Spangler(PrynglesCommon):
         self.data.loc[cond,"visible"]=False
         #self.data.loc[cond,SPANGLER_COL_OBS]=self.data.loc[cond,SPANGLER_COL_INT].values
         #"""
+        # Pandas is strict about assigning float arrays into int columns.
+        # These observer-frame columns can contain continuous floats and/or object-like vectors,
+        # so we coerce them to object dtype before bulk assignment.
+        for col in SPANGLER_COL_OBS:
+            if col not in self.data.columns:
+                self.data[col] = pd.Series([None] * len(self.data), dtype=object, index=self.data.index)
+            elif self.data[col].dtype != object:
+                self.data[col] = self.data[col].astype(object)
+
         self.data.loc[cond,SPANGLER_COL_OBS]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
                                                           columns=SPANGLER_COL_OBS,
                                                           index=self.data[cond].index)
@@ -1236,6 +1275,10 @@ class Spangler(PrynglesCommon):
                 betas = np.arctan(ns_obs[:,1]/ns_obs[:,0])
                 betas[ns_obs[:,0]*ns_obs[:,1] < 0] += np.pi
 
+            if "beta_loc" not in self.data.columns:
+                self.data["beta_loc"] = pd.Series([None] * len(self.data), dtype=object, index=self.data.index)
+            elif self.data["beta_loc"].dtype != object:
+                self.data["beta_loc"] = self.data["beta_loc"].astype(object)
             self.data.loc[group.index, "beta_loc"] = pd.Series(betas.tolist(), dtype=object, index=group.index)
         
         #Update states
@@ -1288,7 +1331,7 @@ class Spangler(PrynglesCommon):
         verbose(VERB_SIMPLE,f"Number of points: {sum(cond)}")
         
         #Depending on body choose which spangles to change
-        cond=[True]*self.nspangles
+        cond = pd.Series([True] * self.nspangles, index=self.data.index)
         if name:
             cond=(self.data.name==name)
         
@@ -1301,6 +1344,12 @@ class Spangler(PrynglesCommon):
         
         #Conditions
         #self.data.loc[cond,SPANGLER_COL_LUZ]=deepcopy(self.data.loc[cond,SPANGLER_COL_INT].values)
+        # Same rationale as in set_observer: allow float/object assignment safely.
+        for col in SPANGLER_COL_LUZ:
+            if col not in self.data.columns:
+                self.data[col] = pd.Series([None] * len(self.data), dtype=object, index=self.data.index)
+            elif self.data[col].dtype != object:
+                self.data[col] = self.data[col].astype(object)
         self.data.loc[cond,SPANGLER_COL_LUZ]=pd.DataFrame(self.data.loc[cond,SPANGLER_COL_INT].values,
                                                           columns=SPANGLER_COL_LUZ,
                                                           index=self.data[cond].index)
@@ -1308,6 +1357,10 @@ class Spangler(PrynglesCommon):
         #Set relative azimuth [-pi,pi]
         azim_obs_luz = (self.data.loc[cond,"azim_obs"]-self.data.loc[cond,"azim_luz"]).to_numpy(dtype=float)
         # pi Shift and domain in [-pi,pi]
+        if "azim_obs_luz" not in self.data.columns:
+            self.data["azim_obs_luz"] = np.nan
+        if not pd.api.types.is_float_dtype(self.data["azim_obs_luz"].dtype):
+            self.data["azim_obs_luz"] = self.data["azim_obs_luz"].astype(float)
         self.data.loc[cond,"azim_obs_luz"] = np.arctan2(np.sin(azim_obs_luz + np.pi), np.cos(azim_obs_luz + np.pi))
 
         #Update states
@@ -1757,7 +1810,8 @@ class Spangler(PrynglesCommon):
                 verbose(VERB_SIMPLE,f"Hull {i+1} for '{name}' of type '{htype}'")
     
                 #Evaluate conditions
-                inhull=Science.points_in_hull(self.data[["x_int","y_int"]],qhull)&(~cond)&(cond_included)
+                inhull = np.asarray(Science.points_in_hull(self.data[["x_int","y_int"]], qhull), dtype=bool)
+                inhull = inhull & np.asarray((~cond) & (cond_included), dtype=bool)
                 below=np.array([False]*self.nspangles)
                 above=np.array([False]*self.nspangles)
                 
@@ -1782,12 +1836,15 @@ class Spangler(PrynglesCommon):
                     cond_int=(~self.data.hidden)&(self.data.name!=name)&(cond_vis)
     
                     if htype=="cen":
-                        below=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]<=zcen)
-                        above=(inhull_not_in_hole)&(inhull)&(self.data[cond_int]["z_int"]>zcen)
+                        not_in_hole = np.asarray(inhull_not_in_hole, dtype=bool)
+                        cond_int_arr = np.asarray(cond_int, dtype=bool)
+                        z_int = self.data["z_int"].to_numpy(dtype=float)
+                        below = not_in_hole & inhull & cond_int_arr & (z_int <= zcen)
+                        above = not_in_hole & inhull & cond_int_arr & (z_int > zcen)
                         
                     elif htype=="plane":
                         #Not in hole, inhull, not hidden, not in object and intersect
-                        cond_full=(inhull_not_in_hole)&(inhull)&(cond_int)
+                        cond_full = np.asarray(inhull_not_in_hole, dtype=bool) & inhull & np.asarray(cond_int, dtype=bool)
                         verbose(VERB_SIMPLE,"Fulfilling all conditions:",sum(cond_full))
                         
                         plane=hull["plane"]

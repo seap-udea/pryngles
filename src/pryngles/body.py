@@ -800,8 +800,10 @@ class Detector(PrynglesCommon):
 
         Returns
         -------
+        signal_times : `numpy.ndarray`
+            Times of the simulated observations [s].
         signal_lc : `numpy.ndarray`
-            Simulated signal light curve [normalized flux].
+            Simulated signal light curve [normalized flux] sampled at `signal_times`.
         signal_error : `numpy.ndarray`
             Simulated signal error [normalized flux].
 
@@ -831,7 +833,7 @@ class Detector(PrynglesCommon):
         >>> detector.set_source(star)
         >>>
         >>> # Generate the signal
-        >>> signal_lc, signal_error = detector.generate_signal(times, fluxes)
+        >>> signal_times, signal_lc, signal_error = detector.generate_signal(times, fluxes)
 
         .. image:: images/detector_signal_example.png
             :align: center
@@ -886,7 +888,7 @@ class Detector(PrynglesCommon):
         self.signal_flux = signal_lc
         self.signal_error = signal_error
 
-        return signal_lc, signal_error
+        return signal_times, signal_lc, signal_error
 
 
         

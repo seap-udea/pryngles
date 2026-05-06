@@ -14,7 +14,7 @@
 ##################################################################
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -22,7 +22,7 @@ setuptools.setup(
     # BASIC DESCRIPTION
     # ######################################################################
     name='pryngles',
-    author="Jorge I. Zuluaga, Allard Veenstra, Sebastian Numpaque, Mario Sucerquia and Jaime A. Alvarado-Montes",
+    author="Jorge I. Zuluaga, Sebastian Numpaque, Allard Veenstra, Jaime A. Alvarado-Montes, Mario Sucerquia",
     author_email="jorge.zuluaga@udea.edu.co",
     description="PlanetaRY spanGLES: general photometry of planets, rings and shadows",
     long_description=long_description,
@@ -34,10 +34,16 @@ setuptools.setup(
     # ######################################################################
     # CLASSIFIER
     # ######################################################################
+    # For Development status see: https://martin-thoma.com/software-development-stages/
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.12",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Astronomy",
+        "Topic :: Scientific/Engineering :: Physics",
         ],
     version='0.9.11',
 
@@ -73,9 +79,10 @@ setuptools.setup(
     # DEPENDENCIES
     # ######################################################################
     install_requires=['rebound','scipy','ipython',
-	              'matplotlib','tqdm','dill',
+	              'matplotlib','tqdm','dill','astropy',
 	              'spiceypy','cmasher','pandas','celluloid',
 	              'sigfig','anytree','ipywidgets','gdown'],
+    python_requires=">=3.12",
 
     # ######################################################################
     # OPTIONS

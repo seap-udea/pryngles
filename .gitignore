@@ -1,12 +1,31 @@
 *~
-.ipynb_checkpoints
+.ipynb_checkpoints/
+.ipynb_checkpoints/*
 *.egg-info
 __pycache__
 .anim*
 env/
+.venv/
+venv/
 dist/
-src/
 build/
 *.bak
 *.pyf
 *.so
+contrib/*
+
+# Docs build artifacts
+docs/_build/
+
+# OS / editor
+.DS_Store
+
+# Jupyter temporary exports
+*_files/
+
+# Project-specific scratch / generated
+tmp/
+tests/sampler_presets/
+doc/papers/full-scattering/tmp/
+doc/papers/full-scattering/figures/
+doc/deprecated/src/.build/

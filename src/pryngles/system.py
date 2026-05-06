@@ -364,6 +364,10 @@ class System(PrynglesCommon):
         if not self._spangled:
             raise AssertionError("You need to spangle the system before updating the scatterers.")
         
+        # This column stores python objects; keep as object dtype.
+        if "scatterer" in self.data.columns and self.data["scatterer"].dtype != object:
+            self.data["scatterer"] = self.data["scatterer"].astype(object)
+
         #Update scatterer only for the non-assigned one
         cond = (self.data.scatterer == "")
         mask = self.data.loc[cond]
@@ -392,9 +396,16 @@ class System(PrynglesCommon):
         cond = (self.data['spangle_type'] != 6) & (self.data['cos_luz'] >= 0)
     
         # Initialize Lambertian Albedo columns into de DataFrame
+        def _as_float(x):
+            # Some scatterers may return numpy scalar/0-d arrays; normalize to Python float for pandas.
+            return float(np.asarray(x).reshape(-1)[0])
+
         self.data.loc[cond, "lambertian_albedo"] = self.data.loc[cond].apply(
-            lambda sp: sp["scatterer"].get_albedo(
-                eta = sp["cos_luz"], zeta = 0, delta = 0, lamb = 0.55), axis = 1)
+            lambda sp: _as_float(
+                sp["scatterer"].get_albedo(eta=sp["cos_luz"], zeta=0, delta=0, lamb=0.55)
+            ),
+            axis=1,
+        )
         
     def _update_optical_depth(self):
         """  
@@ -818,7 +829,15 @@ class System(PrynglesCommon):
 
             cond = (self.data.name == name)
 
-            body.sg.data.iloc[:,:] = self.data.loc[cond, body.sg.data.columns].to_numpy(copy = True)
+            src = self.data.loc[cond, body.sg.data.columns]
+            # Ensure destination dtypes can hold source values (e.g. python objects like scatterers).
+            for col in body.sg.data.columns:
+                if col in src.columns and src[col].dtype == object and body.sg.data[col].dtype != object:
+                    body.sg.data[col] = body.sg.data[col].astype(object)
+                # Also handle numeric strictness: don't try to put floats into int columns.
+                if col in src.columns and pd.api.types.is_float_dtype(src[col].dtype) and not pd.api.types.is_float_dtype(body.sg.data[col].dtype):
+                    body.sg.data[col] = body.sg.data[col].astype(float)
+            body.sg.data.iloc[:, :] = src.to_numpy(copy=True)
         
     
     def update_body(self,body,**props):
@@ -1025,7 +1044,15 @@ class System(PrynglesCommon):
         self.data['stellar_flux'] = np.zeros(self.data.shape[0])
 
         #Computing Incident Stellar Flux
-        self.data.stellar_flux[cond] = abs(self.data.asp_luz[cond]*self.data.cos_luz[cond]/(4*np.pi*self.data.d_luz[cond]**2))
+        # Avoid chained assignment (can be a no-op under pandas Copy-on-Write).
+        incident = (
+            abs(
+                self.data.loc[cond, "asp_luz"].to_numpy(dtype=float)
+                * self.data.loc[cond, "cos_luz"].to_numpy(dtype=float)
+                / (4 * np.pi * self.data.loc[cond, "d_luz"].to_numpy(dtype=float) ** 2)
+            )
+        )
+        self.data.loc[cond, "stellar_flux"] = incident
 
 
     def update_DiffuseReflection(self):
@@ -1070,7 +1097,13 @@ class System(PrynglesCommon):
         self._update_albedos()
 
         #Computing Diffuse Reflected Light
-        self.data.reflected_flux[cond] = self.data.stellar_flux[cond]*self.data.lambertian_albedo[cond]*self.data.cos_obs[cond]
+        # Avoid chained assignment (can be a no-op under pandas Copy-on-Write).
+        reflected = (
+            self.data.loc[cond, "stellar_flux"].to_numpy(dtype=float)
+            * self.data.loc[cond, "lambertian_albedo"].to_numpy(dtype=float)
+            * self.data.loc[cond, "cos_obs"].to_numpy(dtype=float)
+        )
+        self.data.loc[cond, "reflected_flux"] = reflected
 
 
     def update_Transit(self):
@@ -1113,7 +1146,7 @@ class System(PrynglesCommon):
 
         """
         #Creating transit_flux attribute
-        self.data['transit_flux'] = np.zeros(self.data.shape[0])
+        self.data['transit_flux'] = np.zeros(self.data.shape[0], dtype=float)
 
         #Over all Stars
         for star in self.bodies:
@@ -1140,7 +1173,9 @@ class System(PrynglesCommon):
                 limb_darkening = Science.limb_darkening(rhos, cs = limb_coeffs , N = norm_limb_coeff)
 
                 #Computing Stellar Flux Drop
-                self.data.transit_flux[cond] += beta_values*cos_obs*limb_darkening*(asp/star_scale**2)
+                flux_drop = (beta_values * cos_obs * limb_darkening * (asp / star_scale**2)).to_numpy(dtype=float)
+                # Avoid chained assignment (can be a no-op under pandas Copy-on-Write).
+                self.data.loc[cond, "transit_flux"] = self.data.loc[cond, "transit_flux"].to_numpy(dtype=float) + flux_drop
 
 
     def update_ThermalEmission(self, bandwidth = (1.1e-6, 1.7e-6)):
@@ -1288,7 +1323,8 @@ class System(PrynglesCommon):
 
         # Set Stokes Parameters
         stokes_cols = ['stokes_F','stokes_Q','stokes_U','stokes_V','stokes_P']
-        self.data[stokes_cols] = np.zeros((self.data.shape[0],5))
+        # Keep these as float columns; pandas is strict about int<-float assignment.
+        self.data[stokes_cols] = np.zeros((self.data.shape[0], 5), dtype=float)
 
         # Star radius
         R_star = self.root.radius
@@ -1442,7 +1478,13 @@ class System(PrynglesCommon):
             Stokes = np.column_stack((Stokes/Consts.ppm, np.full(Stokes.shape[0], stokes_P/cond_full.sum())))
 
             # Update Spangle DataFrame
-            body.sg.data.loc[:, stokes_cols] = 0
+            # Ensure destination dtype is float (Stokes values are continuous).
+            for col in stokes_cols:
+                if col not in body.sg.data.columns:
+                    body.sg.data[col] = 0.0
+                if not pd.api.types.is_float_dtype(body.sg.data[col].dtype):
+                    body.sg.data[col] = body.sg.data[col].astype(float)
+            body.sg.data.loc[:, stokes_cols] = 0.0
             body.sg.data.loc[cond_full, stokes_cols] = Stokes[cond_full]
 
             self.data.loc[self.data.index[cond_name][cond_full.values], stokes_cols] = Stokes[cond_full]

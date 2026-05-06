@@ -13,6 +13,8 @@
 # License http://github.com/seap-udea/pryngles-public            #
 ##################################################################
 
+.PHONY: release show
+
 ##################################################################
 #BASIC RULES
 ##################################################################
@@ -74,7 +76,16 @@ pull:
 ##################################################################
 #PACKAGE RULES
 ##################################################################
-#Example: make release RELMODE=release VERSION=0.2.0.2 
+# Example:
+#   make release RELMODE=release VERSION=1.0.0
+#   make release RELMODE=test VERSION=1.0.0
+RELMODE ?= release
+VERSION ?=
+
+show:
+	@python3 -c "import re, pathlib; t=pathlib.Path('setup.py').read_text(encoding='utf-8'); print('setup.py:', re.search(r\"^\\s*version\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]\", t, re.M).group(1))"
+	@python3 -c "from pryngles.version import version; print('package :', version)"
+
 release:
 	@echo "Releasing a new version..."
 	@bash bin/release.sh $(RELMODE) $(VERSION)
@@ -84,3 +95,10 @@ pipinstall:
 
 import:
 	@python3 -c "from pryngles import *;print(version)"
+
+##################################################################
+#REQUIREMENTS
+##################################################################
+requirements:
+	@python3 bin/generate_requirements.py
+	@python3 -m pip install -r requirements.txt

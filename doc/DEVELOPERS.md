@@ -495,7 +495,10 @@ Tasks:
 
 ### Release and test a test version
 
-1. Check the latest version: `tail .versions`
+1. Check the current version:
+
+   - `python3 -c "from pryngles.version import version; print(version)"`
+   - `python3 -c "import re, pathlib; t=pathlib.Path('setup.py').read_text(encoding='utf-8'); print(re.search(r\"^\\s*version\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]\", t, re.M).group(1))"`
 
 2. Execute
 
@@ -536,7 +539,10 @@ Tasks:
 
 ### Release and test a production version
 
-1. Check the latest version: `tail .versions`
+1. Check the current version:
+
+   - `python3 -c "from pryngles.version import version; print(version)"`
+   - `python3 -c "import re, pathlib; t=pathlib.Path('setup.py').read_text(encoding='utf-8'); print(re.search(r\"^\\s*version\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]\", t, re.M).group(1))"`
 
 2. Execute
 
@@ -579,7 +585,7 @@ Tasks:
 Version management
 ------------------
 
-- Versions are in .versions file.
+- Versions are stored in `setup.py` and `src/pryngles/version.py` (they must match).
 
 - Version 0: first release and design.  Example: 0.2.1
 

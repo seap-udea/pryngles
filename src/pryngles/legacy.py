@@ -34,7 +34,7 @@ from copy import deepcopy
 import os
 import tqdm
 from mpl_toolkits.mplot3d import Axes3D
-from scipy.interpolate import interp1d,interp2d
+from scipy.interpolate import interp1d, RectBivariateSpline
 from scipy.integrate import quad,dblquad
 import dill
 import cmasher as cmr
@@ -44,7 +44,12 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.ticker import LogLocator
-get_ipython().run_line_magic('matplotlib', 'nbagg')
+# Don't force an interactive backend (nbagg) here; it can prevent rendering in some notebook frontends.
+# Let the notebook/environment choose the backend (e.g., inline in Colab/Cursor previews).
+try:
+    get_ipython().run_line_magic('matplotlib', 'inline')
+except Exception:
+    pass
 
 # Choose 
 #mh=np #Slower but powerful with arrays
@@ -2591,7 +2596,36 @@ class RingedPlanet(object):
         eta=data_ss[1:,0]
         gamma=data_ss[0,1:]
         f=data_ss[1:,1:]
-        self.fint=interp2d(gamma,eta,f)  
+        # SciPy >= 1.14 removed interp2d. We use a regular-grid spline instead.
+        # interp2d(x=gamma, y=eta, z=f) expects z.shape == (len(eta), len(gamma))
+        # and is called as fint(gamma0, eta0) -> array([[value]]).
+        spline = RectBivariateSpline(eta, gamma, f, kx=1, ky=1)
+
+        def fint(g, e):
+            """
+            Backward-compatible replacement for interp2d(gamma, eta, f).
+
+            interp2d(x, y, z) returns:
+              - (x scalar, y scalar) -> array([z])
+              - (x scalar, y vector) -> array([z(y_i)])
+              - (x vector, y scalar) -> array([z(x_i)])
+              - (x vector, y vector) -> 2D array with shape (len(y), len(x))
+            """
+            gg = np.atleast_1d(g).astype(float)
+            ee = np.atleast_1d(e).astype(float)
+
+            if gg.size == 1 and ee.size == 1:
+                return np.array([float(spline(ee[0], gg[0])[0, 0])])
+
+            if gg.size == 1 and ee.size > 1:
+                return spline(ee, gg).reshape(-1)
+
+            if gg.size > 1 and ee.size == 1:
+                return spline(ee, gg).reshape(-1)
+
+            return spline(ee, gg)
+
+        self.fint = fint
 
     def _calcReflectionCoefficient(self,eta,zeta,gamma0=1):
         """
