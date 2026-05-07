@@ -27,5 +27,4 @@ docs/_build/
 tmp/
 tests/sampler_presets/
 doc/papers/full-scattering/tmp/
-doc/papers/full-scattering/figures/
 doc/deprecated/src/.build/
