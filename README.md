@@ -19,6 +19,10 @@
 [![paper2022](https://img.shields.io/badge/paper-2022%20AsCom%20100623-blue)](https://doi.org/10.1016/j.ascom.2022.100623)
 [![ascl](https://img.shields.io/badge/ascl-2205.016-blue.svg?colorB=262255)](https://ascl.net/2205.016)  
 
+<p align="center"> <img
+src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif"
+alt="Animation" width="400"/> </p>
+
 `Pryngles` is a `Python` package intended to produce useful
 visualizations of the geometric configuration of a ringed exoplanet
 (an exoplanet with a ring or exoring for short) and more importantly
@@ -28,12 +32,6 @@ the signatures that exorings may produce not only in the light curve
 of transiting exoplanets (a problem that has been extensively studied)
 but also in the light of stars having non-transiting exoplanets (the
 bright side of the light curve).
-
-This is an example of what can be done with `Pryngles`:
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
-</p>
 
 For the science behind the model please refer to the following papers:
 
@@ -57,10 +55,6 @@ For the science behind the model please refer to the following papers:
   Society: Letters*, 496(1), L85-L90, [doi:10.1093/mnrasl/slaa080](https://doi.org/10.1093/mnrasl/slaa080),
   [journal article](https://academic.oup.com/mnrasl/article/496/1/L85/5837097),
   [PDF (repo)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2020-sucerquia-alvarado-montes-zuluaga-montesinos-bayo_MNRASL_496_L85_arXiv2004.14121.pdf).
-
-<p align="center"> <img
-src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/illumination-animation.gif"
-alt="Animation" width="400"/> </p>
 
 ## Citation
 
@@ -98,6 +92,12 @@ If you use `pryngles` in your research, please cite the relevant paper(s):
   doi     = {10.1093/mnrasl/slaa080},
 }
 ```
+
+This is an example of what can be done with `Pryngles`:
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/light-curve.png" alt="Logo""/>
+</p>
 
 ## API Documentation
 
@@ -148,6 +148,67 @@ If you are used to `GoogleColab` environment, you may also install `pryngles` by
 !pip install -Uq pryngles
 ```
 
+
+## Tutorials
+
+We have prepared several `Jupyter` tutorials to guide you in the usage
+of the package. The tutorials evolve as the package is being optimized.
+
+- **Quickstart** [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-quickstart.ipynb),
+  [Google Colab](https://bit.ly/pryngles-tutorials-quickstart)]. In
+  this tutorial you will learn the very basics about the package.
+
+- **Developers**
+  [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-developers.ipynb),
+  [Google Colab](https://bit.ly/pryngles-tutorials-developers)]. In
+  this tutorial you will find a detailed description and
+  exemplification of almost every part of the package.  It is
+  especially intended for developers, however it may also be very
+  useful for finding code snippets useful for science applications.
+  As expected, it is under construction as the package is being
+  developed.
+
+## Examples
+
+Working with `Pryngles` we have created several `Jupyter` notebooks to
+illustrate many of its capabilities.  In the examples below you will
+find the package at work to do actual science: 
+
+- **Full-science exploration** [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-examples-exploration.ipynb),
+  [Google Colab](https://bit.ly/pryngles-examples-exploration)].  In
+  this example we include the code we used to generate the plots of
+  the release paper
+  [arXiv:2207.08636](https://arxiv.org/abs/2207.08636) as a complete
+  example of how the package can be used in a research context.
+
+## Development with AI
+
+`Pryngles` is possibly one of the last photometric/polarimetric forward-modeling packages that started out **before** the arrival of large language models (LLMs). Today, these models can substantially accelerate tasks that used to take months or years: exploring and understanding legacy code, test-guided refactoring, generating technical documentation, and systematically reviewing numerical edge cases.
+
+Starting with version **1.0.0**, we have begun to introduce (gradually and carefully) **LLM-assisted workflows** to review and improve aspects of the package, in particular:
+
+- reviewing and updating examples and tutorials;
+- detecting incompatibilities introduced by upstream scientific libraries (e.g., `pandas`, `scipy`);
+- improving documentation and reproducible usage guides.
+
+The goal is not to “automate science”, but to **reduce iteration time** so the team can focus on what matters most: physical validation, numerical robustness, and usability.
+
+## Contributions
+
+This project started as an effort to extend and operationalize the ideas presented in **Sucerquia et al. (2020)**. It was initially developed by **Jorge I. Zuluaga**. Later, **Mario Sucerquia** and **Jaime A. Alvarado-Montes** joined the development, especially as *beta testers* and *developers* who used the package as a research tool to produce the scientific results.
+
+Later, **Allard K. Veenstra** joined the team and developed the **polarization** capabilities in the `RingedPlanet` interface, contributing to the consolidation of the polarimetric model. The most recent developer to join the team was **Sebastian Numpaque**, who implemented much of the recent paper’s innovations in the `System` interface and led the technical documentation.
+
+In addition to the above, we acknowledge direct or indirect contributions from:
+
+- **Daphne M. Stam**: co-author of the polarimetric paper; her long-standing work in photometry/polarimetry and references to historical codes/tools (including Fortran implementations for computing and validating scattering/polarization coefficients and phase behavior) were key to validating and benchmarking our models.
+
+## What's new
+
+For a detailed list of the newest features introduced in the latest
+releases please check [What's
+new](https://github.com/seap-udea/pryngles-public/blob/master/WHATSNEW.md).
+
 ## Quickstart
 
 Please import the package and some useful utilities:
@@ -163,6 +224,106 @@ from pryngles import Consts
   ```python
   %matplotlib inline
   ```
+
+Pryngles currently exposes two interfaces. The legacy interface is called `RingedPlanet`; it was used in the earliest versions of the package and in part of the published scientific work. We keep it for a limited transition period so older research code and notebooks remain reproducible. Examples based on this interface are available in `tutorials/Quickstart-RingedPlanet.ipynb` and in the legacy-oriented examples below. The modern interface is `System`, which is the most flexible interface in the package because it supports more complex configurations such as planets with rings, moons, multiple stars, and thermal-emission workflows.
+
+### System (official) interface
+
+The recommended quickstart for new work is the `System` interface. A complete executable version of the workflow is available in `tutorials/Quickstart-System.ipynb`.
+
+Create a star, a planet, and a ring:
+
+```python
+import pryngles as pr
+import numpy as np
+import spiceypy as spy
+
+system = pr.System()
+
+star = system.add(
+  kind='Star',
+  radius=pr.Consts.rsun / system.ul,
+  limb_coeffs=[0.65],
+)
+
+planet = system.add(
+  kind='Planet',
+  parent=star,
+  a=0.2,
+  e=0.0,
+  radius=pr.Consts.rsaturn / system.ul,
+)
+
+ring = system.add(
+  kind='Ring',
+  parent=planet,
+  fi=1.5,
+  fe=2.5,
+  i=30 * pr.Consts.deg,
+)
+```
+
+Set the observer geometry, initialize the dynamics, discretize the surfaces, and visualize the system:
+
+```python
+inc = 90.0
+omega = 0.0
+system.n_obs = spy.eul2m(np.deg2rad(omega), np.deg2rad(inc), 0, 3, 1, 3)[0]
+
+system.initialize_simulation()
+system.spangle_system()
+system.integrate_perspective(0)
+system.sg.plot2d()
+```
+
+Compute the reflected/scattered flux and polarization over one orbital cycle:
+
+```python
+n_times = 181
+period_days = 365.25 * (planet.a ** 1.5)
+times_days = np.linspace(0.0, period_days, n_times)
+times_system = times_days * pr.Consts.day / system.ut
+
+system.compute_lightcurve(
+  times=times_system,
+  effects=['polarization'],
+)
+
+scattering_df = system.lightcurve['scattering']
+polarization_df = system.lightcurve['polarization']
+```
+
+The important difference with respect to `RingedPlanet` is that `System` stores the results in pandas objects. This makes it easy to extract the contribution from each body and then combine them explicitly:
+
+```python
+planet_flux = scattering_df['Planet']
+ring_flux = scattering_df['Ring']
+total_flux = scattering_df.sum(axis=1)
+
+planet_flux_ppm = pr.Consts.ppm * planet_flux
+ring_flux_ppm = pr.Consts.ppm * ring_flux
+total_flux_ppm = pr.Consts.ppm * total_flux
+
+planet_pol = polarization_df['Planet']
+ring_pol = polarization_df['Ring']
+total_pol = polarization_df.sum(axis=1)
+```
+
+The resulting reflected/scattered flux can then be plotted exactly as in the legacy quickstart, but now using the `System` outputs:
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/simple_system_lightcurve.png" alt="Quickstart System reflected flux" width="70%"/>
+</p>
+
+And the polarization workflow gives access to both the flux components and the polarization degree for Planet, Ring, and the combined system:
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/simple_system_lightcurve_and_polarization.png" alt="Quickstart System polarization" width="70%"/>
+</p>
+
+For the full step-by-step notebook, including the pandas extraction logic and plotting code, see `tutorials/Quickstart-System.ipynb`.
+
+### RingedPlanet (legacy) interface
 
 Any calculation in `Pryngles` starts by creating a planetary system:
 
@@ -354,66 +515,6 @@ The resulting polarization and light-curve will be:
 <p align="center">
 <img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/example-polarization-light-curve.png" alt="Polarization and Light curve"/>
 </p>
-
-## Tutorials
-
-We have prepared several `Jupyter` tutorials to guide you in the usage
-of the package. The tutorials evolve as the package is being optimized.
-
-- **Quickstart** [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-quickstart.ipynb),
-  [Google Colab](https://bit.ly/pryngles-tutorials-quickstart)]. In
-  this tutorial you will learn the very basics about the package.
-
-- **Developers**
-  [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-tutorial-developers.ipynb),
-  [Google Colab](https://bit.ly/pryngles-tutorials-developers)]. In
-  this tutorial you will find a detailed description and
-  exemplification of almost every part of the package.  It is
-  especially intended for developers, however it may also be very
-  useful for finding code snippets useful for science applications.
-  As expected, it is under construction as the package is being
-  developed.
-
-## Examples
-
-Working with `Pryngles` we have created several `Jupyter` notebooks to
-illustrate many of its capabilities.  In the examples below you will
-find the package at work to do actual science: 
-
-- **Full-science exploration** [[Download](https://github.com/seap-udea/pryngles-public/blob/master/pryngles-examples-exploration.ipynb),
-  [Google Colab](https://bit.ly/pryngles-examples-exploration)].  In
-  this example we include the code we used to generate the plots of
-  the release paper
-  [arXiv:2207.08636](https://arxiv.org/abs/2207.08636) as a complete
-  example of how the package can be used in a research context.
-
-## Development with AI
-
-`Pryngles` is possibly one of the last photometric/polarimetric forward-modeling packages that started out **before** the arrival of large language models (LLMs). Today, these models can substantially accelerate tasks that used to take months or years: exploring and understanding legacy code, test-guided refactoring, generating technical documentation, and systematically reviewing numerical edge cases.
-
-Starting with version **1.0.0**, we have begun to introduce (gradually and carefully) **LLM-assisted workflows** to review and improve aspects of the package, in particular:
-
-- reviewing and updating examples and tutorials;
-- detecting incompatibilities introduced by upstream scientific libraries (e.g., `pandas`, `scipy`);
-- improving documentation and reproducible usage guides.
-
-The goal is not to “automate science”, but to **reduce iteration time** so the team can focus on what matters most: physical validation, numerical robustness, and usability.
-
-## Contributions
-
-This project started as an effort to extend and operationalize the ideas presented in **Sucerquia et al. (2020)**. It was initially developed by **Jorge I. Zuluaga**. Later, **Mario Sucerquia** and **Jaime A. Alvarado-Montes** joined the development, especially as *beta testers* and *developers* who used the package as a research tool to produce the scientific results.
-
-Later, **Allard K. Veenstra** joined the team and developed the **polarization** capabilities in the `RingedPlanet` interface, contributing to the consolidation of the polarimetric model. The most recent developer to join the team was **Sebastian Numpaque**, who implemented much of the recent paper’s innovations in the `System` interface and led the technical documentation.
-
-In addition to the above, we acknowledge direct or indirect contributions from:
-
-- **Daphne M. Stam**: co-author of the polarimetric paper; her long-standing work in photometry/polarimetry and references to historical codes/tools (including Fortran implementations for computing and validating scattering/polarization coefficients and phase behavior) were key to validating and benchmarking our models.
-
-## What's new
-
-For a detailed list of the newest features introduced in the latest
-releases please check [What's
-new](https://github.com/seap-udea/pryngles-public/blob/master/WHATSNEW.md).
 
 ## Disclaimer
 
