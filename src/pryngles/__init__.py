@@ -37,36 +37,6 @@ from IPython import get_ipython
 # Stand alone code of the module
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"""
-The purpose of the get_ipython class is to provide some response in the python 
-script resulting from the conversion of this notebook.
-
-If you want to add another IPyhton function resulting from a magic command to the class, 
-please verify in the resulting python script the corresponding IPython command.
-
-For instance, the magic "%matplotlib nbagg" is converted into:
-
-    get_ipython().magic('matplotlib nbagg',globals())
-
-So, the method "magic" should be add to the get_ipython() class.        
-"""
-try:
-    cfg=get_ipython().config
-except AttributeError:
-    def Image(url="",filename="",f=""):
-        pass
-    class get_ipython(object):
-        def run_line_magic(self,*args):
-            pass
-        def run_cell_magic(self,x,y,z):
-            pass
-        def magic(self,command,scope=globals()):
-            pass
-
-#Magics can only be located starting from here
-get_ipython().run_line_magic('load_ext', 'autoreload')
-get_ipython().run_line_magic('autoreload', '2')
-
 #Verbosity levels: see help(Verbose)
 VERB_NONE=0
 VERB_SIMPLE=1
