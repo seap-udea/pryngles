@@ -17,8 +17,6 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/seap-udea/pryngles/blob/kiss/tutorials/Quickstart.ipynb)
 [![paper2025](https://img.shields.io/badge/paper-2025%20A%26A%20A310-blue)](https://doi.org/10.1051/0004-6361/202347194)
 [![paper2022](https://img.shields.io/badge/paper-2022%20AsCom%20100623-blue)](https://doi.org/10.1016/j.ascom.2022.100623)
-<!--[![codesize](https://img.shields.io/github/languages/repo-size/seap-udea/pryngles-public)](https://pypi.org/project/pryngles/)-->
-<!--[![arXiv](http://img.shields.io/badge/arXiv-2004.14121-orange.svg?style=flat)](http://arxiv.org/abs/2004.14121)-->
 [![ascl](https://img.shields.io/badge/ascl-2205.016-blue.svg?colorB=262255)](https://ascl.net/2205.016)  
 
 `Pryngles` is a `Python` package intended to produce useful

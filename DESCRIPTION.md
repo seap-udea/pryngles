@@ -23,9 +23,9 @@ The package is built around a discretization strategy: approximate extended surf
 
 The scientific motivation and validation of the approach is documented in the peer-reviewed literature already referenced in the repository:
 
-- Zuluaga et al. (2025), *A general polarimetric model for transiting and nontransiting ringed exoplanets*, A&A 693, A310, doi:10.1051/0004-6361/202347194  
-- Zuluaga, Sucerquia & Alvarado-Montes (2022), *The bright side of the light curve: a general photometric model for non-transiting exorings*, AsCom 40, 100623, doi:10.1016/j.ascom.2022.100623  
-- Sucerquia et al. (2020), *Scattered light may reveal the existence of ringed exoplanets*, MNRASL 496(1), L85–L90, doi:10.1093/mnrasl/slaa080
+- Veenstra, Zuluaga, Alvarado-Montes, Sucerquia & Stam (2025), [*A general polarimetric model for transiting and nontransiting ringed exoplanets* (PDF)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2025-veenstra-zuluaga-alvarado-montes-sucerquia-stam_AA_693_A310.pdf), A&A 693, A310, doi:10.1051/0004-6361/202347194  
+- Zuluaga, Sucerquia & Alvarado-Montes (2022), [*The bright side of the light curve: a general photometric model for non-transiting exorings* (PDF)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2022-zuluaga-sucerquia-alvarado-montes_AsCom_40_100623_arXiv2207.08636.pdf), AsCom 40, 100623, doi:10.1016/j.ascom.2022.100623  
+- Sucerquia, Alvarado-Montes, Zuluaga, Montesinos & Bayo (2020), [*Scattered light may reveal the existence of ringed exoplanets* (PDF)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2020-sucerquia-alvarado-montes-zuluaga-montesinos-bayo_MNRASL_496_L85_arXiv2004.14121.pdf), MNRASL 496(1), L85-L90, doi:10.1093/mnrasl/slaa080
 
 ---
 
@@ -43,13 +43,13 @@ The figure below shows an example of spangle state identification for a specific
   <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/description-spangles2.png" alt="Legacy visualization: ringed planet spangles (RingedPlanet interface)" width="70%"/>
 </p>
 
-Spangles are stored and updated in a **vectorized tabular representation** (pandas `DataFrame`) to support large \(N\) (thousands to millions) of facets with efficient numerical updates.
-
-The figure below summarizes the package architecture.
+The figure below illustrates the geometric quantities involved in the flux computation for each spangle.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/pryngles-architecture.png" alt="Pryngles architecture" width="100%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/spangles_directions.png" alt="Spangle geometric directions" width="70%"/>
 </p>
+
+Spangles are stored and updated in a **vectorized tabular representation** (pandas `DataFrame`) to support large \(N\) (thousands to millions) of facets with efficient numerical updates.
 
 ---
 
@@ -116,6 +116,12 @@ The modern code lives under `src/pryngles/`. The most relevant modules for engin
 
 The documentation is built with Sphinx under `docs/` and is published on Read the Docs: https://pryngles.readthedocs.io
 
+The figure below summarizes the package architecture.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/pryngles-architecture.png" alt="Pryngles architecture" width="100%"/>
+</p>
+
 ---
 
 ## Data flow and computation pipeline (engineering view)
@@ -143,12 +149,6 @@ This design makes it possible to add new physics by introducing:
 - a new per-spangle state field,
 - a new update method in `System` (vectorized over spangles),
 - and, when needed, a new `Scatterer` implementation for reflectance/polarization laws.
-
-The figure below illustrates the geometric quantities involved in the flux computation for each spangle.
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/spangles_directions.png" alt="Spangle geometric directions" width="70%"/>
-</p>
 
 ---
 
@@ -300,13 +300,23 @@ system.sg.plot2d()
   <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_system_view.png" alt="System geometry view (primary transit)" width="70%"/>
 </p>
 
-### 3) Define observer and compute time series
+### 3) Define observer and compute light curve
 
 Run `compute_lightcurve(times=..., effects=[...])` for the desired observables.
+Define detector properties here so they can be reused when computing transit and when generating synthetic measurements later.
 
 Example computing transit, emission, and polarization (excerpted from the same tutorial):
 
 ```python
+DETECTOR_PROPERTIES = {
+  'wavelength_min': lambda_min,
+  'wavelength_max': lambda_max,
+  'apperture': 0.5,
+  'quantum_eff': 0.9,
+  't_cadence': 15 * 60,
+  'distance': 100 * pr.Consts.pc,
+}
+
 # Transit
 system.compute_lightcurve(
     times=times_system,
@@ -361,29 +371,14 @@ plt.show()
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_transit_lightcurve.png" alt="Transit light curve for WASP-43b" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_polarization_lightcurve.png" alt="Transit light curve for WASP-43b" width="70%"/>
 </p>
 
 ### 5) Generate an instrument-specific signal
 
-Use the detector layer to generate a synthetic observed signal with realistic uncertainties:
+Use the detector layer to generate a synthetic observed signal with realistic uncertainties. This assumes the transit light curve was already computed in step 3 with `signal=DETECTOR_PROPERTIES`.
 
 ```python
-DETECTOR_PROPERTIES = {
-  'wavelength_min': lambda_min,
-  'wavelength_max': lambda_max,
-  'apperture': 0.5,
-  'quantum_eff': 0.9,
-  't_cadence': 15 * 60,
-  'distance': 100 * pr.Consts.pc,
-}
-
-system.compute_lightcurve(
-  times=times_system,
-  effects=['transit'],
-  signal=DETECTOR_PROPERTIES,
-)
-
 signal_times, signal_flux, signal_error = system.detector.generate_signal(
   times_system * system.ut,
   total_flux,
@@ -457,7 +452,6 @@ The repository targets **Python 3.12+** (see `README.md` and packaging configura
 
 - **README**: [README.md](https://github.com/seap-udea/pryngles/blob/kiss/README.md) (badges, papers, installation, quickstart, citations)
 - **Release notes**: [WHATSNEW.md](https://github.com/seap-udea/pryngles/blob/kiss/WHATSNEW.md)
-- **Docs**: [docs/](https://github.com/seap-udea/pryngles/tree/kiss/docs) (Sphinx configuration and guides)
 - **Tutorials**: [Quickstart.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart.ipynb), [System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/System-Interface-Tutorial.ipynb)
 - **Core package**: [src/pryngles/](https://github.com/seap-udea/pryngles/tree/kiss/src/pryngles)
 
