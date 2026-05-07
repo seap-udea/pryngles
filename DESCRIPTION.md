@@ -87,7 +87,7 @@ In the current codebase, the two interfaces can be partially bridged (e.g., cons
 
 Complete interface examples are available in:
 
-- [tutorials/Quickstart.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart.ipynb)
+- [tutorials/Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb)
 
 ---
 
@@ -416,7 +416,7 @@ plt.show()
 
 For worked examples, see:
 
-- [tutorials/Quickstart.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart.ipynb) (minimal entry point aligned with `README.md`)
+- [tutorials/Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb) (minimal entry point aligned with `README.md`)
 - [tutorials/System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/System-Interface-Tutorial.ipynb) (complete workflow and combined effects)
 
 ---
@@ -452,7 +452,7 @@ The repository targets **Python 3.12+** (see `README.md` and packaging configura
 
 - **README**: [README.md](https://github.com/seap-udea/pryngles/blob/kiss/README.md) (badges, papers, installation, quickstart, citations)
 - **Release notes**: [WHATSNEW.md](https://github.com/seap-udea/pryngles/blob/kiss/WHATSNEW.md)
-- **Tutorials**: [Quickstart.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart.ipynb), [System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/System-Interface-Tutorial.ipynb)
+- **Tutorials**: [Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb), [System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/System-Interface-Tutorial.ipynb)
 - **Core package**: [src/pryngles/](https://github.com/seap-udea/pryngles/tree/kiss/src/pryngles)
 
 ## External resources

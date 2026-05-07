@@ -14,7 +14,7 @@
 [![python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![docs](https://readthedocs.org/projects/pryngles/badge/?version=latest)](https://pryngles.readthedocs.io/)
 [![GitHub](https://img.shields.io/badge/GitHub-seap--udea%2Fpryngles-blue?logo=github)](https://github.com/seap-udea/pryngles)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/seap-udea/pryngles/blob/kiss/tutorials/Quickstart.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb)
 [![paper2025](https://img.shields.io/badge/paper-2025%20A%26A%20A310-blue)](https://doi.org/10.1051/0004-6361/202347194)
 [![paper2022](https://img.shields.io/badge/paper-2022%20AsCom%20100623-blue)](https://doi.org/10.1016/j.ascom.2022.100623)
 [![ascl](https://img.shields.io/badge/ascl-2205.016-blue.svg?colorB=262255)](https://ascl.net/2205.016)  
@@ -101,7 +101,7 @@ If you use `pryngles` in your research, please cite the relevant paper(s):
 
 ## API Documentation
 
-We are excited to announce that the first version of the `Pryngles` API documentation is now available online! You can explore detailed descriptions of all classes, functions, and modules at:
+You can explore detailed descriptions of all classes, functions, and modules at:
 
 👉 [https://pryngles.readthedocs.io](https://pryngles.readthedocs.io)
 
@@ -150,7 +150,6 @@ If you are used to `GoogleColab` environment, you may also install `pryngles` by
 
 ## Quickstart
 
-¿Getting started using `pryngles`?  
 Please import the package and some useful utilities:
 
 ```python
