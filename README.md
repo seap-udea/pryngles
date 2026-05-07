@@ -274,7 +274,14 @@ system.initialize_simulation()
 system.spangle_system()
 system.integrate_perspective(0)
 system.sg.plot2d()
+system.sg.fig2d.savefig('gallery/simple_system_view.png', dpi=300)
 ```
+
+This produces the following system view:
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/simple_system_view.png" alt="Quickstart System geometry view" width="70%"/>
+</p>
 
 Compute the reflected/scattered flux and polarization over one orbital cycle:
 
@@ -515,15 +522,6 @@ The resulting polarization and light-curve will be:
 <p align="center">
 <img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/example-polarization-light-curve.png" alt="Polarization and Light curve"/>
 </p>
-
-## Disclaimer
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles-public/master/gallery/disco-planet.jpeg" alt="Logo" width="150"/>
-</p>
-
-This is the *disco* version of Pryngles.  We are improving resolution,
-performance, modularity and programming standards for future releases.
 
 ------------
 
