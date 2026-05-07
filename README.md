@@ -14,7 +14,7 @@
 [![python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![docs](https://readthedocs.org/projects/pryngles/badge/?version=latest)](https://pryngles.readthedocs.io/)
 [![GitHub](https://img.shields.io/badge/GitHub-seap--udea%2Fpryngles-blue?logo=github)](https://github.com/seap-udea/pryngles)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/seap-udea/pryngles/blob/master/tutorials/Quickstart-RingedPlanet.ipynb)
 [![paper2025](https://img.shields.io/badge/paper-2025%20A%26A%20A310-blue)](https://doi.org/10.1051/0004-6361/202347194)
 [![paper2022](https://img.shields.io/badge/paper-2022%20AsCom%20100623-blue)](https://doi.org/10.1016/j.ascom.2022.100623)
 [![ascl](https://img.shields.io/badge/ascl-2205.016-blue.svg?colorB=262255)](https://ascl.net/2205.016)  
@@ -39,7 +39,7 @@ For the science behind the model please refer to the following papers:
   **A general polarimetric model for transiting and nontransiting ringed exoplanets**,
   *Astronomy & Astrophysics*, 693, A310, [doi:10.1051/0004-6361/202347194](https://doi.org/10.1051/0004-6361/202347194),
   [A&A article](https://www.aanda.org/articles/aa/full_html/2025/01/aa47194-23/aa47194-23.html),
-  [PDF (repo)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2025-veenstra-zuluaga-alvarado-montes-sucerquia-stam_AA_693_A310.pdf).
+  [PDF (repo)](https://github.com/seap-udea/pryngles/blob/master/doc/papers/pdfs/2025-veenstra-zuluaga-alvarado-montes-sucerquia-stam_AA_693_A310.pdf).
 
 > Zuluaga, J.I., Sucerquia, M. & Alvarado-Montes, J.A. (2022), **The
   bright side of the light curve: a general photometric model for
@@ -47,14 +47,14 @@ For the science behind the model please refer to the following papers:
   100623](https://www.sciencedirect.com/science/article/pii/S2213133722000476),
   [doi:10.1016/j.ascom.2022.100623](https://doi.org/10.1016/j.ascom.2022.100623),
   [arXiv:2207.08636](https://arxiv.org/abs/2207.08636),
-  [PDF (repo)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2022-zuluaga-sucerquia-alvarado-montes_AsCom_40_100623_arXiv2207.08636.pdf).
+  [PDF (repo)](https://github.com/seap-udea/pryngles/blob/master/doc/papers/pdfs/2022-zuluaga-sucerquia-alvarado-montes_AsCom_40_100623_arXiv2207.08636.pdf).
 
 > Sucerquia, M., Alvarado-Montes, J. A., Zuluaga, J. I., Montesinos,
   M., & Bayo, A. (2020), **Scattered light may reveal the existence of
   ringed exoplanets**. *Monthly Notices of the Royal Astronomical
   Society: Letters*, 496(1), L85-L90, [doi:10.1093/mnrasl/slaa080](https://doi.org/10.1093/mnrasl/slaa080),
   [journal article](https://academic.oup.com/mnrasl/article/496/1/L85/5837097),
-  [PDF (repo)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2020-sucerquia-alvarado-montes-zuluaga-montesinos-bayo_MNRASL_496_L85_arXiv2004.14121.pdf).
+  [PDF (repo)](https://github.com/seap-udea/pryngles/blob/master/doc/papers/pdfs/2020-sucerquia-alvarado-montes-zuluaga-montesinos-bayo_MNRASL_496_L85_arXiv2004.14121.pdf).
 
 ## Citation
 
@@ -280,7 +280,7 @@ system.sg.fig2d.savefig('gallery/simple_system_view.png', dpi=300)
 This produces the following system view:
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/simple_system_view.png" alt="Quickstart System geometry view" width="70%"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/simple_system_view.png" alt="Quickstart System geometry view" width="70%"/>
 </p>
 
 Compute the reflected/scattered flux and polarization over one orbital cycle:
@@ -319,13 +319,13 @@ total_pol = polarization_df.sum(axis=1)
 The resulting reflected/scattered flux can then be plotted exactly as in the legacy quickstart, but now using the `System` outputs:
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/simple_system_lightcurve.png" alt="Quickstart System reflected flux" width="70%"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/simple_system_lightcurve.png" alt="Quickstart System reflected flux" width="70%"/>
 </p>
 
 And the polarization workflow gives access to both the flux components and the polarization degree for Planet, Ring, and the combined system:
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/simple_system_lightcurve_and_polarization.png" alt="Quickstart System polarization" width="70%"/>
+<img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/simple_system_lightcurve_and_polarization.png" alt="Quickstart System polarization" width="70%"/>
 </p>
 
 For the full step-by-step notebook, including the pandas extraction logic and plotting code, see `tutorials/Quickstart-System.ipynb`.

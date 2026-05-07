@@ -7,7 +7,7 @@ This document provides a **global, engineering- and science-oriented description
 The package is built around a discretization strategy: approximate extended surfaces (planetary spheres, rings/disks, atmospheres) using many small surface facets (“**spangles**”, historically “sequins”), compute illumination/visibility for each facet, and integrate the resulting contributions to generate time series (“light curves”) and Stokes observables.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/description-spangles.png" alt="Spangles (planet + ring discretization)" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/description-spangles.png" alt="Spangles (planet + ring discretization)" width="70%"/>
 </p>
 
 ---
@@ -23,9 +23,9 @@ The package is built around a discretization strategy: approximate extended surf
 
 The scientific motivation and validation of the approach is documented in the peer-reviewed literature already referenced in the repository:
 
-- Veenstra, Zuluaga, Alvarado-Montes, Sucerquia & Stam (2025), [*A general polarimetric model for transiting and nontransiting ringed exoplanets* (PDF)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2025-veenstra-zuluaga-alvarado-montes-sucerquia-stam_AA_693_A310.pdf), A&A 693, A310, doi:10.1051/0004-6361/202347194  
-- Zuluaga, Sucerquia & Alvarado-Montes (2022), [*The bright side of the light curve: a general photometric model for non-transiting exorings* (PDF)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2022-zuluaga-sucerquia-alvarado-montes_AsCom_40_100623_arXiv2207.08636.pdf), AsCom 40, 100623, doi:10.1016/j.ascom.2022.100623  
-- Sucerquia, Alvarado-Montes, Zuluaga, Montesinos & Bayo (2020), [*Scattered light may reveal the existence of ringed exoplanets* (PDF)](https://github.com/seap-udea/pryngles/blob/kiss/doc/papers/pdfs/2020-sucerquia-alvarado-montes-zuluaga-montesinos-bayo_MNRASL_496_L85_arXiv2004.14121.pdf), MNRASL 496(1), L85-L90, doi:10.1093/mnrasl/slaa080
+- Veenstra, Zuluaga, Alvarado-Montes, Sucerquia & Stam (2025), [*A general polarimetric model for transiting and nontransiting ringed exoplanets* (PDF)](https://github.com/seap-udea/pryngles/blob/master/doc/papers/pdfs/2025-veenstra-zuluaga-alvarado-montes-sucerquia-stam_AA_693_A310.pdf), A&A 693, A310, doi:10.1051/0004-6361/202347194  
+- Zuluaga, Sucerquia & Alvarado-Montes (2022), [*The bright side of the light curve: a general photometric model for non-transiting exorings* (PDF)](https://github.com/seap-udea/pryngles/blob/master/doc/papers/pdfs/2022-zuluaga-sucerquia-alvarado-montes_AsCom_40_100623_arXiv2207.08636.pdf), AsCom 40, 100623, doi:10.1016/j.ascom.2022.100623  
+- Sucerquia, Alvarado-Montes, Zuluaga, Montesinos & Bayo (2020), [*Scattered light may reveal the existence of ringed exoplanets* (PDF)](https://github.com/seap-udea/pryngles/blob/master/doc/papers/pdfs/2020-sucerquia-alvarado-montes-zuluaga-montesinos-bayo_MNRASL_496_L85_arXiv2004.14121.pdf), MNRASL 496(1), L85-L90, doi:10.1093/mnrasl/slaa080
 
 ---
 
@@ -40,13 +40,13 @@ The package discretizes extended bodies into **spangles** that carry the minimal
 The figure below shows an example of spangle state identification for a specific configuration. The color of each spangle (point) is assigned based on whether it receives stellar light, is visible to the observer, is shadowed, and related geometry/illumination conditions.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/description-spangles2.png" alt="Legacy visualization: ringed planet spangles (RingedPlanet interface)" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/description-spangles2.png" alt="Legacy visualization: ringed planet spangles (RingedPlanet interface)" width="70%"/>
 </p>
 
 The figure below illustrates the geometric quantities involved in the flux computation for each spangle.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/spangles_directions.png" alt="Spangle geometric directions" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/spangles_directions.png" alt="Spangle geometric directions" width="70%"/>
 </p>
 
 Spangles are stored and updated in a **vectorized tabular representation** (pandas `DataFrame`) to support large \(N\) (thousands to millions) of facets with efficient numerical updates.
@@ -77,7 +77,7 @@ The canonical workflow is:
 
 The most complete demonstration of this interface is the tutorial notebook:
 
-- [tutorials/System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/System-Interface-Tutorial.ipynb)
+- [tutorials/System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/master/tutorials/System-Interface-Tutorial.ipynb)
 
 ### `RingedPlanet` interface (legacy)
 
@@ -87,7 +87,7 @@ In the current codebase, the two interfaces can be partially bridged (e.g., cons
 
 Complete interface examples are available in:
 
-- [tutorials/Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb)
+- [tutorials/Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/master/tutorials/Quickstart-RingedPlanet.ipynb)
 
 ---
 
@@ -119,7 +119,7 @@ The documentation is built with Sphinx under `docs/` and is published on Read th
 The figure below summarizes the package architecture.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/pryngles-architecture.png" alt="Pryngles architecture" width="100%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/pryngles-architecture.png" alt="Pryngles architecture" width="100%"/>
 </p>
 
 ---
@@ -173,11 +173,11 @@ Based on the current tutorials and code, `pryngles` supports:
 The figure below shows an example simulated light curve for WASP-43b, including primary/secondary transit geometry, thermal emission, and polarization signal.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_synthetic_lightcurve_combined.png" alt="Synthetic combined light curve for WASP-43b" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/wasp43_synthetic_lightcurve_combined.png" alt="Synthetic combined light curve for WASP-43b" width="70%"/>
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_polarization_lightcurve.png" alt="Polarization light curve for WASP-43b" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/wasp43_polarization_lightcurve.png" alt="Polarization light curve for WASP-43b" width="70%"/>
 </p>
 
 ---
@@ -297,7 +297,7 @@ system.sg.plot2d()
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_system_view.png" alt="System geometry view (primary transit)" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/wasp43_system_view.png" alt="System geometry view (primary transit)" width="70%"/>
 </p>
 
 ### 3) Define observer and compute light curve
@@ -371,7 +371,7 @@ plt.show()
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_polarization_lightcurve.png" alt="Transit light curve for WASP-43b" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/wasp43_polarization_lightcurve.png" alt="Transit light curve for WASP-43b" width="70%"/>
 </p>
 
 ### 5) Generate an instrument-specific signal
@@ -409,15 +409,15 @@ plt.show()
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/kiss/gallery/wasp43_synthetic_lightcurve_full.png" alt="Full synthetic light curve" width="70%"/>
+  <img src="https://raw.githubusercontent.com/seap-udea/pryngles/master/gallery/wasp43_synthetic_lightcurve_full.png" alt="Full synthetic light curve" width="70%"/>
 </p>
 
 ---
 
 For worked examples, see:
 
-- [tutorials/Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb) (minimal entry point aligned with `README.md`)
-- [tutorials/System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/System-Interface-Tutorial.ipynb) (complete workflow and combined effects)
+- [tutorials/Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/master/tutorials/Quickstart-RingedPlanet.ipynb) (minimal entry point aligned with `README.md`)
+- [tutorials/System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/master/tutorials/System-Interface-Tutorial.ipynb) (complete workflow and combined effects)
 
 ---
 
@@ -450,10 +450,10 @@ The repository targets **Python 3.12+** (see `README.md` and packaging configura
 
 ## Links and references inside the repo
 
-- **README**: [README.md](https://github.com/seap-udea/pryngles/blob/kiss/README.md) (badges, papers, installation, quickstart, citations)
-- **Release notes**: [WHATSNEW.md](https://github.com/seap-udea/pryngles/blob/kiss/WHATSNEW.md)
-- **Tutorials**: [Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/Quickstart-RingedPlanet.ipynb), [System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/kiss/tutorials/System-Interface-Tutorial.ipynb)
-- **Core package**: [src/pryngles/](https://github.com/seap-udea/pryngles/tree/kiss/src/pryngles)
+- **README**: [README.md](https://github.com/seap-udea/pryngles/blob/master/README.md) (badges, papers, installation, quickstart, citations)
+- **Release notes**: [WHATSNEW.md](https://github.com/seap-udea/pryngles/blob/master/WHATSNEW.md)
+- **Tutorials**: [Quickstart-RingedPlanet.ipynb](https://github.com/seap-udea/pryngles/blob/master/tutorials/Quickstart-RingedPlanet.ipynb), [System-Interface-Tutorial.ipynb](https://github.com/seap-udea/pryngles/blob/master/tutorials/System-Interface-Tutorial.ipynb)
+- **Core package**: [src/pryngles/](https://github.com/seap-udea/pryngles/tree/master/src/pryngles)
 
 ## External resources
 
