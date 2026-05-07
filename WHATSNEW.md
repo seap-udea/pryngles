@@ -20,6 +20,12 @@ list of the features introduced in each version family of the package.
   - Transit light curves: fixed flux accumulation to ensure non-flat transit depths in recent `pandas` versions.
   - Reflected-light curves: fixed incident/reflected flux updates to ensure diffuse reflection contributions are applied correctly.
   - Polarimetric light curves: support for polarized flux and degree of polarization in `System.compute_lightcurve(effects=["polarization"])`.
+  - **Documentation — `DESCRIPTION.md`**: new engineering- and science-oriented description of the codebase added at the repository root. Covers the core modeling concept (spangles), both interfaces (`System` and legacy `RingedPlanet`), the full computation pipeline, module-by-module package structure, performance notes, and external links (GitHub, PyPI, ReadTheDocs, ASCL). Fully hyperlinked with raw GitHub image URLs.
+  - **Documentation — `README.md`**: added a complete `System` (official) interface quickstart section showing how to build a Star/Planet/Ring hierarchy, initialize the simulation, compute a polarimetric light curve, and extract body-wise contributions from pandas DataFrames. Gallery images embedded inline. Legacy interface heading typo fixed.
+  - **Tutorials — new `tutorials/Quickstart-System.ipynb`**: step-by-step quickstart notebook using the modern `System` interface. Covers body creation, observer setup, orbital dynamics, spangling, flux/polarization light-curve computation, and pandas-based extraction of Planet and Ring contributions.
+  - **Tutorials — `tutorials/Quickstart.ipynb` renamed to `tutorials/Quickstart-RingedPlanet.ipynb`**: clarifies that this notebook uses the legacy `RingedPlanet` interface. All internal and external references updated accordingly.
+  - **Tutorials — Colab support**: all three notebooks in `tutorials/` now include an "Open in Colab" badge and a conditional `pip install pryngles` cell.
+  - **Gallery — new images**: added gallery images for the `System` interface quickstart and the WASP-43b tutorial workflow.
 
 - **0.9.x versions**:
 
