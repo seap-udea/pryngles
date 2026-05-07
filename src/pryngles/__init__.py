@@ -156,6 +156,12 @@ from pryngles.spangler import *
 from pryngles.body import *
 from pryngles.system import *
 
+def _welcome():
+    """Show a welcome message when importing the package."""
+    print(f"Welcome to pryngles v{version}!")
+
+_welcome()
+
 #Reset verbosity
 Verbose.VERBOSITY=VERB_NONE
 
