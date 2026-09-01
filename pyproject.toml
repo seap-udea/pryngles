@@ -19,3 +19,8 @@ requires = ['setuptools','rebound','scipy','ipython',
 	    'sigfig','anytree','ipywidgets','gdown'
 	    ]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+filterwarnings = ["ignore::DeprecationWarning"]
