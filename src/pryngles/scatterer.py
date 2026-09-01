@@ -94,7 +94,9 @@ class Scatterer(PrynglesCommon,ABC):
     @classmethod
     def reset_catalogue(self):
         """To reset the catalogue of registered scatterers """
-        SCATTERERS_CATALOGUE=dict()
+        # Mutate the shared global in place (register() populates the same
+        # dict), otherwise this would only rebind a local name.
+        SCATTERERS_CATALOGUE.clear()
         
 
 
