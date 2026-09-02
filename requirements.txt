@@ -1,4 +1,4 @@
-rebound
+rebound>=4,<5
 scipy
 ipython
 matplotlib
